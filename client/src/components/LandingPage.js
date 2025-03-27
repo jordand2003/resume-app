@@ -393,7 +393,7 @@ const LandingPage = () => {
               fontWeight: 700,
             }}
           >
-            Why Choose Resumify?
+            Why Choose Lighthouse?
           </Typography>
           <Grid container spacing={4}>
             {features.map((feature, index) => (
@@ -429,7 +429,7 @@ const LandingPage = () => {
                 variant="h4"
                 sx={{ color: "white", mb: 3, fontWeight: 700 }}
               >
-                About Resumify
+                About Lighthouse
               </Typography>
               <Typography
                 variant="body1"
@@ -440,7 +440,7 @@ const LandingPage = () => {
                   lineHeight: 1.7,
                 }}
               >
-                Resumify is a modern resume builder that combines the power of
+                Lighthouse is a modern resume builder that combines the power of
                 AI with beautiful design. Our platform helps job seekers create
                 professional resumes that catch employers' attention and
                 increase their chances of landing interviews.
@@ -516,7 +516,7 @@ const LandingPage = () => {
                     Email Us
                   </Typography>
                   <Typography variant="body1" sx={{ color: "#666" }}>
-                    support@resumify.com
+                    support@lighthouse.com
                   </Typography>
                 </CardContent>
               </FeatureCard>

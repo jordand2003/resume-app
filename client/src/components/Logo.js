@@ -40,7 +40,7 @@ const Logo = () => {
             textShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
-          R
+          L
         </Typography>
       </Box>
       <Typography
@@ -54,7 +54,7 @@ const Logo = () => {
           WebkitTextFillColor: "transparent",
         }}
       >
-        Resumify
+        Lighthouse
       </Typography>
     </Box>
   );
