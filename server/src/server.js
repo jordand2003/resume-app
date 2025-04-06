@@ -29,6 +29,7 @@ mongoose
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const careerRoutes = require("./routes/career-history");
 
 // Routes
 app.get("/", (req, res) => {
@@ -37,6 +38,9 @@ app.get("/", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+
+// History Career Routes
+app.use("/api/resume", careerRoutes);
 
 // Protected route example
 app.get("/api/protected", checkJwt, (req, res) => {
