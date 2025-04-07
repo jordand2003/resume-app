@@ -13,6 +13,9 @@ import {
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import WorkIcon from "@mui/icons-material/Work";
+import SchoolIcon from "@mui/icons-material/School";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -46,6 +49,30 @@ const NavBar = () => {
           </Typography>
           {isAuthenticated && (
             <>
+              <Button
+                color="inherit"
+                onClick={() => navigate("/resume-upload")}
+                startIcon={<UploadFileIcon />}
+                sx={{ mr: 2 }}
+              >
+                Upload Resume
+              </Button>
+              <Button
+                color="inherit"
+                onClick={() => navigate("/career-history")}
+                startIcon={<WorkIcon />}
+                sx={{ mr: 2 }}
+              >
+                Career History
+              </Button>
+              <Button
+                color="inherit"
+                onClick={() => navigate("/education")}
+                startIcon={<SchoolIcon />}
+                sx={{ mr: 2 }}
+              >
+                Education
+              </Button>
               <Button
                 color="inherit"
                 onClick={handleLogout}
