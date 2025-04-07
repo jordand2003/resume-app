@@ -3,42 +3,53 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { saveStructuredData } = require("../services/structuredDataService");
+const { verifyJWT, extractUserId } = require("../middleware/auth");
 require("dotenv").config();
 
 // Missing: userid, and save function.
 // Userid should be extracted from JWT token, but I don't know how it will be donw
 // Save function is Jordan's work
 
-// Template GET api for Retreive Stored Career History
-router.get("/history", async (req, res) => {
-  try {
-    const db = mongoose.connection.useDb("Career", {
-      // `useCache` tells Mongoose to cache connections by database name, so
-      // `mongoose.connection.useDb('foo', { useCache: true })` returns the
-      // same reference each time.
-      useCache: true,
-    });
-    const { userid } = req.params;
-    const cursor = db.find({ userid: userid });
-    res.status(200).json({
-      message: "",
-    });
-  } catch (error) {
-    console.error("Retreive Career History error:", error);
-    res.status(500).json({
-      message: "Retrieve Stored Career History failed",
-    });
-  }
-});
-
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// POST api for Career History
-router.post("/history", async (req, res) => {
+// GET api for retrieving stored career history
+router.get("/history", verifyJWT, extractUserId, async (req, res) => {
   try {
+    const userId = req.userId; // Get userId from Auth0 token
+
+    const ResumeData = mongoose.model("ResumeData");
+    const userResumes = await ResumeData.find({ userId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      status: "Success",
+      message: "Career history retrieved successfully",
+      data: userResumes.map((resume) => resume.parsedData),
+    });
+  } catch (error) {
+    console.error("Retrieve Career History error:", error);
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed to retrieve career history",
+    });
+  }
+});
+
+// POST api for Career History
+router.post("/history", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId; // Get userId from Auth0 token
     const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Resume text is required",
+      });
+    }
 
     const prompt = `Extract structured information from the following resume text. Format the response as a JSON object with the following structure:
 {
@@ -92,18 +103,17 @@ Return only valid JSON without any additional text or explanation.`;
       parsedHistory = JSON.parse(generatedText);
     } catch (error) {
       console.error("Failed to parse AI response:", error);
-      // Use a default structure if parsing fails
       parsedHistory = {
         education: [],
         work_experience: [],
       };
     }
 
-    // Save the structured data
-    const savedData = await saveStructuredData(text);
+    // Save the structured data with userId
+    const savedData = await saveStructuredData(text, userId);
 
     res.json({
-      historyId: "1",
+      historyId: savedData.data._id || "1",
       Status: "Success",
       message: "Career history submitted successfully",
       data: savedData.data || parsedHistory,

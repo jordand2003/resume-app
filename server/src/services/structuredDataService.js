@@ -19,6 +19,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Schema for structured resume data
 const ResumeDataSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+    index: true,
+  },
   rawContent: {
     type: String,
     required: true,
@@ -99,6 +104,9 @@ ResumeDataSchema.methods.extractKeywords = function () {
     .filter((word) => !stopWords.has(word) && word.length > 2)
     .slice(0, 100); // Keep top 100 keywords
 };
+
+// Create compound index for userId and contentHash
+ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
 
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
 
@@ -406,15 +414,19 @@ async function findSimilarDocuments(normalizedContent, keywords) {
 
 /**
  * Merge similar documents into a new summary document
- * @param {Array} documents - Array of similar documents
+ * @param {Object} newDoc - The new document being added
+ * @param {Array} similarDocs - Array of similar existing documents
  * @returns {Promise<Object>} Merged document
  */
-async function mergeSimilarDocuments(documents) {
+async function mergeSimilarDocuments(newDoc, similarDocs) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Combine all documents' structured data
-    const allData = documents.map((doc) => doc.parsedData);
+    const allData = [
+      newDoc.parsedData,
+      ...similarDocs.map((doc) => doc.parsedData),
+    ];
 
     const prompt = `Given these similar resume entries, create a single merged entry that combines and summarizes the information, removing duplicates and keeping the most detailed/recent information:
     ${JSON.stringify(allData)}
@@ -434,94 +446,114 @@ async function mergeSimilarDocuments(documents) {
 
     // Create new merged document
     const mergedDoc = new ResumeData({
-      rawContent: documents[0].rawContent,
+      userId: newDoc.userId, // Keep the user ID from the new document
+      rawContent: newDoc.rawContent,
       parsedData: mergedData,
-      similarDocuments: documents.map((doc) => doc._id),
+      similarDocuments: [...similarDocs.map((doc) => doc._id)],
       isMergedDocument: true,
       contentHash: require("crypto")
-        .createHash("md5")
-        .update(documents[0].rawContent.toLowerCase().trim())
+        .createHash("sha256")
+        .update(newDoc.rawContent.toLowerCase().replace(/\s+/g, " ").trim())
         .digest("hex"),
-      keywords: documents[0].keywords,
+      keywords: newDoc.keywords,
     });
 
     await mergedDoc.save();
+
+    // Update similar documents to mark them as merged
+    await ResumeData.updateMany(
+      { _id: { $in: similarDocs.map((doc) => doc._id) } },
+      { $set: { isMergedDocument: true } }
+    );
+
     return mergedDoc;
   } catch (error) {
     console.error("Merge failed:", error);
-    // Fallback to using the most recent document as base
+    // Fallback to using the new document as base
     const mergedDoc = new ResumeData({
-      rawContent: documents[0].rawContent,
-      parsedData: documents[0].parsedData,
-      similarDocuments: documents.map((doc) => doc._id),
+      userId: newDoc.userId, // Keep the user ID from the new document
+      rawContent: newDoc.rawContent,
+      parsedData: newDoc.parsedData,
+      similarDocuments: [...similarDocs.map((doc) => doc._id)],
       isMergedDocument: true,
       contentHash: require("crypto")
-        .createHash("md5")
-        .update(documents[0].rawContent.toLowerCase().trim())
+        .createHash("sha256")
+        .update(newDoc.rawContent.toLowerCase().replace(/\s+/g, " ").trim())
         .digest("hex"),
-      keywords: documents[0].keywords,
+      keywords: newDoc.keywords,
     });
 
     await mergedDoc.save();
+
+    // Update similar documents to mark them as merged
+    await ResumeData.updateMany(
+      { _id: { $in: similarDocs.map((doc) => doc._id) } },
+      { $set: { isMergedDocument: true } }
+    );
+
     return mergedDoc;
   }
 }
 
 /**
- * Main function to save structured data from content
+ * Save structured resume data and handle duplicates
  * @param {string} content - Raw content to process
- * @returns {Promise<Object>} Result of the operation
+ * @param {string} userId - ID of the user this resume belongs to
+ * @returns {Promise<Object>} Save result with status and data
  */
-async function saveStructuredData(content) {
+async function saveStructuredData(content, userId) {
+  if (!content) {
+    throw new Error("Content is required");
+  }
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
   try {
     // Extract structured data
-    const structuredData = await extractStructuredData(content);
+    const parsedData = await extractStructuredData(content);
 
-    // Create new document
-    const normalizedContent = content.toLowerCase().replace(/\s+/g, " ").trim();
+    // Create document
     const doc = new ResumeData({
+      userId,
       rawContent: content,
-      parsedData: structuredData,
+      parsedData,
       contentHash: require("crypto")
-        .createHash("md5")
-        .update(normalizedContent)
+        .createHash("sha256")
+        .update(content.toLowerCase().replace(/\s+/g, " ").trim())
         .digest("hex"),
-      keywords: [],
     });
 
-    // Extract keywords
+    // Extract and save keywords
     doc.keywords = doc.extractKeywords();
 
-    // Check for duplicates/similar documents
-    const { hasSimilar, documents } = await findSimilarDocuments(
-      normalizedContent,
-      doc.keywords
-    );
+    // Check for similar documents for this user
+    const similarDocs = await ResumeData.find({
+      userId,
+      _id: { $ne: doc._id },
+      keywords: { $in: doc.keywords },
+    }).limit(5);
 
-    if (hasSimilar) {
-      // If similar documents exist, try to merge them
-      try {
-        const mergedDoc = await mergeSimilarDocuments([...documents, doc]);
-        return {
-          status: "merged",
-          message: "Content was merged with similar existing entries",
-          data: mergedDoc.parsedData,
-          mergedCount: documents.length + 1,
-        };
-      } catch (mergeError) {
-        console.warn("Merge failed, saving as new document:", mergeError);
-      }
+    if (similarDocs.length > 0) {
+      // Found similar documents, merge them
+      const mergedDoc = await mergeSimilarDocuments(doc, similarDocs);
+      return {
+        status: "merged",
+        message: "Content was merged with similar existing entries",
+        data: mergedDoc.parsedData,
+        mergedCount: similarDocs.length,
+      };
     }
 
-    // Save as new document
+    // No similar documents found, save as new
     await doc.save();
-
     return {
-      status: "success",
-      message: "Content processed and saved successfully",
-      data: structuredData,
+      status: "saved",
+      message: "New content saved successfully",
+      data: doc.parsedData,
     };
   } catch (error) {
+    console.error("Failed to save structured data:", error);
     throw new Error(`Failed to save structured data: ${error.message}`);
   }
 }

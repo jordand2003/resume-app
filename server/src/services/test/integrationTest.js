@@ -4,10 +4,17 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const { saveStructuredData } = require("../structuredDataService");
 const express = require("express");
+const jwt = require("jsonwebtoken");
+
+// Mock Auth0 token for testing
+const createTestToken = (userId) => {
+  return jwt.sign({ sub: userId }, "test-secret");
+};
 
 async function testStructuredDataSaving() {
   console.log("\n=== Testing Structured Data Saving ===");
   try {
+    const testUserId = "auth0|test-user-123";
     const testData = {
       rawContent: `John Doe
 Software Engineer at Google
@@ -46,12 +53,15 @@ Mountain View, CA
     };
 
     console.log("Testing data saving...");
-    const result = await saveStructuredData(testData.rawContent);
+    const result = await saveStructuredData(testData.rawContent, testUserId);
     console.log("Save Result:", JSON.stringify(result, null, 2));
 
     // Test duplicate detection
     console.log("\nTesting duplicate detection...");
-    const duplicateResult = await saveStructuredData(testData.rawContent);
+    const duplicateResult = await saveStructuredData(
+      testData.rawContent,
+      testUserId
+    );
     console.log(
       "Duplicate Save Result:",
       JSON.stringify(duplicateResult, null, 2)
@@ -67,6 +77,8 @@ Mountain View, CA
 async function testCareerHistory() {
   console.log("\n=== Testing Career History Submission ===");
   try {
+    const testUserId = "auth0|test-user-123";
+    const testToken = createTestToken(testUserId);
     const testHistory = `
             Software Engineer at Google
             2020 - Present
@@ -87,7 +99,10 @@ async function testCareerHistory() {
     // Mock request and response
     const req = {
       body: { text: testHistory },
-      params: {},
+      headers: {
+        authorization: `Bearer ${testToken}`,
+      },
+      userId: testUserId, // This would normally be set by the middleware
       get: () => {},
     };
 
@@ -117,8 +132,17 @@ async function testCareerHistory() {
       throw new Error("Could not find POST /history route");
     }
 
-    // Call the handler directly
-    await historyRoute.route.stack[0].handle(req, res);
+    // Mock the middleware chain
+    const middlewareChain = async (req, res, next) => {
+      // Skip actual JWT verification in tests
+      req.userId = testUserId;
+      await historyRoute.route.stack[
+        historyRoute.route.stack.length - 1
+      ].handle(req, res);
+    };
+
+    // Call the handler with mocked middleware
+    await middlewareChain(req, res);
 
     return responseData && responseData.Status === "Success";
   } catch (error) {
