@@ -32,7 +32,7 @@ mongoose
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
-const resumeUploadRoutes = require("./routes/resume-upload");
+//const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 
 // Routes
@@ -47,7 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/resume", careerRoutes);
 
 // Resume Upload Routes
-app.use("/api/resume", resumeUploadRoutes);
+//app.use("/api/resume", resumeUploadRoutes);
 
 // Education Routes
 app.use("/api/education", educationRoutes);

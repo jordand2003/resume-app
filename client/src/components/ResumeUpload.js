@@ -13,29 +13,29 @@ import { useAuth0 } from "@auth0/auth0-react";
 
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
-  const [filePath, setFilePath] = useState("");
+  const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFileChange = (event) => {
-    const path = event.target.value;
-    if (path) {
+    const file = event.target.files[0];
+    if (file) {
       // Validate file type
       if (
-        !path.toLowerCase().endsWith(".docx") &&
-        !path.toLowerCase().endsWith(".pdf")
+        !file.name.toLowerCase().endsWith(".docx") &&
+        !file.name.toLowerCase().endsWith(".pdf")
       ) {
         setErrorMessage("Please upload a DOCX or PDF file");
         return;
       }
-      setFilePath(path);
+      setFile(file);
       setErrorMessage("");
     }
   };
 
   const handleUpload = async () => {
-    if (!filePath) {
+    if (!file) {
       setErrorMessage("Please select a file first");
       return;
     }
@@ -46,14 +46,17 @@ const ResumeUpload = () => {
       setErrorMessage("");
 
       const token = await getAccessTokenSilently();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Error From here
       const response = await axios.post(
         "/api/resume/history",
-        {
-          filePath: filePath,
-        },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",  
           },
           onUploadProgress: (progressEvent) => {
             const progress = Math.round(
@@ -64,10 +67,9 @@ const ResumeUpload = () => {
           timeout: 60000, // 60 second timeout
         }
       );
-
       if (response.data && response.data.status === "Success") {
         setUploadStatus("success");
-        setFilePath("");
+        setFile(null);
         setUploadProgress(0);
       } else {
         throw new Error(response.data?.message || "Upload failed");
@@ -113,9 +115,9 @@ const ResumeUpload = () => {
               Select File
             </Button>
           </label>
-          {filePath && (
+          {file && (
             <Typography variant="body2" component="span">
-              Selected: {filePath}
+              Selected: {file.name}
             </Typography>
           )}
         </Box>
@@ -145,7 +147,7 @@ const ResumeUpload = () => {
           variant="contained"
           color="primary"
           onClick={handleUpload}
-          disabled={!filePath || uploadStatus === "uploading"}
+          disabled={!file || uploadStatus === "uploading"}
           fullWidth
         >
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}

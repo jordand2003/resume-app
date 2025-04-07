@@ -5,12 +5,20 @@ const pdfParse = require("pdf-parse");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config({ path: "../.env" });
 
-const resumeUpload = async (filepath) => {
+const resumeUpload = async (file) => {
   // Convert filepath to Buffer object & get file extension
-  const fileBuffer = fs.readFileSync(filepath);
-  const fileExtension = path.extname(filepath);
+  // const fileBuffer = fs.readFileSync(filepath);
+  // const fileExtension = path.extname(filepath);
 
   try {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+
+    // Convert file object to buffer
+    const fileBuffer = file.buffer;
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+  
     // Identify extension
     let resume_text = "";
     if (fileExtension === ".docx") {
