@@ -9,8 +9,10 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const ResumeUpload = () => {
+  const { getAccessTokenSilently } = useAuth0();
   const [filePath, setFilePath] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
@@ -43,12 +45,16 @@ const ResumeUpload = () => {
       setUploadProgress(0);
       setErrorMessage("");
 
+      const token = await getAccessTokenSilently();
       const response = await axios.post(
         "/api/resume/history",
         {
           filePath: filePath,
         },
         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           onUploadProgress: (progressEvent) => {
             const progress = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total

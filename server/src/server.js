@@ -33,6 +33,7 @@ mongoose
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
 const resumeUploadRoutes = require("./routes/resume-upload");
+const educationRoutes = require("./routes/education");
 
 // Routes
 app.get("/", (req, res) => {
@@ -47,6 +48,9 @@ app.use("/api/resume", careerRoutes);
 
 // Resume Upload Routes
 app.use("/api/resume", resumeUploadRoutes);
+
+// Education Routes
+app.use("/api/education", educationRoutes);
 
 // Protected route example
 app.get("/api/protected", checkJwt, (req, res) => {

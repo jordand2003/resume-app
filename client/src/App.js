@@ -11,6 +11,9 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Auth0ProviderWithHistory from "./components/Auth0ProviderWithHistory";
 import LandingPage from "./components/LandingPage";
 import HomePage from "./components/HomePage";
+import ResumeUpload from "./components/ResumeUpload";
+import CareerHistory from "./components/CareerHistory";
+import EducationInfo from "./components/EducationInfo";
 
 const theme = createTheme({
   palette: {
@@ -151,6 +154,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resume-upload"
+        element={
+          <ProtectedRoute>
+            <ResumeUpload />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/career-history"
+        element={
+          <ProtectedRoute>
+            <CareerHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/education"
+        element={
+          <ProtectedRoute>
+            <EducationInfo />
           </ProtectedRoute>
         }
       />
