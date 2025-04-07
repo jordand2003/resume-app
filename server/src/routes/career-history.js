@@ -33,52 +33,88 @@ router.get("/history", async (req, res) => {
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // POST api for Career History
 router.post("/history", async (req, res) => {
   try {
     const { text } = req.body;
 
-    const prompt = `Extract career history from the following text and format it as JSON with work experience entries. Each entry should have: Title, Company, Location, Start Date, End Date, and Responsibilities (as an array). Here's the text to analyze:
+    const prompt = `Extract structured information from the following resume text. Format the response as a JSON object with the following structure:
+{
+  "education": [
+    {
+      "Institute": "university name",
+      "Location": "city, state",
+      "Degree": "degree name",
+      "Major": "field of study",
+      "Start_Date": "YYYY",
+      "End_Date": "YYYY or Present",
+      "GPA": "X.XX",
+      "RelevantCoursework": "course1, course2, ...",
+      "other": "additional info"
+    }
+  ],
+  "work_experience": [
+    {
+      "Job_Title": "position title",
+      "Company": "company name",
+      "Location": "city, state",
+      "Start_Date": "YYYY",
+      "End_Date": "YYYY or Present",
+      "Responsibilities": [
+        "responsibility 1",
+        "responsibility 2"
+      ]
+    }
+  ]
+}
 
-${text}`;
+Resume Text:
+${text}
+
+Return only valid JSON without any additional text or explanation.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const generatedText = response.text();
+    let generatedText = response.text();
+
+    // Remove markdown formatting if present
+    if (generatedText.startsWith("```")) {
+      generatedText = generatedText
+        .replace(/^```json\n/, "")
+        .replace(/\n```$/, "");
+    }
 
     // Parse the generated text as JSON
     let parsedHistory;
     try {
       parsedHistory = JSON.parse(generatedText);
     } catch (error) {
-      console.error("Failed to parse AI response as JSON:", error);
-      parsedHistory = { work_experience: [] };
+      console.error("Failed to parse AI response:", error);
+      // Use a default structure if parsing fails
+      parsedHistory = {
+        education: [],
+        work_experience: [],
+      };
     }
 
-    // Save the structured data using our service
-    const savedResult = await saveStructuredData(text);
+    // Save the structured data
+    const savedData = await saveStructuredData(text);
 
-    res.status(200).json({
-      historyId: savedResult.data._id,
-      Status: "Saved",
-      data: savedResult.data,
+    res.json({
+      historyId: "1",
+      Status: "Success",
+      message: "Career history submitted successfully",
+      data: savedData.data || parsedHistory,
     });
   } catch (error) {
     console.error("Submit Free-Form History error:", error);
-    if (error === "Insufficient Data")
-      res.status(400).json({
-        historyId: "-1",
-        Status: "Failed",
-        message: "Invalid Career History given. Try again.",
-      });
-    else
-      res.status(500).json({
-        historyId: "-1",
-        Status: "Failed",
-        message: "Submit Free-Form History failed due to internal error.",
-      });
+    res.status(500).json({
+      historyId: "-1",
+      Status: "Failed",
+      message: "Submit Free-Form History failed due to internal error.",
+    });
   }
 });
 

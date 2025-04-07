@@ -86,7 +86,7 @@ async function testCareerHistory() {
 
     // Mock request and response
     const req = {
-      body: testHistory,
+      body: { text: testHistory },
       params: {},
       get: () => {},
     };
@@ -120,7 +120,7 @@ async function testCareerHistory() {
     // Call the handler directly
     await historyRoute.route.stack[0].handle(req, res);
 
-    return responseData && responseData.Status === "Saved";
+    return responseData && responseData.Status === "Success";
   } catch (error) {
     console.error("Career History Test Error:", error);
     return false;
