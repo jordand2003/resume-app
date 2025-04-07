@@ -4,6 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const { auth } = require("express-oauth2-jwt-bearer");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Auth0 configuration
 const checkJwt = auth({
@@ -30,6 +32,7 @@ mongoose
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
+const resumeUploadRoutes = require("./routes/resume-upload");
 
 // Routes
 app.get("/", (req, res) => {
@@ -41,6 +44,9 @@ app.use("/api/auth", authRoutes);
 
 // History Career Routes
 app.use("/api/resume", careerRoutes);
+
+// Resume Upload Routes
+app.use("/api/resume", resumeUploadRoutes);
 
 // Protected route example
 app.get("/api/protected", checkJwt, (req, res) => {
