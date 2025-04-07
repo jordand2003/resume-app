@@ -1,0 +1,25 @@
+John Doe
+123 Main Street, San Francisco, CA 94105
+john.doe@email.com | (555) 123-4567
+
+EDUCATION
+Stanford University, Stanford, CA
+Bachelor of Science in Computer Science
+2016 - 2020
+GPA: 3.8
+Relevant Coursework: Data Structures, Algorithms, Machine Learning
+
+WORK EXPERIENCE
+Software Engineer, Google
+Mountain View, CA
+2020 - Present
+• Developed full-stack applications using React and Node.js
+• Led a team of 3 developers on a critical project
+• Improved system performance by 40%
+
+Software Engineering Intern, Microsoft
+Redmond, WA
+Summer 2019
+• Implemented new features for Azure cloud services
+• Fixed critical bugs in production code
+• Collaborated with senior engineers on system design 

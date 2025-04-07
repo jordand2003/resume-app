@@ -17,19 +17,6 @@ if (!process.env.GEMINI_API_KEY) {
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// List available models
-async function listAvailableModels() {
-  try {
-    const models = await genAI.listModels();
-    console.log("Available models:", models);
-  } catch (error) {
-    console.error("Failed to list models:", error);
-  }
-}
-
-// Call this to see available models
-listAvailableModels();
-
 // Schema for structured resume data
 const ResumeDataSchema = new mongoose.Schema({
   rawContent: {
