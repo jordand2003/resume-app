@@ -11,58 +11,57 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 
 const ResumeUpload = () => {
-  const [file, setFile] = useState(null);
+  const [filePath, setFilePath] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
+    const path = event.target.value;
+    if (path) {
       // Validate file type
-      const validTypes = [
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/pdf",
-      ];
-      if (!validTypes.includes(selectedFile.type)) {
+      if (
+        !path.toLowerCase().endsWith(".docx") &&
+        !path.toLowerCase().endsWith(".pdf")
+      ) {
         setErrorMessage("Please upload a DOCX or PDF file");
         return;
       }
-      setFile(selectedFile);
+      setFilePath(path);
       setErrorMessage("");
     }
   };
 
   const handleUpload = async () => {
-    if (!file) {
+    if (!filePath) {
       setErrorMessage("Please select a file first");
       return;
     }
-
-    const formData = new FormData();
-    formData.append("resume", file);
 
     try {
       setUploadStatus("uploading");
       setUploadProgress(0);
       setErrorMessage("");
 
-      const response = await axios.post("/api/resume/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await axios.post(
+        "/api/resume/history",
+        {
+          filePath: filePath,
         },
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setUploadProgress(progress);
-        },
-        timeout: 60000, // 60 second timeout
-      });
+        {
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(progress);
+          },
+          timeout: 60000, // 60 second timeout
+        }
+      );
 
       if (response.data && response.data.status === "Success") {
         setUploadStatus("success");
-        setFile(null);
+        setFilePath("");
         setUploadProgress(0);
       } else {
         throw new Error(response.data?.message || "Upload failed");
@@ -108,9 +107,9 @@ const ResumeUpload = () => {
               Select File
             </Button>
           </label>
-          {file && (
+          {filePath && (
             <Typography variant="body2" component="span">
-              Selected: {file.name}
+              Selected: {filePath}
             </Typography>
           )}
         </Box>
@@ -140,7 +139,7 @@ const ResumeUpload = () => {
           variant="contained"
           color="primary"
           onClick={handleUpload}
-          disabled={!file || uploadStatus === "uploading"}
+          disabled={!filePath || uploadStatus === "uploading"}
           fullWidth
         >
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}
