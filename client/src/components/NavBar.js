@@ -23,6 +23,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
+import HomeIcon from "@mui/icons-material/Home"
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -55,18 +56,20 @@ const NavBar = () => {
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
     <List>
-      {['/resume-upload', '/career-history', '/education'].map((route, index) => (
+      {['/', '/resume-upload', '/career-history', '/education'].map((route, index) => (
         <ListItem key={route} disablePadding>
           <ListItemButton onClick={() => handleDrawerItemClick(route)}>
             <ListItemIcon>
               {/* Add your icons here, e.g., for each item */}
-              {index === 0 && <UploadFileIcon />}
-              {index === 1 && <WorkIcon />}
-              {index === 2 && <SchoolIcon />}
+              {index === 0 && <HomeIcon />}
+              {index === 1 && <UploadFileIcon />}
+              {index === 2 && <WorkIcon />}
+              {index === 3 && <SchoolIcon />}
             </ListItemIcon>
             <ListItemText primary={
-              index === 0 ? 'Upload Resume' :
-              index === 1 ? 'Career History' :
+              index === 0 ? 'Home' :
+              index === 1 ? 'Upload Resume' :
+              index === 2 ? 'Career History' :
               'Education'
             } />
           </ListItemButton>
