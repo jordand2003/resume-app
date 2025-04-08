@@ -64,9 +64,9 @@ const EducationInfo = () => {
     try {
       const token = await getAccessTokenSilently();
 
-      // Format the data for submission
+      // Format the data to match the database schema
       const formattedData = education.map((edu) => ({
-        _id: edu._id, // Include _id if it exists
+        _id: edu._id, // Preserve _id for existing entries
         Institute: edu.institution,
         Degree: edu.degree,
         Major: edu.field,
@@ -83,25 +83,26 @@ const EducationInfo = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
       console.log("Save response:", response.data);
-      setSuccessMessage("Education information saved successfully!");
 
-      // Update the local state with the response data if available
-      if (response.data && response.data.education) {
-        const updatedEducation = response.data.education.map((edu) => ({
+      if (response.data.status === "Success") {
+        setSuccessMessage("Education information saved successfully!");
+        // Update local state to match the saved data format
+        const updatedEducation = formattedData.map((edu) => ({
           _id: edu._id,
-          institution: edu.Institute || edu.institution,
-          degree: edu.Degree || edu.degree,
-          field: edu.Major || edu.field,
-          startDate: edu.Start_Date || edu.startDate,
-          endDate: edu.End_Date || edu.endDate,
+          institution: edu.Institute,
+          degree: edu.Degree,
+          field: edu.Major,
+          startDate: edu.Start_Date,
+          endDate: edu.End_Date,
         }));
         setEducation(updatedEducation);
       } else {
-        // Refresh education data if response doesn't include it
+        // If the save wasn't successful, refresh the data
         await fetchEducationInfo();
       }
     } catch (error) {
