@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import NavBar from "./NavBar";
 import ResumeUpload from "./ResumeUpload";
+import Dashboard from "./Dashboard";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -61,20 +62,8 @@ const HomePage = () => {
           </Tabs>
         </Paper>
 
-        {currentTab === 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h5" gutterBottom>
-              Your Dashboard
-            </Typography>
-            {/* Add dashboard content here */}
-          </Box>
-        )}
-
-        {currentTab === 1 && (
-          <Box sx={{ mt: 2 }}>
-            <ResumeUpload />
-          </Box>
-        )}
+        {currentTab === 0 && <Dashboard />}
+        {currentTab === 1 && <ResumeUpload />}
       </Container>
     </Box>
   );

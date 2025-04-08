@@ -513,15 +513,38 @@ async function saveStructuredData(content, userId) {
     // Extract structured data
     const parsedData = await extractStructuredData(content);
 
-    // Create document
+    // Create content hash
+    const contentHash = require("crypto")
+      .createHash("sha256")
+      .update(content.toLowerCase().replace(/\s+/g, " ").trim())
+      .digest("hex");
+
+    // Check if document with same hash exists
+    const existingDoc = await ResumeData.findOne({
+      userId,
+      contentHash,
+    });
+
+    if (existingDoc) {
+      // Update existing document
+      existingDoc.rawContent = content;
+      existingDoc.parsedData = parsedData;
+      existingDoc.keywords = existingDoc.extractKeywords();
+      await existingDoc.save();
+
+      return {
+        status: "updated",
+        message: "Existing document updated successfully",
+        data: existingDoc.parsedData,
+      };
+    }
+
+    // Create new document
     const doc = new ResumeData({
       userId,
       rawContent: content,
       parsedData,
-      contentHash: require("crypto")
-        .createHash("sha256")
-        .update(content.toLowerCase().replace(/\s+/g, " ").trim())
-        .digest("hex"),
+      contentHash,
     });
 
     // Extract and save keywords

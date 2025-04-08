@@ -43,22 +43,6 @@ mongoose
     console.log("MongoDB host:", mongoose.connection.host);
     console.log("MongoDB database:", mongoose.connection.name);
     console.log("MongoDB collections:", mongoose.connection.collections);
-
-    // Verify JobHistory model exists
-    if (!mongoose.models.JobHistory) {
-      console.log("JobHistory model not found, creating...");
-      const JobHistorySchema = new mongoose.Schema({
-        userId: { type: String, required: true, index: true },
-        company: { type: String, required: true },
-        position: { type: String, required: true },
-        startDate: { type: String, required: true },
-        endDate: { type: String, required: true },
-        description: { type: String, required: true },
-        createdAt: { type: Date, default: Date.now },
-      });
-      mongoose.model("JobHistory", JobHistorySchema);
-      console.log("JobHistory model created");
-    }
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
@@ -80,7 +64,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 
 // Resume Upload Routes
-app.use("/api/resume/file", resumeUploadRoutes);
+app.use("/api/resume", resumeUploadRoutes);
 
 // Career History Routes
 app.use("/api/career-history", careerRoutes);

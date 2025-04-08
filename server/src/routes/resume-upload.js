@@ -6,6 +6,7 @@ const fs = require("fs");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const resumeUpload = require("../resumeUpload");
 const { saveStructuredData } = require("../services/structuredDataService");
+const JobHistory = require("../models/JobHistory");
 
 // Configure multer for file upload
 const storage = multer.memoryStorage(); // Store file in memory instead of disk
@@ -159,5 +160,32 @@ router.post(
     }
   }
 );
+
+// Get stored career history
+router.get("/history", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log("Fetching career history for user:", userId);
+
+    // Get all job history entries for the user
+    const jobHistory = await JobHistory.find({ userId }).sort({
+      createdAt: -1,
+    });
+    console.log("Found job history entries:", jobHistory.length);
+
+    res.json({
+      status: "Success",
+      message: "Career history retrieved successfully",
+      data: jobHistory,
+    });
+  } catch (error) {
+    console.error("Error retrieving career history:", error);
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed to retrieve career history",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;
