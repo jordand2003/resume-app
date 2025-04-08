@@ -9,7 +9,7 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
-
+import NavBar from "./NavBar";
 const CareerHistory = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [careerHistory, setCareerHistory] = useState([]);
@@ -28,10 +28,14 @@ const CareerHistory = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setCareerHistory(response.data.careerHistory || []);
-      setLoading(false);
+      if (response.data && response.data.careerHistory) {
+        setCareerHistory(response.data.careerHistory || []);
+      } else {
+        setCareerHistory([]); 
+      }
     } catch (error) {
       setError("Failed to fetch career history");
+    } finally {
       setLoading(false);
     }
   };
@@ -59,10 +63,11 @@ const CareerHistory = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
 
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, p: 3 }}>
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <NavBar />
+      {error && <Alert severity="error">{error}</Alert>}
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Career History
@@ -73,7 +78,7 @@ const CareerHistory = () => {
               <TextField
                 fullWidth
                 label="Company"
-                value={job.company}
+                value={job.company || ""}
                 onChange={(e) => {
                   const newCareerHistory = [...careerHistory];
                   newCareerHistory[index].company = e.target.value;
@@ -84,7 +89,7 @@ const CareerHistory = () => {
               <TextField
                 fullWidth
                 label="Position"
-                value={job.position}
+                value={job.position || ""}
                 onChange={(e) => {
                   const newCareerHistory = [...careerHistory];
                   newCareerHistory[index].position = e.target.value;
@@ -95,7 +100,7 @@ const CareerHistory = () => {
               <TextField
                 fullWidth
                 label="Start Date"
-                value={job.startDate}
+                value={job.startDate || ""}
                 onChange={(e) => {
                   const newCareerHistory = [...careerHistory];
                   newCareerHistory[index].startDate = e.target.value;
@@ -106,7 +111,7 @@ const CareerHistory = () => {
               <TextField
                 fullWidth
                 label="End Date"
-                value={job.endDate}
+                value={job.endDate || ""}
                 onChange={(e) => {
                   const newCareerHistory = [...careerHistory];
                   newCareerHistory[index].endDate = e.target.value;
