@@ -49,7 +49,7 @@ const ResumeUpload = () => {
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await axios.post("/api/resume/file/upload", formData, {
+      const response = await axios.post("/api/resume/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -62,6 +62,7 @@ const ResumeUpload = () => {
         },
         timeout: 60000, // 60 second timeout
       });
+      console.log("Upload response:", response.data);
       if (response.data && response.data.status === "Success") {
         setUploadStatus("success");
         setFile(null);

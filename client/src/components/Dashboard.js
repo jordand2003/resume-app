@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Box,
+  Button,
   Paper,
   Typography,
   List,
@@ -14,9 +16,11 @@ import {
 } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
+import EditIcon from "@mui/icons-material/Edit";
 
 const Dashboard = () => {
   const { getAccessTokenSilently } = useAuth0();
+  const navigate = useNavigate();
   const [careerHistory, setCareerHistory] = useState([]);
   const [education, setEducation] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,14 +81,29 @@ const Dashboard = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ display: "flex", alignItems: "center" }}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
         >
-          <WorkIcon sx={{ mr: 1 }} />
-          Career History
-        </Typography>
+          <Typography
+            variant="h6"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <WorkIcon sx={{ mr: 1 }} />
+            Career History
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => navigate("/career-history")}
+          >
+            Edit Career History
+          </Button>
+        </Box>
         <List>
           {careerHistory.map((job, index) => (
             <React.Fragment key={index}>
@@ -134,14 +153,29 @@ const Dashboard = () => {
       </Paper>
 
       <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ display: "flex", alignItems: "center" }}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
         >
-          <SchoolIcon sx={{ mr: 1 }} />
-          Education
-        </Typography>
+          <Typography
+            variant="h6"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <SchoolIcon sx={{ mr: 1 }} />
+            Education
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => navigate("/education")}
+          >
+            Edit Education
+          </Button>
+        </Box>
         <List>
           {education.map((edu, index) => (
             <React.Fragment key={index}>
