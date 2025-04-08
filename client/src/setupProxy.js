@@ -4,12 +4,12 @@ module.exports = function (app) {
   app.use(
     "/api",
     createProxyMiddleware({
-      target: "http://localhost:5001",
+      target: "http://localhost:8000",
       changeOrigin: true,
       secure: false,
       timeout: 60000,
       pathRewrite: {
-        "^/api": "", // Remove the /api prefix since the server routes already include it
+        "^/api": "/api", // Keep the /api prefix when forwarding to the server
       },
       onError: (err, req, res) => {
         console.error("Proxy Error:", err);

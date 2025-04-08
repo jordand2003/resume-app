@@ -20,17 +20,25 @@ const resumeUpload = async (file) => {
 
     // Identify extension
     let resume_text = "";
-    if (fileExtension === ".docx") {
-      console.log("Processing DOCX file");
-      resume_text = await docx2Text(fileBuffer);
-    } else if (fileExtension === ".pdf") {
-      console.log("Processing PDF file");
-      resume_text = await pdf2Text(fileBuffer);
-    } else {
-      throw new Error("Extension not supported.");
+    try {
+      if (fileExtension === ".docx") {
+        console.log("Processing DOCX file");
+        resume_text = await docx2Text(fileBuffer);
+      } else if (fileExtension === ".pdf") {
+        console.log("Processing PDF file");
+        resume_text = await pdf2Text(fileBuffer);
+      } else {
+        throw new Error("Extension not supported.");
+      }
+    } catch (error) {
+      console.error("Error processing file:", error);
+      throw new Error(`Failed to process file: ${error.message}`);
     }
 
     console.log("Resume text extracted, length:", resume_text.length);
+    if (!resume_text || resume_text.length === 0) {
+      throw new Error("No text could be extracted from the file");
+    }
 
     // Comb through text + return JSON formatted response
     const gemini_key = process.env.GEMINI_API_KEY;
@@ -47,8 +55,14 @@ const resumeUpload = async (file) => {
     const ai = new GoogleGenerativeAI(gemini_key);
 
     console.log("Gemini AI initialized, starting parse...");
-    const json = await parse(ai, resume_text.trim("\n"));
-    console.log("Raw Gemini response:", json);
+    let json;
+    try {
+      json = await parse(ai, resume_text.trim("\n"));
+      console.log("Raw Gemini response:", json);
+    } catch (error) {
+      console.error("Error in Gemini AI parsing:", error);
+      throw new Error(`Failed to parse resume with AI: ${error.message}`);
+    }
 
     const cleanedJson = cleanJsonResponse(json);
     console.log("Cleaned JSON:", cleanedJson);
@@ -56,11 +70,14 @@ const resumeUpload = async (file) => {
     try {
       const parsedJson = JSON.parse(cleanedJson);
       console.log("Successfully parsed JSON");
-      return parsedJson;
+      return {
+        parsedData: parsedJson,
+        rawText: resume_text,
+      };
     } catch (parseError) {
       console.error("JSON parsing error:", parseError);
       console.error("Raw response:", cleanedJson);
-      throw new Error("Failed to parse AI response");
+      throw new Error(`Failed to parse AI response: ${parseError.message}`);
     }
   } catch (error) {
     console.error("Resume upload error:", error);

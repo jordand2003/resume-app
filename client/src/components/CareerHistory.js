@@ -23,17 +23,18 @@ const CareerHistory = () => {
   const fetchCareerHistory = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("/api/career-history", {
+      const response = await axios.get("/api/career-history/history", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.data && response.data.careerHistory) {
-        setCareerHistory(response.data.careerHistory || []);
+      if (response.data && response.data.data) {
+        setCareerHistory(response.data.data || []);
       } else {
-        setCareerHistory([]); 
+        setCareerHistory([]);
       }
     } catch (error) {
+      console.error("Error fetching career history:", error);
       setError("Failed to fetch career history");
     } finally {
       setLoading(false);
@@ -44,21 +45,28 @@ const CareerHistory = () => {
     e.preventDefault();
     try {
       const token = await getAccessTokenSilently();
-      await axios.post(
-        "/api/career-history",
+      console.log("Submitting career history:", careerHistory);
+      const response = await axios.post(
+        "/api/career-history/history",
         {
-          careerHistory: careerHistory,
+          text: JSON.stringify(careerHistory),
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
+      console.log("Career history submission response:", response.data);
       // Refresh the career history
       fetchCareerHistory();
     } catch (error) {
-      setError("Failed to save career history");
+      console.error("Error saving career history:", error);
+      setError(
+        "Failed to save career history: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 

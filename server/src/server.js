@@ -29,13 +29,40 @@ const checkJwt = auth({
   tokenSigningAlg: "RS256",
 });
 
-// Database connection
+// MongoDB Connection
+console.log("Attempting to connect to MongoDB...");
+console.log("MongoDB URI:", process.env.MONGODB_URI ? "Present" : "Missing");
+const dbName = process.env.MONGODB_URI.split("/").pop().split("?")[0];
+console.log("Database name from URI:", dbName);
+
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
+  .then(() => {
+    console.log("MongoDB connected successfully");
+    console.log("MongoDB connection state:", mongoose.connection.readyState);
+    console.log("MongoDB host:", mongoose.connection.host);
+    console.log("MongoDB database:", mongoose.connection.name);
+    console.log("MongoDB collections:", mongoose.connection.collections);
+
+    // Verify JobHistory model exists
+    if (!mongoose.models.JobHistory) {
+      console.log("JobHistory model not found, creating...");
+      const JobHistorySchema = new mongoose.Schema({
+        userId: { type: String, required: true, index: true },
+        company: { type: String, required: true },
+        position: { type: String, required: true },
+        startDate: { type: String, required: true },
+        endDate: { type: String, required: true },
+        description: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      });
+      mongoose.model("JobHistory", JobHistorySchema);
+      console.log("JobHistory model created");
+    }
+  })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
-    process.exit(1); // Exit if database connection fails
+    process.exit(1);
   });
 
 // Import routes
@@ -49,17 +76,17 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Job Seeker API" });
 });
 
-// Auth routes
-app.use("/auth", authRoutes);
+// Auth Routes
+app.use("/api/auth", authRoutes);
 
 // Resume Upload Routes
-app.use("/resume/file", resumeUploadRoutes);
+app.use("/api/resume/file", resumeUploadRoutes);
 
-// History Career Routes
-app.use("/resume", careerRoutes);
+// Career History Routes
+app.use("/api/career-history", careerRoutes);
 
 // Education Routes
-app.use("/education", educationRoutes);
+app.use("/api/education", educationRoutes);
 
 // Protected route example
 app.get("/protected", checkJwt, (req, res) => {
@@ -77,7 +104,7 @@ app.use((err, req, res, next) => {
     .json({ message: "Something went wrong!", error: err.message });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
