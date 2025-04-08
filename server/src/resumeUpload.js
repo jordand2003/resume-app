@@ -102,7 +102,7 @@ async function parse(ai, resume_text) {
     );
 
     // Get the model
-    const model = ai.getGenerativeModel({ model: "gemini-pro" });
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Prepare the prompt
     const prompt =
@@ -113,7 +113,13 @@ async function parse(ai, resume_text) {
       resume_text;
 
     // Generate content
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+    });
     const response = await result.response;
     const text = response.text();
 
