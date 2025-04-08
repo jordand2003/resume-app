@@ -70,9 +70,11 @@ const CollapsibleTable = () => {
                 sx={{
                   textAlign: 'center',
                   fontWeight: 'bold',
-                  height: '10px',
+                  height: '50px',  // More reasonable height
+                  width: '20px',  // Adjust width to your preference
                   display: 'flex',
                   justifyContent: 'center',
+                  alignItems: 'center', // Center vertically
                 }}
               >
                 Education
