@@ -15,7 +15,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemIcon,
-  ListItemText
+  ListItemText,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -23,7 +23,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
-import HomeIcon from "@mui/icons-material/Home"
+import HomeIcon from "@mui/icons-material/Home";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -55,29 +55,36 @@ const NavBar = () => {
 
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
-    <List>
-      {['/', '/resume-upload', '/career-history', '/education'].map((route, index) => (
-        <ListItem key={route} disablePadding>
-          <ListItemButton onClick={() => handleDrawerItemClick(route)}>
-            <ListItemIcon>
-              {/* Add your icons here, e.g., for each item */}
-              {index === 0 && <HomeIcon />}
-              {index === 1 && <UploadFileIcon />}
-              {index === 2 && <WorkIcon />}
-              {index === 3 && <SchoolIcon />}
-            </ListItemIcon>
-            <ListItemText primary={
-              index === 0 ? 'Home' :
-              index === 1 ? 'Upload Resume' :
-              index === 2 ? 'Career History' :
-              'Education'
-            } />
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
-  </Box>
-);
+      <List>
+        {["/", "/resume-upload", "/career-history", "/education"].map(
+          (route, index) => (
+            <ListItem key={route} disablePadding>
+              <ListItemButton onClick={() => handleDrawerItemClick(route)}>
+                <ListItemIcon>
+                  {/* Add your icons here, e.g., for each item */}
+                  {index === 0 && <HomeIcon />}
+                  {index === 1 && <UploadFileIcon />}
+                  {index === 2 && <WorkIcon />}
+                  {index === 3 && <SchoolIcon />}
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    index === 0
+                      ? "Home"
+                      : index === 1
+                      ? "Upload Resume"
+                      : index === 2
+                      ? "Career History"
+                      : "Education"
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
+      </List>
+    </Box>
+  );
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -101,6 +108,9 @@ const NavBar = () => {
               >
                 Logout
               </Button>
+              <Typography variant="body1" sx={{ mr: 2 }}>
+                {user?.name || user?.email}
+              </Typography>
               <IconButton
                 size="large"
                 aria-label="account of current user"
@@ -111,10 +121,7 @@ const NavBar = () => {
               >
                 <AccountCircle />
               </IconButton>
-              <IconButton
-                onClick={toggleDrawer(true)}
-                color="inherit"
-              >
+              <IconButton onClick={toggleDrawer(true)} color="inherit">
                 <MenuIcon />
               </IconButton>
               <Drawer
