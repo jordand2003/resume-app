@@ -92,7 +92,7 @@ const EducationInfo = () => {
       if (response.data.status === "Success") {
         setSuccessMessage("Education information saved successfully!");
         // Update local state to match the saved data format
-        const updatedEducation = formattedData.map((edu) => ({
+        const updatedEducation = response.data.data.map((edu) => ({
           _id: edu._id,
           institution: edu.Institute,
           degree: edu.Degree,

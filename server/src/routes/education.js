@@ -65,7 +65,15 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
     const { education } = req.body;
 
     console.log("Received education data for user:", userId);
-    console.log("Education data:", education);
+    console.log("Education data:", JSON.stringify(education, null, 2));
+
+    if (!education || !Array.isArray(education)) {
+      console.log("No education array provided in request");
+      return res.status(400).json({
+        status: "Failed",
+        message: "Education data is required and must be an array",
+      });
+    }
 
     // Get the most recent resume data or create new one
     let resumeData = await ResumeData.findOne({ userId }).sort({
@@ -78,7 +86,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         userId,
         rawContent: "",
         parsedData: {
-          careerHistory: [],
+          work_experience: [],
           education: [],
           skills: [],
           summary: "",
@@ -90,14 +98,19 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
       });
     }
 
-    // Update education in parsedData
+    // Update education in parsedData with consistent field names
     resumeData.parsedData.education = education.map((edu) => ({
-      institution: edu.institution,
-      degree: edu.degree,
-      field: edu.field,
-      startDate: edu.startDate,
-      endDate: edu.endDate,
+      Institute: edu.Institute || edu.institution,
+      Degree: edu.Degree || edu.degree,
+      Major: edu.Major || edu.field,
+      Start_Date: edu.Start_Date || edu.startDate,
+      End_Date: edu.End_Date || edu.endDate,
     }));
+
+    console.log(
+      "Saving education data:",
+      JSON.stringify(resumeData.parsedData.education, null, 2)
+    );
 
     // Save the updated document
     await resumeData.save();
@@ -106,7 +119,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
     res.json({
       status: "Success",
       message: "Education information saved successfully",
-      education: resumeData.parsedData.education,
+      data: resumeData.parsedData.education,
     });
   } catch (error) {
     console.error("Error saving education information:", error);
