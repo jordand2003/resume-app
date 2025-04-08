@@ -31,9 +31,19 @@ router.get("/history", verifyJWT, extractUserId, async (req, res) => {
     }
 
     // Get the most recent resume data
+    console.log("Searching for ResumeData with userId:", userId);
     const resumeData = await ResumeData.findOne({ userId })
       .sort({ createdAt: -1 })
       .limit(1);
+
+    console.log("Found ResumeData:", resumeData ? "Yes" : "No");
+    if (resumeData) {
+      console.log("ResumeData _id:", resumeData._id);
+      console.log(
+        "ResumeData parsedData:",
+        JSON.stringify(resumeData.parsedData, null, 2)
+      );
+    }
 
     if (!resumeData) {
       console.log("No resume data found for user");
@@ -45,7 +55,10 @@ router.get("/history", verifyJWT, extractUserId, async (req, res) => {
     }
 
     // Extract career history from parsed data
-    const careerHistory = resumeData.parsedData?.careerHistory || [];
+    const careerHistory =
+      resumeData.parsedData?.work_experience ||
+      resumeData.parsedData?.careerHistory ||
+      [];
     console.log("Found career history entries:", careerHistory.length);
     console.log(
       "Career history entries:",

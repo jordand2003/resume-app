@@ -90,7 +90,7 @@ const Dashboard = () => {
             <React.Fragment key={index}>
               <ListItem>
                 <ListItemText
-                  primary={job.Job_Title || job.position}
+                  primary={job.Job_Title || job.position || job["Job_Title(s)"]}
                   secondary={
                     <>
                       <Typography
@@ -100,12 +100,23 @@ const Dashboard = () => {
                       >
                         {job.Company || job.company}
                       </Typography>
+                      {job.Location && (
+                        <>
+                          <br />
+                          {job.Location}
+                        </>
+                      )}
                       <br />
                       {job.Start_Date || job.startDate} -{" "}
                       {job.End_Date || job.endDate}
                       <br />
-                      {job.Responsibilities
-                        ? job.Responsibilities.join("\n")
+                      {Array.isArray(job.Responsibilities)
+                        ? job.Responsibilities.map((resp, i) => (
+                            <React.Fragment key={i}>
+                              • {resp}
+                              <br />
+                            </React.Fragment>
+                          ))
                         : job.description}
                     </>
                   }
