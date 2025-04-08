@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import NavBar from "./NavBar";
 import ResumeUpload from "./ResumeUpload";
+import CareerHistory from "./CareerHistory";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ const HomePage = () => {
           >
             <Tab label="Dashboard" />
             <Tab label="Upload Resume" />
+            <Tab label="Career History" />
           </Tabs>
         </Paper>
 
@@ -73,6 +75,12 @@ const HomePage = () => {
         {currentTab === 1 && (
           <Box sx={{ mt: 2 }}>
             <ResumeUpload />
+          </Box>
+        )}
+
+        {currentTab === 2 && (
+          <Box sx={{ mt: 2 }}>
+            <CareerHistory />
           </Box>
         )}
       </Container>
