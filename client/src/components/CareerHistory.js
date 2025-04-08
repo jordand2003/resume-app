@@ -66,25 +66,21 @@ const CareerHistory = () => {
     try {
       const token = await getAccessTokenSilently();
 
-      // Format the data for submission
+      // Format the data to match the database schema
       const formattedData = careerHistory.map((job) => ({
-        _id: job._id, // Include _id if it exists
-        Company: job.company,
+        _id: job._id, // Preserve _id for existing entries
         Job_Title: job.position,
+        Company: job.company,
         Start_Date: job.startDate,
         End_Date: job.endDate,
-        description: job.description,
-        // Convert description back to array if it contains newlines
-        Responsibilities: job.description
-          ? job.description.split("\n").filter((line) => line.trim())
-          : [],
+        Responsibilities: job.description ? job.description.split("\n") : [],
       }));
 
       console.log("Submitting career history:", formattedData);
       const response = await axios.post(
         "/api/career-history/history",
         {
-          text: JSON.stringify(formattedData),
+          work_experience: formattedData, // Match the database field name
         },
         {
           headers: {
@@ -94,23 +90,23 @@ const CareerHistory = () => {
         }
       );
       console.log("Career history submission response:", response.data);
-      setSuccessMessage("Career history saved successfully!");
 
-      // Update the local state with the response data if available
-      if (response.data && response.data.data) {
-        const updatedHistory = response.data.data.map((job) => ({
+      if (response.data.status === "Success") {
+        setSuccessMessage("Career history saved successfully!");
+        // Update local state to match the saved data format
+        const updatedHistory = formattedData.map((job) => ({
           _id: job._id,
-          company: job.Company || job.company,
-          position: job.Job_Title || job.position || job["Job_Title(s)"],
-          startDate: job.Start_Date || job.startDate,
-          endDate: job.End_Date || job.endDate,
+          company: job.Company,
+          position: job.Job_Title,
+          startDate: job.Start_Date,
+          endDate: job.End_Date,
           description: Array.isArray(job.Responsibilities)
             ? job.Responsibilities.join("\n")
-            : job.description,
+            : job.Responsibilities,
         }));
         setCareerHistory(updatedHistory);
       } else {
-        // Refresh the career history if response doesn't include data
+        // If the save wasn't successful, refresh the data
         await fetchCareerHistory();
       }
     } catch (error) {

@@ -87,30 +87,18 @@ router.get("/history", verifyJWT, extractUserId, async (req, res) => {
 router.post("/history", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
-    const { text } = req.body;
+    const { work_experience } = req.body;
 
     console.log("Received career history submission:", {
       userId,
-      textLength: text?.length,
+      work_experience: work_experience,
     });
 
-    if (!text) {
-      console.log("No text provided in request");
+    if (!work_experience || !Array.isArray(work_experience)) {
+      console.log("No work experience array provided in request");
       return res.status(400).json({
         status: "Failed",
-        message: "Career history text is required",
-      });
-    }
-
-    let parsedHistory;
-    try {
-      parsedHistory = JSON.parse(text);
-      console.log("Successfully parsed career history:", parsedHistory);
-    } catch (error) {
-      console.error("Failed to parse career history:", error);
-      return res.status(400).json({
-        status: "Failed",
-        message: "Invalid career history format",
+        message: "Career history data is required and must be an array",
       });
     }
 
@@ -125,7 +113,7 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
         userId,
         rawContent: "",
         parsedData: {
-          careerHistory: [],
+          work_experience: [],
           education: [],
           skills: [],
           summary: "",
@@ -137,14 +125,8 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
       });
     }
 
-    // Update career history in parsedData
-    resumeData.parsedData.careerHistory = parsedHistory.map((job) => ({
-      company: job.company,
-      position: job.position,
-      startDate: job.startDate,
-      endDate: job.endDate,
-      description: job.description,
-    }));
+    // Update work experience in parsedData
+    resumeData.parsedData.work_experience = work_experience;
 
     // Save the updated document
     await resumeData.save();
@@ -153,13 +135,14 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
     res.json({
       status: "Success",
       message: "Career history submitted successfully",
-      data: resumeData.parsedData.careerHistory,
+      data: resumeData.parsedData.work_experience,
     });
   } catch (error) {
     console.error("Submit Career History error:", error);
     res.status(500).json({
       status: "Failed",
       message: "Submit Career History failed due to internal error.",
+      error: error.message,
     });
   }
 });
