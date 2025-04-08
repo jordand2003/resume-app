@@ -6,40 +6,66 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config({ path: "../.env" });
 
 const resumeUpload = async (file) => {
-  // Convert filepath to Buffer object & get file extension
-  // const fileBuffer = fs.readFileSync(filepath);
-  // const fileExtension = path.extname(filepath);
-
   try {
+    console.log("Starting resume upload process");
+
     if (!file) {
-      throw new Error('No file uploaded');
+      throw new Error("No file uploaded");
     }
 
     // Convert file object to buffer
     const fileBuffer = file.buffer;
     const fileExtension = path.extname(file.originalname).toLowerCase();
-  
+    console.log("File extension:", fileExtension);
+
     // Identify extension
     let resume_text = "";
     if (fileExtension === ".docx") {
-      // Convert DOCX file
+      console.log("Processing DOCX file");
       resume_text = await docx2Text(fileBuffer);
     } else if (fileExtension === ".pdf") {
-      // Convert PDF file
+      console.log("Processing PDF file");
       resume_text = await pdf2Text(fileBuffer);
     } else {
-      // Extension mismatch
       throw new Error("Extension not supported.");
     }
 
+    console.log("Resume text extracted, length:", resume_text.length);
+
     // Comb through text + return JSON formatted response
-    gemini_key = process.env.GEMINI_API_KEY;
-    const ai = new GoogleGenerativeAI({ apiKey: gemini_key });
+    const gemini_key = process.env.GEMINI_API_KEY;
+    if (!gemini_key) {
+      throw new Error("GEMINI_API_KEY not found in environment variables");
+    }
+
+    console.log(
+      "Initializing Gemini AI with key:",
+      gemini_key.substring(0, 10) + "..."
+    );
+
+    // Initialize Gemini AI with just the API key
+    const ai = new GoogleGenerativeAI(gemini_key);
+
+    console.log("Gemini AI initialized, starting parse...");
     const json = await parse(ai, resume_text.trim("\n"));
-    return JSON.parse(cleanJsonResponse(json));
+    console.log("Raw Gemini response:", json);
+
+    const cleanedJson = cleanJsonResponse(json);
+    console.log("Cleaned JSON:", cleanedJson);
+
+    try {
+      const parsedJson = JSON.parse(cleanedJson);
+      console.log("Successfully parsed JSON");
+      return parsedJson;
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      console.error("Raw response:", cleanedJson);
+      throw new Error("Failed to parse AI response");
+    }
   } catch (error) {
-    // Fail message + JSON
-    console.log("Upload Failed: " + error.message);
+    console.error("Resume upload error:", error);
+    console.error("Error stack:", error.stack);
+    throw error;
   }
 };
 
@@ -77,20 +103,40 @@ function pdf2Text(fbuffer) {
 
 // Function to parse using gemini
 async function parse(ai, resume_text) {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents:
+  try {
+    console.log(
+      "Starting Gemini AI parsing with text length:",
+      resume_text.length
+    );
+
+    // Get the model
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    // Prepare the prompt
+    const prompt =
       "Extract the following information from this resume text and return as JSON: {" +
-      "'education':[ {'Institute': }, {'Location': }, {'Degree': }, {'Major': }, {''Start_Date': }, {'End_Date': }, {'GPA':}, {'RelevantCoursework': }, {'other': }], " +
+      "'education':[ {'Institute': }, {'Location': }, {'Degree': }, {'Major': }, {'Start_Date': }, {'End_Date': }, {'GPA':}, {'RelevantCoursework': }, {'other': }], " +
       "'work_experience':[ {'Job_Title(s)': }, {'Company': }, {'Location': }, {'Start_Date': }, {'End_Date': }, {'Responsibilities': }]," +
-      //+ "'skills':[],"
-      //+ "'projects':[ {'project_name': }, {'start_date': }, {'end_date': }, {'summary': }],"
-      //+ "'accomplishments':[],"
       "} Resume Text: " +
-      resume_text,
-  });
-  //console.log(response.text);
-  return response.text;
+      resume_text;
+
+    // Generate content
+    const result = await model.generateContent({
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+    });
+    const response = await result.response;
+    const text = response.text();
+
+    console.log("Gemini AI response received:", text);
+    return text;
+  } catch (error) {
+    console.error("Error in Gemini AI parsing:", error);
+    throw error;
+  }
 }
 
 function cleanJsonResponse(responseText) {

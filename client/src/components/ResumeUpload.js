@@ -47,26 +47,21 @@ const ResumeUpload = () => {
 
       const token = await getAccessTokenSilently();
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("resume", file);
 
-      // Error From here
-      const response = await axios.post(
-        "/api/resume/history",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",  
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(progress);
-          },
-          timeout: 60000, // 60 second timeout
-        }
-      );
+      const response = await axios.post("/api/resume/file/upload", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(progress);
+        },
+        timeout: 60000, // 60 second timeout
+      });
       if (response.data && response.data.status === "Success") {
         setUploadStatus("success");
         setFile(null);

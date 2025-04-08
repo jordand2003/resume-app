@@ -5,7 +5,7 @@ require("dotenv").config();
 // Auth0 JWT verification middleware
 const verifyJWT = auth({
   audience: process.env.AUTH0_AUDIENCE,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
   tokenSigningAlg: "RS256",
 });
 

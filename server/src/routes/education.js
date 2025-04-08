@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { auth } = require("../middleware/auth");
+const { verifyJWT } = require("../middleware/auth");
 const { extractEducationInfo } = require("../services/structuredDataService");
 
 // Get education information
-router.get("/", auth, async (req, res) => {
+router.get("/", verifyJWT, async (req, res) => {
   try {
     const userId = req.user.sub;
     // TODO: Implement database query to get education information
@@ -16,7 +16,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // Submit education information
-router.post("/", auth, async (req, res) => {
+router.post("/", verifyJWT, async (req, res) => {
   try {
     const userId = req.user.sub;
     const { education } = req.body;
@@ -30,7 +30,7 @@ router.post("/", auth, async (req, res) => {
 });
 
 // Extract education information from resume
-router.post("/extract", auth, async (req, res) => {
+router.post("/extract", verifyJWT, async (req, res) => {
   try {
     const userId = req.user.sub;
     const { resumeText } = req.body;

@@ -16,10 +16,16 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
 // Auth0 configuration
 const checkJwt = auth({
   audience: process.env.AUTH0_AUDIENCE,
-  issuerBaseURL: process.env.AUTH0_DOMAIN,
+  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
   tokenSigningAlg: "RS256",
 });
 
@@ -27,12 +33,15 @@ const checkJwt = auth({
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1); // Exit if database connection fails
+  });
 
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
-//const resumeUploadRoutes = require("./routes/resume-upload");
+const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 
 // Routes
@@ -41,29 +50,34 @@ app.get("/", (req, res) => {
 });
 
 // Auth routes
-app.use("/api/auth", authRoutes);
-
-// History Career Routes
-app.use("/api/resume", careerRoutes);
+app.use("/auth", authRoutes);
 
 // Resume Upload Routes
-//app.use("/api/resume", resumeUploadRoutes);
+app.use("/resume/file", resumeUploadRoutes);
+
+// History Career Routes
+app.use("/resume", careerRoutes);
 
 // Education Routes
-app.use("/api/education", educationRoutes);
+app.use("/education", educationRoutes);
 
 // Protected route example
-app.get("/api/protected", checkJwt, (req, res) => {
+app.get("/protected", checkJwt, (req, res) => {
   res.json({ message: "This is a protected route", user: req.auth });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+  console.error("Error:", err);
+  if (err.name === "UnauthorizedError") {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+  res
+    .status(500)
+    .json({ message: "Something went wrong!", error: err.message });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
