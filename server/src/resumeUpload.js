@@ -100,20 +100,25 @@ async function parse(ai, resume_text) {
       "Starting Gemini AI parsing with text length:",
       resume_text.length
     );
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents:
-        "Extract the following information from this resume text and return as JSON: {" +
-        "'education':[ {'Institute': }, {'Location': }, {'Degree': }, {'Major': }, {'Start_Date': }, {'End_Date': }, {'GPA':}, {'RelevantCoursework': }, {'other': }], " +
-        "'work_experience':[ {'Job_Title(s)': }, {'Company': }, {'Location': }, {'Start_Date': }, {'End_Date': }, {'Responsibilities': }]," +
-        //+ "'skills':[],"
-        //+ "'projects':[ {'project_name': }, {'start_date': }, {'end_date': }, {'summary': }],"
-        //+ "'accomplishments':[],"
-        "} Resume Text: " +
-        resume_text,
-    });
-    console.log("Gemini AI response received:", response);
-    return response.text;
+
+    // Get the model
+    const model = ai.getGenerativeModel({ model: "gemini-pro" });
+
+    // Prepare the prompt
+    const prompt =
+      "Extract the following information from this resume text and return as JSON: {" +
+      "'education':[ {'Institute': }, {'Location': }, {'Degree': }, {'Major': }, {'Start_Date': }, {'End_Date': }, {'GPA':}, {'RelevantCoursework': }, {'other': }], " +
+      "'work_experience':[ {'Job_Title(s)': }, {'Company': }, {'Location': }, {'Start_Date': }, {'End_Date': }, {'Responsibilities': }]," +
+      "} Resume Text: " +
+      resume_text;
+
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    console.log("Gemini AI response received:", text);
+    return text;
   } catch (error) {
     console.error("Error in Gemini AI parsing:", error);
     throw error;

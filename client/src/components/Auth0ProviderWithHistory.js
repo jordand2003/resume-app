@@ -21,10 +21,11 @@ const Auth0ProviderWithHistory = ({ children }) => {
       authorizationParams={{
         redirect_uri: `${origin}/callback`,
         audience: process.env.REACT_APP_AUTH0_AUDIENCE,
-        scope: "openid profile email",
+        scope: "openid profile email offline_access",
       }}
       onRedirectCallback={onRedirectCallback}
       cacheLocation="localstorage"
+      useRefreshTokens={true}
     >
       {children}
     </Auth0Provider>
