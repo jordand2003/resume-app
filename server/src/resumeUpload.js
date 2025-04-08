@@ -39,7 +39,9 @@ const resumeUpload = async (file) => {
     }
 
     console.log("Initializing Gemini AI");
-    const ai = new GoogleGenerativeAI({ apiKey: gemini_key });
+    const ai = new GoogleGenerativeAI({
+      baseUrl: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gemini_key}`,
+    });
     const json = await parse(ai, resume_text.trim("\n"));
     console.log("Raw Gemini response:", json);
 
