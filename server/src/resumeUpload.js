@@ -38,10 +38,15 @@ const resumeUpload = async (file) => {
       throw new Error("GEMINI_API_KEY not found in environment variables");
     }
 
-    console.log("Initializing Gemini AI");
-    const ai = new GoogleGenerativeAI({
-      baseUrl: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${gemini_key}`,
-    });
+    console.log(
+      "Initializing Gemini AI with key:",
+      gemini_key.substring(0, 10) + "..."
+    );
+
+    // Initialize Gemini AI with just the API key
+    const ai = new GoogleGenerativeAI(gemini_key);
+
+    console.log("Gemini AI initialized, starting parse...");
     const json = await parse(ai, resume_text.trim("\n"));
     console.log("Raw Gemini response:", json);
 
@@ -59,6 +64,7 @@ const resumeUpload = async (file) => {
     }
   } catch (error) {
     console.error("Resume upload error:", error);
+    console.error("Error stack:", error.stack);
     throw error;
   }
 };
