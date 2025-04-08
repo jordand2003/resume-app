@@ -33,16 +33,31 @@ router.post(
   upload.single("resume"),
   async (req, res) => {
     try {
+      console.log("Upload request received:", {
+        file: req.file,
+        body: req.body,
+        headers: req.headers,
+      });
+
       if (!req.file) {
+        console.log("No file uploaded");
         return res.status(400).json({
           status: "Failed",
           message: "No file uploaded",
         });
       }
 
+      console.log("Processing file:", {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      });
+
       const result = await resumeUpload(req.file);
+      console.log("Resume processing result:", result);
 
       if (!result) {
+        console.log("No result from resume processing");
         return res.status(500).json({
           status: "Failed",
           message: "Failed to process resume",
@@ -56,6 +71,7 @@ router.post(
       });
     } catch (error) {
       console.error("Resume upload error:", error);
+      console.error("Error stack:", error.stack);
       res.status(500).json({
         status: "Failed",
         message: error.message || "Failed to process resume",
