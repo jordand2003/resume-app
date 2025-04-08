@@ -8,13 +8,16 @@ import {
   TextField,
   Paper,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+
 const CareerHistory = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [careerHistory, setCareerHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     fetchCareerHistory();
@@ -28,14 +31,29 @@ const CareerHistory = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log("Career history response:", response.data);
       if (response.data && response.data.data) {
-        setCareerHistory(response.data.data || []);
+        // Map the data to match the form fields
+        const formattedHistory = response.data.data.map((job) => ({
+          _id: job._id, // Preserve the _id if it exists
+          company: job.Company || job.company,
+          position: job.Job_Title || job.position || job["Job_Title(s)"],
+          startDate: job.Start_Date || job.startDate,
+          endDate: job.End_Date || job.endDate,
+          description: Array.isArray(job.Responsibilities)
+            ? job.Responsibilities.join("\n")
+            : job.description,
+        }));
+        setCareerHistory(formattedHistory);
       } else {
-        setCareerHistory([]);
+        // Initialize with an empty job entry if no data
+        setCareerHistory([{}]);
       }
     } catch (error) {
       console.error("Error fetching career history:", error);
       setError("Failed to fetch career history");
+      // Initialize with an empty job entry on error
+      setCareerHistory([{}]);
     } finally {
       setLoading(false);
     }
@@ -43,13 +61,30 @@ const CareerHistory = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccessMessage("");
     try {
       const token = await getAccessTokenSilently();
-      console.log("Submitting career history:", careerHistory);
+
+      // Format the data for submission
+      const formattedData = careerHistory.map((job) => ({
+        _id: job._id, // Include _id if it exists
+        Company: job.company,
+        Job_Title: job.position,
+        Start_Date: job.startDate,
+        End_Date: job.endDate,
+        description: job.description,
+        // Convert description back to array if it contains newlines
+        Responsibilities: job.description
+          ? job.description.split("\n").filter((line) => line.trim())
+          : [],
+      }));
+
+      console.log("Submitting career history:", formattedData);
       const response = await axios.post(
         "/api/career-history/history",
         {
-          text: JSON.stringify(careerHistory),
+          text: JSON.stringify(formattedData),
         },
         {
           headers: {
@@ -59,8 +94,25 @@ const CareerHistory = () => {
         }
       );
       console.log("Career history submission response:", response.data);
-      // Refresh the career history
-      fetchCareerHistory();
+      setSuccessMessage("Career history saved successfully!");
+
+      // Update the local state with the response data if available
+      if (response.data && response.data.data) {
+        const updatedHistory = response.data.data.map((job) => ({
+          _id: job._id,
+          company: job.Company || job.company,
+          position: job.Job_Title || job.position || job["Job_Title(s)"],
+          startDate: job.Start_Date || job.startDate,
+          endDate: job.End_Date || job.endDate,
+          description: Array.isArray(job.Responsibilities)
+            ? job.Responsibilities.join("\n")
+            : job.description,
+        }));
+        setCareerHistory(updatedHistory);
+      } else {
+        // Refresh the career history if response doesn't include data
+        await fetchCareerHistory();
+      }
     } catch (error) {
       console.error("Error saving career history:", error);
       setError(
@@ -70,91 +122,159 @@ const CareerHistory = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+        <NavBar />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
       <NavBar />
-      {error && <Alert severity="error">{error}</Alert>}
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          Career History
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          {careerHistory.map((job, index) => (
-            <Box key={index} sx={{ mb: 3, p: 2, border: "1px solid #ddd" }}>
-              <TextField
-                fullWidth
-                label="Company"
-                value={job.company || ""}
-                onChange={(e) => {
-                  const newCareerHistory = [...careerHistory];
-                  newCareerHistory[index].company = e.target.value;
-                  setCareerHistory(newCareerHistory);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Position"
-                value={job.position || ""}
-                onChange={(e) => {
-                  const newCareerHistory = [...careerHistory];
-                  newCareerHistory[index].position = e.target.value;
-                  setCareerHistory(newCareerHistory);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Start Date"
-                value={job.startDate || ""}
-                onChange={(e) => {
-                  const newCareerHistory = [...careerHistory];
-                  newCareerHistory[index].startDate = e.target.value;
-                  setCareerHistory(newCareerHistory);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="End Date"
-                value={job.endDate || ""}
-                onChange={(e) => {
-                  const newCareerHistory = [...careerHistory];
-                  newCareerHistory[index].endDate = e.target.value;
-                  setCareerHistory(newCareerHistory);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Description"
-                value={job.description}
-                onChange={(e) => {
-                  const newCareerHistory = [...careerHistory];
-                  newCareerHistory[index].description = e.target.value;
-                  setCareerHistory(newCareerHistory);
-                }}
-                margin="normal"
-              />
+      <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {successMessage && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {successMessage}
+          </Alert>
+        )}
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Career History
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            {careerHistory.map((job, index) => (
+              <Box
+                key={index}
+                sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
+              >
+                <TextField
+                  fullWidth
+                  label="Company"
+                  value={job.company || ""}
+                  onChange={(e) => {
+                    const newCareerHistory = [...careerHistory];
+                    newCareerHistory[index] = {
+                      ...newCareerHistory[index],
+                      company: e.target.value,
+                    };
+                    setCareerHistory(newCareerHistory);
+                  }}
+                  margin="normal"
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Position"
+                  value={job.position || ""}
+                  onChange={(e) => {
+                    const newCareerHistory = [...careerHistory];
+                    newCareerHistory[index] = {
+                      ...newCareerHistory[index],
+                      position: e.target.value,
+                    };
+                    setCareerHistory(newCareerHistory);
+                  }}
+                  margin="normal"
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Start Date"
+                  value={job.startDate || ""}
+                  onChange={(e) => {
+                    const newCareerHistory = [...careerHistory];
+                    newCareerHistory[index] = {
+                      ...newCareerHistory[index],
+                      startDate: e.target.value,
+                    };
+                    setCareerHistory(newCareerHistory);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., Jan 2020"
+                />
+                <TextField
+                  fullWidth
+                  label="End Date"
+                  value={job.endDate || ""}
+                  onChange={(e) => {
+                    const newCareerHistory = [...careerHistory];
+                    newCareerHistory[index] = {
+                      ...newCareerHistory[index],
+                      endDate: e.target.value,
+                    };
+                    setCareerHistory(newCareerHistory);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., Present"
+                />
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  label="Description"
+                  value={job.description || ""}
+                  onChange={(e) => {
+                    const newCareerHistory = [...careerHistory];
+                    newCareerHistory[index] = {
+                      ...newCareerHistory[index],
+                      description: e.target.value,
+                    };
+                    setCareerHistory(newCareerHistory);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="Enter job responsibilities and achievements"
+                />
+                {careerHistory.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => {
+                      const newCareerHistory = careerHistory.filter(
+                        (_, i) => i !== index
+                      );
+                      setCareerHistory(newCareerHistory);
+                    }}
+                    sx={{ mt: 1 }}
+                  >
+                    Remove Job
+                  </Button>
+                )}
+              </Box>
+            ))}
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => setCareerHistory([...careerHistory, {}])}
+              >
+                Add Another Job
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                Save Career History
+              </Button>
             </Box>
-          ))}
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => setCareerHistory([...careerHistory, {}])}
-            sx={{ mr: 2 }}
-          >
-            Add Job
-          </Button>
-          <Button type="submit" variant="contained" color="primary">
-            Save Career History
-          </Button>
-        </form>
-      </Paper>
+          </form>
+        </Paper>
+      </Box>
     </Box>
   );
 };

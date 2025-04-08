@@ -8,13 +8,16 @@ import {
   TextField,
   Paper,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+
 const EducationInfo = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [education, setEducation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     fetchEducationInfo();
@@ -29,14 +32,26 @@ const EducationInfo = () => {
         },
       });
       console.log("Education response:", response.data);
-      if (response.data && response.data.education) {
-        setEducation(response.data.education || []);
+      if (response.data && response.data.data) {
+        // Map the data to match the form fields
+        const formattedEducation = response.data.data.map((edu) => ({
+          _id: edu._id, // Preserve the _id if it exists
+          institution: edu.Institute || edu.institution,
+          degree: edu.Degree || edu.degree,
+          field: edu.Major || edu.field,
+          startDate: edu.Start_Date || edu.startDate,
+          endDate: edu.End_Date || edu.endDate,
+        }));
+        setEducation(formattedEducation);
       } else {
-        setEducation([]);
+        // Initialize with an empty education entry if no data
+        setEducation([{}]);
       }
     } catch (error) {
       console.error("Failed to fetch education history:", error);
       setError("Failed to fetch education history");
+      // Initialize with an empty education entry on error
+      setEducation([{}]);
     } finally {
       setLoading(false);
     }
@@ -44,12 +59,26 @@ const EducationInfo = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccessMessage("");
     try {
       const token = await getAccessTokenSilently();
+
+      // Format the data for submission
+      const formattedData = education.map((edu) => ({
+        _id: edu._id, // Include _id if it exists
+        Institute: edu.institution,
+        Degree: edu.degree,
+        Major: edu.field,
+        Start_Date: edu.startDate,
+        End_Date: edu.endDate,
+      }));
+
+      console.log("Submitting education data:", formattedData);
       const response = await axios.post(
         "/api/education",
         {
-          education: education,
+          education: formattedData,
         },
         {
           headers: {
@@ -58,100 +87,185 @@ const EducationInfo = () => {
         }
       );
       console.log("Save response:", response.data);
+      setSuccessMessage("Education information saved successfully!");
+
+      // Update the local state with the response data if available
       if (response.data && response.data.education) {
-        setEducation(response.data.education);
+        const updatedEducation = response.data.education.map((edu) => ({
+          _id: edu._id,
+          institution: edu.Institute || edu.institution,
+          degree: edu.Degree || edu.degree,
+          field: edu.Major || edu.field,
+          startDate: edu.Start_Date || edu.startDate,
+          endDate: edu.End_Date || edu.endDate,
+        }));
+        setEducation(updatedEducation);
+      } else {
+        // Refresh education data if response doesn't include it
+        await fetchEducationInfo();
       }
-      // Refresh the education information
-      fetchEducationInfo();
     } catch (error) {
       console.error("Failed to save education information:", error);
-      setError("Failed to save education information");
+      setError(
+        "Failed to save education information: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+        <NavBar />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
       <NavBar />
-      {error && <Alert severity="error">{error}</Alert>}
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          Education Information
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          {education.map((edu, index) => (
-            <Box key={index} sx={{ mb: 3, p: 2, border: "1px solid #ddd" }}>
-              <TextField
-                fullWidth
-                label="Institution"
-                value={edu.institution || ""}
-                onChange={(e) => {
-                  const newEducation = [...education];
-                  newEducation[index].institution = e.target.value;
-                  setEducation(newEducation);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Degree"
-                value={edu.degree || ""}
-                onChange={(e) => {
-                  const newEducation = [...education];
-                  newEducation[index].degree = e.target.value;
-                  setEducation(newEducation);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Field of Study"
-                value={edu.field || ""}
-                onChange={(e) => {
-                  const newEducation = [...education];
-                  newEducation[index].field = e.target.value;
-                  setEducation(newEducation);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Start Date"
-                value={edu.startDate || ""}
-                onChange={(e) => {
-                  const newEducation = [...education];
-                  newEducation[index].startDate = e.target.value;
-                  setEducation(newEducation);
-                }}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="End Date"
-                value={edu.endDate || ""}
-                onChange={(e) => {
-                  const newEducation = [...education];
-                  newEducation[index].endDate = e.target.value;
-                  setEducation(newEducation);
-                }}
-                margin="normal"
-              />
+      <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {successMessage && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {successMessage}
+          </Alert>
+        )}
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Education Information
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            {education.map((edu, index) => (
+              <Box
+                key={index}
+                sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
+              >
+                <TextField
+                  fullWidth
+                  label="Institution"
+                  value={edu.institution || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      institution: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., University of California, Berkeley"
+                />
+                <TextField
+                  fullWidth
+                  label="Degree"
+                  value={edu.degree || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      degree: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., Bachelor of Science"
+                />
+                <TextField
+                  fullWidth
+                  label="Field of Study"
+                  value={edu.field || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      field: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., Computer Science"
+                />
+                <TextField
+                  fullWidth
+                  label="Start Date"
+                  value={edu.startDate || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      startDate: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., Sep 2018"
+                />
+                <TextField
+                  fullWidth
+                  label="End Date"
+                  value={edu.endDate || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      endDate: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., May 2022"
+                />
+                {education.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => {
+                      const newEducation = education.filter(
+                        (_, i) => i !== index
+                      );
+                      setEducation(newEducation);
+                    }}
+                    sx={{ mt: 1 }}
+                  >
+                    Remove Education
+                  </Button>
+                )}
+              </Box>
+            ))}
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={() => setEducation([...education, {}])}
+              >
+                Add Another Education
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                Save Education
+              </Button>
             </Box>
-          ))}
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={() => setEducation([...education, {}])}
-            sx={{ mr: 2 }}
-          >
-            Add Education
-          </Button>
-          <Button type="submit" variant="contained" color="primary">
-            Save Education
-          </Button>
-        </form>
-      </Paper>
+          </form>
+        </Paper>
+      </Box>
     </Box>
   );
 };
