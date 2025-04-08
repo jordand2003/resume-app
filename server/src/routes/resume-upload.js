@@ -36,9 +36,13 @@ router.post(
   async (req, res) => {
     try {
       console.log("Upload request received:", {
-        file: req.file,
-        body: req.body,
-        headers: req.headers,
+        file: req.file
+          ? {
+              originalname: req.file.originalname,
+              mimetype: req.file.mimetype,
+              size: req.file.size,
+            }
+          : null,
         userId: req.userId,
       });
 
@@ -66,7 +70,12 @@ router.post(
 
       // Process the resume file
       const result = await resumeUpload(req.file);
-      console.log("Resume processing result:", result);
+      console.log("Resume processing result:", {
+        hasData: !!result,
+        hasParsedData: result?.parsedData ? true : false,
+        hasRawText: result?.rawText ? true : false,
+        parsedData: result?.parsedData,
+      });
 
       if (!result || !result.parsedData || !result.rawText) {
         console.log("No result from resume processing");
