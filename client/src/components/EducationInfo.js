@@ -9,7 +9,7 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
-
+import NavBar from "./NavBar";
 const EducationInfo = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [education, setEducation] = useState([]);
@@ -28,10 +28,14 @@ const EducationInfo = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setEducation(response.data.education || []);
-      setLoading(false);
+      if (response.data && response.data.educationHistory) {
+        setEducation(response.data.educationHistory || []);
+      } else {
+        setEducation([]); 
+      }
     } catch (error) {
-      setError("Failed to fetch education information");
+      setError("Failed to fetch career history");
+    } finally {
       setLoading(false);
     }
   };
@@ -59,10 +63,11 @@ const EducationInfo = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
 
   return (
-    <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, p: 3 }}>
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <NavBar />
+      {error && <Alert severity="error">{error}</Alert>}
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Education Information
@@ -73,7 +78,7 @@ const EducationInfo = () => {
               <TextField
                 fullWidth
                 label="Institution"
-                value={edu.institution}
+                value={edu.institution || ""}
                 onChange={(e) => {
                   const newEducation = [...education];
                   newEducation[index].institution = e.target.value;
@@ -84,7 +89,7 @@ const EducationInfo = () => {
               <TextField
                 fullWidth
                 label="Degree"
-                value={edu.degree}
+                value={edu.degree || ""}
                 onChange={(e) => {
                   const newEducation = [...education];
                   newEducation[index].degree = e.target.value;
@@ -95,7 +100,7 @@ const EducationInfo = () => {
               <TextField
                 fullWidth
                 label="Field of Study"
-                value={edu.field}
+                value={edu.field || ""}
                 onChange={(e) => {
                   const newEducation = [...education];
                   newEducation[index].field = e.target.value;
@@ -106,7 +111,7 @@ const EducationInfo = () => {
               <TextField
                 fullWidth
                 label="Start Date"
-                value={edu.startDate}
+                value={edu.startDate || ""}
                 onChange={(e) => {
                   const newEducation = [...education];
                   newEducation[index].startDate = e.target.value;
@@ -117,7 +122,7 @@ const EducationInfo = () => {
               <TextField
                 fullWidth
                 label="End Date"
-                value={edu.endDate}
+                value={edu.endDate || ""}
                 onChange={(e) => {
                   const newEducation = [...education];
                   newEducation[index].endDate = e.target.value;
