@@ -28,13 +28,15 @@ const EducationInfo = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.data && response.data.educationHistory) {
-        setEducation(response.data.educationHistory || []);
+      console.log("Education response:", response.data);
+      if (response.data && response.data.education) {
+        setEducation(response.data.education || []);
       } else {
-        setEducation([]); 
+        setEducation([]);
       }
     } catch (error) {
-      setError("Failed to fetch career history");
+      console.error("Failed to fetch education history:", error);
+      setError("Failed to fetch education history");
     } finally {
       setLoading(false);
     }
@@ -44,7 +46,7 @@ const EducationInfo = () => {
     e.preventDefault();
     try {
       const token = await getAccessTokenSilently();
-      await axios.post(
+      const response = await axios.post(
         "/api/education",
         {
           education: education,
@@ -55,9 +57,14 @@ const EducationInfo = () => {
           },
         }
       );
+      console.log("Save response:", response.data);
+      if (response.data && response.data.education) {
+        setEducation(response.data.education);
+      }
       // Refresh the education information
       fetchEducationInfo();
     } catch (error) {
+      console.error("Failed to save education information:", error);
       setError("Failed to save education information");
     }
   };
