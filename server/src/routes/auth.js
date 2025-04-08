@@ -2,12 +2,59 @@ const express = require("express");
 const router = express.Router();
 const { ManagementClient } = require("auth0");
 const jwt = require("jsonwebtoken");
+const User = require("../models/Users");
 
 // Initialize Auth0 Management API client
 const management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_CLIENT_ID,
   clientSecret: process.env.AUTH0_CLIENT_SECRET,
+});
+
+// Get user by ID
+router.get("/users/:userId", async (req, res) => {
+  try {
+    const user = await User.findOne({ user_id: req.params.userId });
+    console.log("Get user result:", user); // Add this line
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Error fetching user" });
+  }
+});
+
+router.get("/users/e2", async (req, res) => {
+  res.json("lol")
+});
+
+
+// Create new user
+router.post("/users", async (req, res) => {
+  try {
+    const { user_id, email, name } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ user_id });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    // Create new user
+    const newUser = new User({
+      user_id,
+      email,
+      name
+    });
+
+    await newUser.save();
+    res.status(201).json(newUser);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Error creating user" });
+  }
 });
 
 // Register endpoint

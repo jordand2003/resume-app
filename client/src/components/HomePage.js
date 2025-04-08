@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
@@ -15,11 +15,69 @@ import ResumeUpload from "./ResumeUpload";
 import Dashboard from "./Dashboard";
 
 const HomePage = () => {
+  //console.log("Homepage mounted");
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const [currentTab, setCurrentTab] = useState(0);
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
 
-  if (isLoading) {
+  const memoizedGetAccessTokenSilently = useCallback(getAccessTokenSilently, []);
+
+  // Only include user properties that are actually used in the effect
+  const userSub = user?.sub;
+
+  React.useEffect(() => {
+    const checkAndCreateUser = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const accessToken = await memoizedGetAccessTokenSilently();
+          
+          // First, check if user exists
+          const checkResponse = await fetch(`http://localhost:8000/api/auth/users/${user.sub}`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const textResponse = await checkResponse.text();
+          //console.log('Raw response text:', textResponse);
+          //console.log(user.sub)
+
+          // User doesn't exist, create them
+          //console.log(checkResponse.status)
+          if (checkResponse.status === 404) {
+            const createResponse = await fetch('http://localhost:8000/api/auth/users', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                user_id: user.sub,
+                email: user.email,
+                name: user.name,
+              }),
+            });
+
+            if (!createResponse.ok) {
+              console.error('Failed to create user in database');
+            }
+          } else if (!checkResponse.ok) {
+            console.error('Error checking user existence');
+          }
+        } catch (error) {
+          console.error('Error during user check/creation:', error);
+        } finally {
+          setIsCheckingUser(false);
+        }
+      }
+    };
+
+    checkAndCreateUser();
+  }, [isAuthenticated, userSub, memoizedGetAccessTokenSilently, user]);
+
+  if (isLoading || isCheckingUser) {
     return (
       <Box
         display="flex"
