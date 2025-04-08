@@ -49,7 +49,7 @@ const ResumeUpload = () => {
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await axios.post("/api/resume/upload", formData, {
+      const response = await axios.post("/api/resume/file/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
