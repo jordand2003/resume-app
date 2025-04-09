@@ -35,7 +35,7 @@ const Dashboard = () => {
       const token = await getAccessTokenSilently();
 
       // Fetch career history
-      const careerResponse = await axios.get("/api/career-history/history", {
+      const careerResponse = await axios.get("http://localhost:8000/api/career-history/history", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
@@ -45,7 +45,7 @@ const Dashboard = () => {
       setCareerHistory(careerResponse.data.data || []);
 
       // Fetch education
-      const educationResponse = await axios.get("/api/education", {
+      const educationResponse = await axios.get("http://localhost:8000/api/education", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
@@ -193,6 +193,8 @@ const Dashboard = () => {
                       </Typography>
                       <br />
                       {edu.Major || edu.field}
+                      <br />
+                      {"GPA:"} {edu.GPA || edu.gpa}
                       <br />
                       {edu.Start_Date || edu.startDate} -{" "}
                       {edu.End_Date || edu.endDate}

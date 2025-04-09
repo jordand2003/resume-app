@@ -26,7 +26,7 @@ const CareerHistory = () => {
   const fetchCareerHistory = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("/api/career-history/history", {
+      const response = await axios.get("http://localhost:8000/api/career-history/history", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -78,7 +78,7 @@ const CareerHistory = () => {
 
       console.log("Submitting career history:", formattedData);
       const response = await axios.post(
-        "/api/career-history/history",
+        "http://localhost:8000/api/career-history/history",
         {
           work_experience: formattedData, // Match the database field name
         },
@@ -238,7 +238,7 @@ const CareerHistory = () => {
                   required
                   placeholder="Enter job responsibilities and achievements"
                 />
-                {careerHistory.length > 1 && (
+                {
                   <Button
                     type="button"
                     variant="outlined"
@@ -253,7 +253,7 @@ const CareerHistory = () => {
                   >
                     Remove Job
                   </Button>
-                )}
+                }
               </Box>
             ))}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>

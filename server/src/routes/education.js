@@ -103,6 +103,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
       Institute: edu.Institute || edu.institution,
       Degree: edu.Degree || edu.degree,
       Major: edu.Major || edu.field,
+      GPA: edu.gpa || edu.GPA,
       Start_Date: edu.Start_Date || edu.startDate,
       End_Date: edu.End_Date || edu.endDate,
     }));

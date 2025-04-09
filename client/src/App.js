@@ -11,7 +11,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Auth0ProviderWithHistory from "./components/Auth0ProviderWithHistory";
 import LandingPage from "./components/LandingPage";
 import HomePage from "./components/HomePage";
-import ResumeUpload from "./components/ResumeUpload";
+import ResumeUploadPage from "./components/ResumeUploadPage";
 import CareerHistory from "./components/CareerHistory";
 import EducationInfo from "./components/EducationInfo";
 
@@ -161,7 +161,7 @@ const AppRoutes = () => {
         path="/resume-upload"
         element={
           <ProtectedRoute>
-            <ResumeUpload />
+            <ResumeUploadPage />
           </ProtectedRoute>
         }
       />

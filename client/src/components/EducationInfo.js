@@ -26,7 +26,7 @@ const EducationInfo = () => {
   const fetchEducationInfo = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("/api/education", {
+      const response = await axios.get("http://localhost:8000/api/education", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -39,6 +39,7 @@ const EducationInfo = () => {
           institution: edu.Institute || edu.institution,
           degree: edu.Degree || edu.degree,
           field: edu.Major || edu.field,
+          gpa: edu.GPA || edu.gpa,
           startDate: edu.Start_Date || edu.startDate,
           endDate: edu.End_Date || edu.endDate,
         }));
@@ -63,20 +64,20 @@ const EducationInfo = () => {
     setSuccessMessage("");
     try {
       const token = await getAccessTokenSilently();
-
       // Format the data to match the database schema
       const formattedData = education.map((edu) => ({
         _id: edu._id, // Preserve _id for existing entries
         Institute: edu.institution,
         Degree: edu.degree,
         Major: edu.field,
+        gpa: edu.gpa,
         Start_Date: edu.startDate,
         End_Date: edu.endDate,
       }));
 
       console.log("Submitting education data:", formattedData);
       const response = await axios.post(
-        "/api/education",
+        "http://localhost:8000/api/education",
         {
           education: formattedData,
         },
@@ -97,6 +98,7 @@ const EducationInfo = () => {
           institution: edu.Institute,
           degree: edu.Degree,
           field: edu.Major,
+          gpa: edu.GPA,
           startDate: edu.Start_Date,
           endDate: edu.End_Date,
         }));
@@ -204,6 +206,22 @@ const EducationInfo = () => {
                 />
                 <TextField
                   fullWidth
+                  label="GPA"
+                  value={edu.gpa || ""}
+                  onChange={(e) => {
+                    const newEducation = [...education];
+                    newEducation[index] = {
+                      ...newEducation[index],
+                      gpa: e.target.value,
+                    };
+                    setEducation(newEducation);
+                  }}
+                  margin="normal"
+                  required
+                  placeholder="e.g., 4.0"
+                />
+                <TextField
+                  fullWidth
                   label="Start Date"
                   value={edu.startDate || ""}
                   onChange={(e) => {
@@ -234,7 +252,7 @@ const EducationInfo = () => {
                   required
                   placeholder="e.g., May 2022"
                 />
-                {education.length > 1 && (
+                {
                   <Button
                     type="button"
                     variant="outlined"
@@ -249,7 +267,7 @@ const EducationInfo = () => {
                   >
                     Remove Education
                   </Button>
-                )}
+                }
               </Box>
             ))}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>

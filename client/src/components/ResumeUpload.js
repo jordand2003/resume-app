@@ -11,6 +11,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
+
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [file, setFile] = useState(null);
@@ -49,7 +50,7 @@ const ResumeUpload = () => {
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await axios.post("/api/resume/upload", formData, {
+      const response = await axios.post("http://localhost:8000/api/resume/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
