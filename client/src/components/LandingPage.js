@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
 import ParticlesBackground from "./ParticlesBackground";
+import { Link } from 'react-router-dom';
 import Logo from "./Logo";
 
 const fadeIn = keyframes`
@@ -170,9 +171,10 @@ const LogoContainer = styled(Box)({
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { loginWithRedirect, isAuthenticated, isLoading, user } = useAuth0();
+  const { loginWithRedirect, isAuthenticated, isLoading, user, logout } = useAuth0();
 
   React.useEffect(() => {
+    // If user hasn't been logouted & they still require verification, this runs
     const checkEmailVerification = async () => {
       if (isAuthenticated && user) {
         if (!user.email_verified) {
@@ -214,6 +216,12 @@ const LandingPage = () => {
     );
   }
 
+  // Function to sign out
+  const handleSignOut = () => {
+    logout({ returnTo: window.location.origin });
+  };
+
+  // If user hasn't been logouted & they still require verification, this runs
   if (isAuthenticated && !user?.email_verified) {
     return (
       <BackgroundContainer>
@@ -254,15 +262,13 @@ const LandingPage = () => {
                 >
                   Check Verification Status
                 </StyledButton>
-                <StyledButton
-                  variant="outlined"
-                  onClick={() => {
-                    window.location.href = "/";
-                  }}
-                >
-                  Try Different Email
-                </StyledButton>
               </ButtonContainer>
+                <StyledButton
+                  color="primary"
+                  onClick={handleSignOut}
+                >
+                  Home Page
+                </StyledButton>
             </StyledPaper>
           </ContentSection>
         </Container>
@@ -324,7 +330,7 @@ const LandingPage = () => {
             <StyledButton variant="outlined" onClick={handleSignIn}>
               Sign In
             </StyledButton>
-            <StyledButton variant="contained" onClick={handleRegister}>
+            <StyledButton variant="contained" /*onClick={handleRegister}*/ component={Link} to="/register">
               Register
             </StyledButton>
           </AuthButtonsContainer>

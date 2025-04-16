@@ -14,6 +14,7 @@ import HomePage from "./components/HomePage";
 import ResumeUploadPage from "./components/ResumeUploadPage";
 import CareerHistory from "./components/CareerHistory";
 import EducationInfo from "./components/EducationInfo";
+import Register from "./components/Register";
 
 const theme = createTheme({
   palette: {
@@ -180,6 +181,12 @@ const AppRoutes = () => {
             <EducationInfo />
           </ProtectedRoute>
         }
+      />
+      <Route 
+        path="/register" 
+        element={
+          <Register />
+        } 
       />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

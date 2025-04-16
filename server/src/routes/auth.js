@@ -14,11 +14,13 @@ const management = new ManagementClient({
 // Get user by ID
 router.get("/users/:userId", async (req, res) => {
   try {
+    console.log("lol")
     const user = await User.findOne({ user_id: req.params.userId });
-    console.log("Get user result:", user); // Add this line
+    console.log("lol")
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    console.log("Get user result:", user); // Add this line
     res.json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -26,12 +28,7 @@ router.get("/users/:userId", async (req, res) => {
   }
 });
 
-router.get("/users/e2", async (req, res) => {
-  res.json("lol")
-});
-
-
-// Create new user
+// Create new user in mongoDB
 router.post("/users", async (req, res) => {
   try {
     const { user_id, email, name } = req.body;

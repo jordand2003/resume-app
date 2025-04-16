@@ -15,24 +15,27 @@ import ResumeUpload from "./ResumeUpload";
 import Dashboard from "./Dashboard";
 
 const HomePage = () => {
-  //console.log("Homepage mounted");
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const [currentTab, setCurrentTab] = useState(0);
   const [isCheckingUser, setIsCheckingUser] = useState(true);
 
+  // Effect Hook: Adds user_id into DB for brand new users
   const memoizedGetAccessTokenSilently = useCallback(getAccessTokenSilently, []);
-
-  // Only include user properties that are actually used in the effect
   const userSub = user?.sub;
-
   React.useEffect(() => {
     const checkAndCreateUser = async () => {
       if (isAuthenticated && user) {
+
+        // Check if email has been verified, if not return to home
+        if (!user.email_verified) {
+          alert("Oops. It seems you haven't verified your email yet. Please check your inbox.")
+          navigate("/");
+        }
+
+        // Next, check if user exists in DB
         try {
           const accessToken = await memoizedGetAccessTokenSilently();
-          
-          // First, check if user exists
           const checkResponse = await fetch(`http://localhost:8000/api/auth/users/${user.sub}`, {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
@@ -40,12 +43,7 @@ const HomePage = () => {
             }
           });
 
-          const textResponse = await checkResponse.text();
-          //console.log('Raw response text:', textResponse);
-          //console.log(user.sub)
-
           // User doesn't exist, create them
-          //console.log(checkResponse.status)
           if (checkResponse.status === 404) {
             const createResponse = await fetch('http://localhost:8000/api/auth/users', {
               method: 'POST',
@@ -74,8 +72,11 @@ const HomePage = () => {
       }
     };
 
+    // Only run if authenticated AND not loading
+  if (isAuthenticated && !isLoading) {
     checkAndCreateUser();
-  }, [isAuthenticated, userSub, memoizedGetAccessTokenSilently, user]);
+  }
+  }, [isAuthenticated, userSub, memoizedGetAccessTokenSilently, user, isLoading]);
 
   if (isLoading || isCheckingUser) {
     return (

@@ -197,6 +197,9 @@ const CareerHistory = () => {
                     newCareerHistory[index] = {
                       ...newCareerHistory[index],
                       startDate: e.target.value,
+
+                      // Do string validation
+                      
                     };
                     setCareerHistory(newCareerHistory);
                   }}
@@ -224,7 +227,7 @@ const CareerHistory = () => {
                   fullWidth
                   multiline
                   rows={4}
-                  label="Description"
+                  label="Key Responsibilities"
                   value={job.description || ""}
                   onChange={(e) => {
                     const newCareerHistory = [...careerHistory];
