@@ -14,9 +14,7 @@ const management = new ManagementClient({
 // Get user by ID
 router.get("/users/:userId", async (req, res) => {
   try {
-    console.log("lol")
     const user = await User.findOne({ user_id: req.params.userId });
-    console.log("lol")
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

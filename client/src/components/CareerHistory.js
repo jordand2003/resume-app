@@ -18,11 +18,16 @@ const CareerHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  
+  // State variables for validation
+  const [careerErrors, setCareerErrors] = useState([]);
+
 
   useEffect(() => {
     fetchCareerHistory();
   }, []);
 
+  // Get Career History from DB
   const fetchCareerHistory = async () => {
     try {
       const token = await getAccessTokenSilently();
@@ -33,9 +38,8 @@ const CareerHistory = () => {
       });
       console.log("Career history response:", response.data);
       if (response.data && response.data.data) {
-        // Map the data to match the form fields
         const formattedHistory = response.data.data.map((job) => ({
-          _id: job._id, // Preserve the _id if it exists
+          _id: job._id,
           company: job.Company || job.company,
           position: job.Job_Title || job.position || job["Job_Title(s)"],
           startDate: job.Start_Date || job.startDate,
@@ -45,30 +49,70 @@ const CareerHistory = () => {
             : job.description,
         }));
         setCareerHistory(formattedHistory);
+        setCareerErrors(new Array(formattedHistory.length).fill({}));
       } else {
-        // Initialize with an empty job entry if no data
         setCareerHistory([{}]);
+        setCareerErrors([{}]);
       }
     } catch (error) {
       console.error("Error fetching career history:", error);
       setError("Failed to fetch career history");
-      // Initialize with an empty job entry on error
       setCareerHistory([{}]);
+      setCareerErrors([{}]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Submit BUtton
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage("");
-    try {
-      const token = await getAccessTokenSilently();
 
-      // Format the data to match the database schema
+    let hasError = false;
+    const newErrors = [];
+
+    careerHistory.forEach((job, index) => {
+      const errors = {};
+
+      if (!job.company) {
+        errors.company = "Company name is required.";
+        hasError = true;
+      }
+
+      if (!job.position) {
+        errors.position = "Position is required.";
+        hasError = true;
+      }
+
+      if (!job.startDate) {
+        errors.startDate = "Start date is required.";
+        hasError = true;
+      } else if (!/^(?:(?:[A-Z][a-z]*|\d{1,2})\s)*\d{4}|[Pp]resent$/.test(job.startDate)) {
+        errors.startDate = "Invalid start date format. Use MM-YYYY or Month YYYY.";
+        hasError = true;
+      }
+
+      if (!job.endDate) {
+        errors.endDate = "End date is required.";
+        hasError = true;
+      } else if (!/^(?:(?:[A-Z][a-z]*|\d{1,2})\s)*\d{4}|[Pp]resent$/.test(job.endDate)) {
+        errors.endDate = "Invalid end date format. Must include YYYY or Present.";
+        hasError = true;
+      }
+
+      newErrors.push(errors);
+    });
+
+    setCareerErrors(newErrors);
+    if (hasError) return;
+
+    try {
+      // Prepare formattedData for the API
+      const token = await getAccessTokenSilently();
       const formattedData = careerHistory.map((job) => ({
-        _id: job._id, // Preserve _id for existing entries
+        _id: job._id,
         Job_Title: job.position,
         Company: job.company,
         Start_Date: job.startDate,
@@ -76,11 +120,12 @@ const CareerHistory = () => {
         Responsibilities: job.description ? job.description.split("\n") : [],
       }));
 
+      // Adding Career History into DB
       console.log("Submitting career history:", formattedData);
       const response = await axios.post(
         "http://localhost:8000/api/career-history/history",
         {
-          work_experience: formattedData, // Match the database field name
+          work_experience: formattedData,
         },
         {
           headers: {
@@ -91,9 +136,9 @@ const CareerHistory = () => {
       );
       console.log("Career history submission response:", response.data);
 
+      // Addition was successful
       if (response.data.status === "Success") {
         setSuccessMessage("Career history saved successfully!");
-        // Update local state to match the saved data format
         const updatedHistory = formattedData.map((job) => ({
           _id: job._id,
           company: job.Company,
@@ -105,16 +150,12 @@ const CareerHistory = () => {
             : job.Responsibilities,
         }));
         setCareerHistory(updatedHistory);
-      } else {
-        // If the save wasn't successful, refresh the data
+      } else {  // Addition was not successful
         await fetchCareerHistory();
       }
     } catch (error) {
       console.error("Error saving career history:", error);
-      setError(
-        "Failed to save career history: " +
-          (error.response?.data?.message || error.message)
-      );
+      setError("Failed to save career history: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -144,9 +185,34 @@ const CareerHistory = () => {
           </Alert>
         )}
         {successMessage && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {successMessage}
-          </Alert>
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 20,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 9999,
+              width: 'auto',
+              maxWidth: 600,
+            }}
+          >
+            <Alert
+              severity="success"
+              variant="filled"
+              onClose={() => setSuccessMessage("")}
+              sx={{ 
+                padding: '20px', 
+                minHeight: '20px',
+                animation: 'fadeIn 0.5s ease-in-out',
+                '@keyframes fadeIn': {
+                  from: { opacity: 0 },
+                  to: { opacity: 1 }
+                }
+              }}
+            >
+              {successMessage}
+            </Alert>
+          </Box>
         )}
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
@@ -171,6 +237,8 @@ const CareerHistory = () => {
                     setCareerHistory(newCareerHistory);
                   }}
                   margin="normal"
+                  error={!!careerErrors[index]?.company}
+                  helperText={careerErrors[index]?.company}
                   required
                 />
                 <TextField
@@ -186,6 +254,8 @@ const CareerHistory = () => {
                     setCareerHistory(newCareerHistory);
                   }}
                   margin="normal"
+                  error={!!careerErrors[index]?.position}
+                  helperText={careerErrors[index]?.position}
                   required
                 />
                 <TextField
@@ -197,13 +267,12 @@ const CareerHistory = () => {
                     newCareerHistory[index] = {
                       ...newCareerHistory[index],
                       startDate: e.target.value,
-
-                      // Do string validation
-                      
                     };
                     setCareerHistory(newCareerHistory);
                   }}
                   margin="normal"
+                  error={!!careerErrors[index]?.startDate}
+                  helperText={careerErrors[index]?.startDate}
                   required
                   placeholder="e.g., Jan 2020"
                 />
@@ -220,6 +289,8 @@ const CareerHistory = () => {
                     setCareerHistory(newCareerHistory);
                   }}
                   margin="normal"
+                  error={!!careerErrors[index]?.endDate}
+                  helperText={careerErrors[index]?.endDate}
                   required
                   placeholder="e.g., Present"
                 />
@@ -241,29 +312,31 @@ const CareerHistory = () => {
                   required
                   placeholder="Enter job responsibilities and achievements"
                 />
-                {
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      const newCareerHistory = careerHistory.filter(
-                        (_, i) => i !== index
-                      );
-                      setCareerHistory(newCareerHistory);
-                    }}
-                    sx={{ mt: 1 }}
-                  >
-                    Remove Job
-                  </Button>
-                }
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => {
+                    const newCareerHistory = careerHistory.filter(
+                      (_, i) => i !== index
+                    );
+                    setCareerHistory(newCareerHistory);
+                    setCareerErrors(newCareerHistory.map(() => ({})));
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  Remove Job
+                </Button>
               </Box>
             ))}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <Button
                 type="button"
                 variant="outlined"
-                onClick={() => setCareerHistory([...careerHistory, {}])}
+                onClick={() => {
+                  setCareerHistory([...careerHistory, {}]);
+                  setCareerErrors([...careerErrors, {}]);
+                }}
               >
                 Add Another Job
               </Button>

@@ -128,7 +128,7 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
     // Update work experience in parsedData
     resumeData.parsedData.work_experience = work_experience;
 
-    // Save the updated document
+    // Save the updated document in resumesData's 'parsedData' section in 'work_experience'
     await resumeData.save();
 
     console.log("Successfully processed all job entries");

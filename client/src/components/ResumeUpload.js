@@ -64,11 +64,20 @@ const ResumeUpload = () => {
         timeout: 60000, // 60 second timeout
       });
       console.log("Upload response:", response.data);
-      if (response.data && response.data.status === "Success") {
+      if (response.data && response.data.status.toLowerCase() === "success") {
         setUploadStatus("success");
         setFile(null);
         setUploadProgress(0);
-      } else {
+      } else if (response.data && (response.data.status.toLowerCase() === "updated")){
+        setUploadStatus("updated");
+        setFile(null);
+        setUploadProgress(0);
+      } 
+      else if (response.data && (response.data.status.toLowerCase() === 'merged')){
+        setUploadStatus("merged");
+        setFile(null);
+        setUploadProgress(0);
+      }else {
         throw new Error(response.data?.message || "Upload failed");
       }
     } catch (error) {
@@ -119,11 +128,20 @@ const ResumeUpload = () => {
           )}
         </Box>
 
-        {uploadStatus === "uploading" && (
+        {/*uploadStatus === "uploading" && (
           <Box sx={{ width: "100%", mb: 2 }}>
             <LinearProgress variant="determinate" value={uploadProgress} />
             <Typography variant="body2" color="text.secondary" align="center">
               {uploadProgress}%
+            </Typography>
+          </Box>
+        )*/}
+
+        {uploadStatus === "uploading" && (
+          <Box sx={{ width: "100%", mb: 2 }}>
+            <LinearProgress />
+            <Typography variant="body2" color="text.secondary" align="center">
+              Please wait a moment...
             </Typography>
           </Box>
         )}
@@ -134,9 +152,21 @@ const ResumeUpload = () => {
           </Alert>
         )}
 
+        {uploadStatus === "updated" && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            We've detected a similar entry has already been uploaded. Your history has been successfully updated.
+          </Alert>
+        )}
+
+        {uploadStatus === "merged" && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            We've detected a similar entry has already been uploaded. We've successfully merged them together!
+          </Alert>
+        )}
+
         {uploadStatus === "success" && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Resume uploaded successfully! Your career history has been updated.
+            Resume uploaded successfully! A new entry has been created, and your history has been saved.
           </Alert>
         )}
 

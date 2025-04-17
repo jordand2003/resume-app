@@ -527,6 +527,7 @@ async function saveStructuredData(content, userId) {
 
     if (existingDoc) {
       // Update existing document
+      console.log("Existing document found. Updating...")
       existingDoc.rawContent = content;
       existingDoc.parsedData = parsedData;
       existingDoc.keywords = existingDoc.extractKeywords();
@@ -585,3 +586,26 @@ module.exports = {
   saveStructuredData,
   ResumeData,
 };
+
+
+/*
+// Check for Duplicate Response; abort if found
+      try{
+        const entry = await resumedatas.findOne({ user_id: req.params.userId, rawContent: result.rawText });
+        if(entry){
+          console.log("Duplicate Entry Detected");
+          return res.status(500).json({
+            status: "Duplicate",
+            message: "Similar Resume has already been uploaded",
+          })
+        }
+      }
+      catch (error) {
+        console.error("Error occured during duplication check:", error);
+        return res.status(500).json({ 
+          status: "Failed",
+          message: "Error checking for duplication. Please Try again" 
+        });
+      }
+
+*/
