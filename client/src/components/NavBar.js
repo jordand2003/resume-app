@@ -24,6 +24,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
+import JobDescIcon from "@mui/icons-material/Book"
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -56,16 +57,16 @@ const NavBar = () => {
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
       <List>
-        {["/", "/resume-upload", "/career-history", "/education"].map(
+        {["/", "/resume-upload", "/career-history", "/education", "/job-desc"].map(
           (route, index) => (
             <ListItem key={route} disablePadding>
               <ListItemButton onClick={() => handleDrawerItemClick(route)}>
                 <ListItemIcon>
-                  {/* Add your icons here, e.g., for each item */}
                   {index === 0 && <HomeIcon />}
                   {index === 1 && <UploadFileIcon />}
                   {index === 2 && <WorkIcon />}
                   {index === 3 && <SchoolIcon />}
+                  {index === 4 && <JobDescIcon /> }
                 </ListItemIcon>
                 <ListItemText
                   primary={
@@ -75,7 +76,9 @@ const NavBar = () => {
                       ? "Upload Resume"
                       : index === 2
                       ? "Career History"
-                      : "Education"
+                      : index === 3
+                      ? "Education"
+                      : "Job Descriptions"
                   }
                 />
               </ListItemButton>
