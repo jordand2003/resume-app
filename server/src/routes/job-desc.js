@@ -57,11 +57,10 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
-    const jobDescription = req.body.job_description && req.body.job_description[0]
-    const { Job_Title, Company, Description } = jobDescription;
-    console.log("Req:", req);
+    const jobDescriptions = req.body.job_description;
+
     
-    if (!jobDescription || !Job_Title || !Company || !Description) {
+    if (!jobDescriptions) {
       console.log("Received data:", req.body)
       console.log("Missing fields for job listing");
       return res.status(400).json({
@@ -69,32 +68,69 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         message: "Fill all required fields before submitting",
       });
     }
-    const descriptionString = Array.isArray(Description) ? Description.join(" ") : Description;
+    const jobListings = [];
 
-    const jobDescData = new JobDesc({
-        userId,
-        company: Company,
-        job_title: Job_Title, 
-        description: descriptionString,
-        contentHash: require("crypto")
-          .createHash("sha256")
-          .update("initial")
-          .digest("hex"),
+    for (const job of jobDescriptions) {
+      const { Job_Title, Company, Description } = job;
+
+      if (!Job_Title || !Company || !Description) {
+        console.log("Skipping incomplete job entry:", job);
+        continue;
+      }
+
+      const descriptionString = Array.isArray(Description)
+        ? Description.join(" ")
+        : String(Description);
+
+      const existingJob = await JobDesc.findOne({
+          userId,
+          company: Company,
+          job_title: Job_Title,
       });
 
-    console.log(
-      "Saving education data:",
-      JSON.stringify(jobDescData, null, 2)
-    );
+      if (existingJob) {
+        // Checking for duplicate and updating existing entry
+        const updatedJob = await JobDesc.findOneAndUpdate(
+          { _id: existingJob._id }, 
+          {
+            $set: {
+              company: Company,
+              job_title: Job_Title,
+              description: descriptionString,
+            }
+          },
+          { new: true }
+        );
 
-    // Save the updated document
-    await jobDescData.save();
+        jobListings.push(updatedJob);
+      } else {
+      const jobDescData = new JobDesc({
+          userId,
+          company: Company,
+          job_title: Job_Title, 
+          description: descriptionString,
+          contentHash: require("crypto")
+            .createHash("sha256")
+            .update("initial")
+            .digest("hex"),
+        });
+
+      console.log(
+        "Saving education data:",
+        JSON.stringify(jobDescData, null, 2)
+      );
+      
+      // Save the updated document
+      const jobListing = await jobDescData.save();
+      jobListings.push(jobListing);
+    }
+  }
 
     console.log("Successfully job listing entries");
     res.json({
       status: "Success",
       message: "Job listing saved successfully",
-      data: jobDescData,
+      data: jobListings,
     });
   } catch (error) {
     console.error("Error saving job listing:", error);

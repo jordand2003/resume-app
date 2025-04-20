@@ -89,11 +89,11 @@ const JobDescription= () => {
       if (response.data.status === "Success") {
         setSuccessMessage("Job description saved successfully!");
         // Update local state to match the saved data format
-        const updatedHistory = formattedData.map((jobdesc) => ({
+        const updatedHistory = response.data.data.map((jobdesc) => ({
           _id: jobdesc._id,
-          company: jobdesc.Company,
-          job_title: jobdesc.Job_Title,
-          description: jobdesc.Description
+          company: jobdesc.company,
+          job_title: jobdesc.job_title,
+          description: jobdesc.description,
         }));
         setJobDescHistory(updatedHistory);
       } else {
