@@ -15,6 +15,7 @@ import ResumeUploadPage from "./components/ResumeUploadPage";
 import CareerHistory from "./components/CareerHistory";
 import EducationInfo from "./components/EducationInfo";
 import Register from "./components/Register";
+import StatusChecker from "./components/StatusChecker";
 
 const theme = createTheme({
   palette: {
@@ -189,6 +190,12 @@ const AppRoutes = () => {
         } 
       />
       <Route path="*" element={<Navigate to="/" />} />
+      <Route
+        path="/test"
+        element={
+          <StatusChecker />
+        }
+      />
     </Routes>
   );
 };
