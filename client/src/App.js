@@ -16,6 +16,7 @@ import CareerHistory from "./components/CareerHistory";
 import EducationInfo from "./components/EducationInfo";
 import Register from "./components/Register";
 import StatusChecker from "./components/StatusChecker";
+import JobDesc from "./components/JobDescriptions";
 
 const theme = createTheme({
   palette: {
@@ -180,6 +181,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <EducationInfo />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/job-desc"
+        element={
+          <ProtectedRoute>
+            <JobDesc />
           </ProtectedRoute>
         }
       />
