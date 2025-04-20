@@ -54,7 +54,8 @@ const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
 const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
-const jobDescRoutes = require("./routes/job-desc")
+const jobDescRoutes = require("./routes/job-desc");
+const resumeGenerationRoutes = require("./routes/resumeRoutes");
 
 // Routes
 app.get("/", (req, res) => {
@@ -75,6 +76,9 @@ app.use("/api/education", educationRoutes);
 
 // Job Description Routes
 app.use("/api/job-desc", jobDescRoutes);
+
+// Resume Generation Routes
+app.use("/api/resumes", resumeGenerationRoutes);
 
 // Protected route example
 app.get("/protected", checkJwt, (req, res) => {
