@@ -7,13 +7,6 @@ const mongoose = require("mongoose");
 router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
     try {
         // Checks if resumeId is undefined/not passed
-        console.log("Cookie checker");
-        let status = document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("status="))
-            ?.split("=")[1];
-        console.log(document.cookie);
-        console.log(status);
         if (!req.paramas.resumeId)
             return res.status(404).json({
                 status: "Failed",

@@ -11,7 +11,6 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
-
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [file, setFile] = useState(null);
@@ -77,7 +76,7 @@ const ResumeUpload = () => {
         setUploadStatus("merged");
         setFile(null);
         setUploadProgress(0);
-      }else {
+      } else {
         throw new Error(response.data?.message || "Upload failed");
       }
     } catch (error) {
