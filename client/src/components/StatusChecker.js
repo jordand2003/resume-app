@@ -5,87 +5,86 @@ import { Stack, CircularProgress, Typography, Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { green } from "@mui/material/colors";
 
-const StatusChecker = () => {
+const StatusChecker = ({ resumeId: propResumeId }) => {
   const { getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [failure, setFailure] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState("");
+  const [isActive, setIsActive] = React.useState(false);
 
-  // Check status only when there's an active generation
+  // Reset states when resumeId changes
   React.useEffect(() => {
-    const status = localStorage.getItem("status");
-    const resumeId = localStorage.getItem("resumeId");
-
-    // Only start checking if we have both a status and resumeId
-    if (status && resumeId) {
-      if (status === "COMPLETED") {
-        setSuccess(true);
-        setLoading(false);
-      } else if (status === "Processing") {
-        setLoading(true);
-        setSuccess(false);
-      } else if (status === "FAILED") {
-        setFailure(true);
-        setLoading(false);
-        setErrorMessage(localStorage.getItem("error") || "Generation failed");
-      }
+    if (propResumeId) {
+      setLoading(true);
+      setSuccess(false);
+      setFailure(false);
+      setErrorMessage("");
+      setIsActive(true);
+      localStorage.setItem("resumeId", propResumeId);
+      localStorage.setItem("status", "Processing");
     }
-
-    // Cleanup function to clear status on unmount
-    return () => {
-      localStorage.removeItem("status");
-      localStorage.removeItem("resumeId");
-      localStorage.removeItem("error");
-    };
-  }, []);
+  }, [propResumeId]);
 
   // Periodically check for status if processing
   React.useEffect(() => {
     let timer;
-    if (loading) {
-      timer = setTimeout(() => {
+    if (loading && isActive) {
+      updateStatus();
+      timer = setInterval(() => {
         updateStatus();
       }, 2000);
     }
-    return () => clearTimeout(timer);
-  }, [loading]);
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [loading, isActive]);
 
   async function updateStatus() {
-    let resumeId = localStorage.getItem("resumeId");
-    if (!resumeId) {
+    let currentResumeId = localStorage.getItem("resumeId");
+    if (!currentResumeId) {
       setFailure(true);
+      setLoading(false);
       setErrorMessage("No resume ID found");
+      setIsActive(false);
       return;
     }
 
     try {
       const token = await getAccessTokenSilently();
       const response = await axios.get(
-        `http://localhost:8000/api/resumes/status/${resumeId}`,
+        `http://localhost:8000/api/resumes/status/${currentResumeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       const data = response.data;
-      if (data.status !== localStorage.getItem("status")) {
-        localStorage.setItem("status", data.status);
-        if (data.status === "COMPLETED") {
-          setSuccess(true);
-          setLoading(false);
-        } else if (data.status === "FAILED") {
-          setFailure(true);
-          setLoading(false);
-          setErrorMessage(data.message || "Generation failed");
-        }
+      localStorage.setItem("status", data.status);
+
+      if (data.status === "COMPLETED") {
+        setSuccess(true);
+        setLoading(false);
+        setIsActive(false); // Stop checking once completed
+      } else if (data.status === "FAILED") {
+        setFailure(true);
+        setLoading(false);
+        setIsActive(false); // Stop checking on failure
+        setErrorMessage(data.message || "Generation failed");
       }
     } catch (error) {
       console.error("Status check error:", error);
       setLoading(false);
       setFailure(true);
       setErrorMessage(error.response?.data?.message || error.message);
+      setIsActive(false);
     }
+  }
+
+  if (!isActive && !loading && !success && !failure) {
+    return null;
   }
 
   return (
@@ -95,6 +94,7 @@ const StatusChecker = () => {
         marginLeft: "auto",
         marginRight: "auto",
         alignItems: "center",
+        mt: 2,
       }}
       spacing={2}
     >

@@ -186,7 +186,7 @@ const ResumeGeneration = () => {
                 Generate Resume
               </Button>
 
-              <StatusChecker></StatusChecker>
+              <StatusChecker resumeId={resumeId} />
 
               {generationStatus === "success" && generatedMessage && (
                 <Alert severity="info" sx={{ mt: 2 }}>
