@@ -56,7 +56,7 @@ const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const statusRoutes = require("./routes/resumeStatus");
 const jobDescRoutes = require("./routes/job-desc");
-const resumeGenerationRoutes = require("./routes/resumeRoutes");
+const resumeRoutes = require("./routes/resumeRoutes");
 // Routes
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Job Seeker API" });
@@ -81,7 +81,7 @@ app.use("/api/resumes/status", statusRoutes);
 app.use("/api/job-desc", jobDescRoutes);
 
 // Resume Generation Routes
-app.use("/api/resumes", resumeGenerationRoutes);
+app.use("/api/resumes", resumeRoutes);
 
 // Protected route example
 app.get("/protected", checkJwt, (req, res) => {
