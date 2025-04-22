@@ -54,7 +54,7 @@ const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
 const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
-const statusRoutes = require("./routes/resumeStatus");
+const statusRoutes = require("./routes/ResumeStatus");
 const jobDescRoutes = require("./routes/job-desc");
 const resumeRoutes = require("./routes/resumeRoutes");
 // Routes

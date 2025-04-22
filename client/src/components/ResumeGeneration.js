@@ -56,7 +56,7 @@ const ResumeGeneration = () => {
             setGenerationStatus("idle");
         } 
         catch (error) {
-            console.error("Error fetching jobs:", error);
+            console.error("Error fetching jobs: ", error);
             setErrorMessage(
                 error.response?.data?.message ||
                     error.message ||
