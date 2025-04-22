@@ -3,7 +3,6 @@ const router = express.Router();
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const mongoose = require("mongoose");
 const ResumeSchema = require("../models/Resume");
-const Resume = require("../models/Resume");
 
 router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
     try {

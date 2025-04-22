@@ -58,7 +58,7 @@ const StatusChecker = ({ resumeId: propResumeId }) => {
       const response = await axios.get(
         `http://localhost:8000/api/resumes/status/${currentResumeId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },    
         }
       );
 
