@@ -12,7 +12,7 @@ const ResumeSchema = new mongoose.Schema({
   },
   content: {
     type: Object,
-    required: true,
+    //required: true,
   },
   status: {
     type: String,

@@ -22,8 +22,9 @@ router.post("/generate", verifyJWT, extractUserId, async (req, res) => {
       });
     }
 
+    //console.log("joe mama")
     const result = await ResumeService.generateResume(jobId, req.userId);
-
+    
     res.status(202).json({
       message: "Resume generation started",
       resumeId: result.resumeId,

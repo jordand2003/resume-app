@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { ResumeData } = require("../services/structuredDataService");
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 class ResumeService {
   static async generateResume(_id, userId) {
@@ -14,6 +14,7 @@ class ResumeService {
       resume = new Resume({
         job_id: _id, // Just store the MongoDB _id
         status: "PENDING",
+        //content: null,
       });
       await resume.save();
 
@@ -32,13 +33,13 @@ class ResumeService {
       // Construct AI prompt
       const prompt = this.constructAIPrompt(jobDesc, careerHistory);
 
-      // Call Gemini API
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      // Something funky going on here
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const generatedContent = JSON.parse(response.text());
+      const generatedContent = JSON.parse(cleanJsonResponse(response.text()));
 
-      // Update resume with generated content
+      // Update resume
       resume.content = generatedContent;
       resume.status = "COMPLETED";
       await resume.save();
@@ -110,6 +111,20 @@ Return ONLY a JSON object with exactly the following structure, with no addition
 
     // Return the work experience from the parsed data
     return resumeData.parsedData?.work_experience || [];
+  }
+}
+
+function cleanJsonResponse(responseText) {
+  if (responseText.startsWith("```json") && responseText.endsWith("```")) {
+    // Extract the JSON string and trim any leading/trailing whitespace
+    const jsonString = responseText
+      .substring(7, responseText.length - 3)
+      .trim();
+    console.log(jsonString)
+    return jsonString;
+  } else {
+    // If no delimiters, return the original string
+    return responseText;
   }
 }
 
