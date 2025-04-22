@@ -19,6 +19,12 @@ const ResumeSchema = new mongoose.Schema(
     content: {
       type: Object,
     },
+    careerHistory: {
+      type: Object,
+    },
+    eduHistory:{
+      type: Object,
+    },
     status: {
       type: String,
       enum: ["PENDING", "COMPLETED", "FAILED"],
