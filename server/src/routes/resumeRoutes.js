@@ -22,9 +22,8 @@ router.post("/generate", verifyJWT, extractUserId, async (req, res) => {
       });
     }
 
-    //console.log("joe mama")
     const result = await ResumeService.generateResume(jobId, req.userId);
-    
+
     res.status(202).json({
       message: "Resume generation started",
       resumeId: result.resumeId,
@@ -51,6 +50,20 @@ router.get("/status/:resumeId", verifyJWT, extractUserId, async (req, res) => {
     res.status(error.message === "Resume not found" ? 404 : 500).json({
       error: error.message,
     });
+  }
+});
+
+// Get all resumes for a user
+router.get("/", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const resumes = await ResumeService.getResumesForUser(userId);
+    res.json({ success: true, data: resumes });
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch resumes" });
   }
 });
 

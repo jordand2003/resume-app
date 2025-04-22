@@ -24,8 +24,8 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
-import JobDescIcon from "@mui/icons-material/Book"
-import GenResumeIcon from "@mui/icons-material/AutoFixNormal"
+import JobDescIcon from "@mui/icons-material/Book";
+import GenResumeIcon from "@mui/icons-material/AutoFixNormal";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -46,6 +46,11 @@ const NavBar = () => {
     logout({ returnTo: window.location.origin });
   };
 
+  const handleMenuClick = (route) => {
+    handleClose();
+    navigate(route);
+  };
+
   const toggleDrawer = (newOpen) => () => {
     setDrawerOpen(newOpen);
   };
@@ -58,38 +63,46 @@ const NavBar = () => {
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
       <List>
-        {["/", "/resume-upload", "/career-history", "/education", "/job-desc", "/resumeRoutes"].map(
-          (route, index) => (
-            <ListItem key={route} disablePadding>
-              <ListItemButton onClick={() => handleDrawerItemClick(route)}>
-                <ListItemIcon>
-                  {index === 0 && <HomeIcon />}
-                  {index === 1 && <UploadFileIcon />}
-                  {index === 2 && <WorkIcon />}
-                  {index === 3 && <SchoolIcon />}
-                  {index === 4 && <JobDescIcon /> }
-                  {index === 5 && <GenResumeIcon /> } 
-
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    index === 0
-                      ? "Home"
-                      : index === 1
-                      ? "Upload Resume"
-                      : index === 2
-                      ? "Career History"
-                      : index === 3
-                      ? "Education"
-                      : index === 4
-                      ? "Job Descriptions"
-                      : "Generate Resume"
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-          )
-        )}
+        {[
+          "/home",
+          "/resume-upload",
+          "/career-history",
+          "/education",
+          "/job-desc",
+          "/resume-generation",
+          "/my-resumes",
+        ].map((route, index) => (
+          <ListItem key={route} disablePadding>
+            <ListItemButton onClick={() => handleDrawerItemClick(route)}>
+              <ListItemIcon>
+                {index === 0 && <HomeIcon />}
+                {index === 1 && <UploadFileIcon />}
+                {index === 2 && <WorkIcon />}
+                {index === 3 && <SchoolIcon />}
+                {index === 4 && <JobDescIcon />}
+                {index === 5 && <GenResumeIcon />}
+                {index === 6 && <GenResumeIcon />}
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  index === 0
+                    ? "Home"
+                    : index === 1
+                    ? "Upload Resume"
+                    : index === 2
+                    ? "Career History"
+                    : index === 3
+                    ? "Education"
+                    : index === 4
+                    ? "Job Descriptions"
+                    : index === 5
+                    ? "Generate Resume"
+                    : "My Resumes"
+                }
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
       </List>
     </Box>
   );
@@ -156,6 +169,12 @@ const NavBar = () => {
               >
                 <MenuItem onClick={handleClose}>
                   {user?.name || user?.email}
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
+                  Resume Generation
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuClick("/my-resumes")}>
+                  My Resumes
                 </MenuItem>
               </Menu>
             </>

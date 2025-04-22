@@ -12,7 +12,8 @@ class ResumeService {
     try {
       // Create a new resume entry with PENDING status
       resume = new Resume({
-        job_id: _id, // Just store the MongoDB _id
+        jobId: _id,
+        userId: userId,
         status: "PENDING",
       });
       await resume.save();
@@ -43,11 +44,11 @@ class ResumeService {
       }
 
       const generatedText = cleanJsonResponse(response.text());
-      console.log("Generated text: ", generatedText)
+      console.log("Generated text: ", generatedText);
 
       // Update resume with generated content
       try {
-        const generatedContent = JSON.parse(generatedText); 
+        const generatedContent = JSON.parse(generatedText);
         resume.content = generatedContent;
         resume.status = "COMPLETED";
         await resume.save();
@@ -55,14 +56,12 @@ class ResumeService {
           resumeId: resume._id,
           status: "COMPLETED",
         };
-      } 
-      catch (error) {
-          resume.status = "FAILED";
-          await resume.save();
-          throw new Error("Could not parse Gemini response.");
+      } catch (error) {
+        resume.status = "FAILED";
+        await resume.save();
+        throw new Error("Could not parse Gemini response.");
       }
-    }
-    catch (error) {
+    } catch (error) {
       // If resume was created, update its status to FAILED
       if (resume) {
         resume.status = "FAILED";
@@ -126,6 +125,27 @@ Return ONLY a JSON object with exactly the following structure, with no addition
     // Return the work experience from the parsed data
     return resumeData.parsedData?.work_experience || [];
   }
+
+  static async getResumesForUser(userId) {
+    try {
+      const resumes = await Resume.find({ userId })
+        .sort({ createdAt: -1 }) // Sort by newest first
+        .populate("jobId", "company job_title"); // Get job details
+
+      // Transform the data to include job details
+      return resumes.map((resume) => ({
+        _id: resume._id,
+        content: resume.content,
+        status: resume.status,
+        createdAt: resume.createdAt,
+        jobTitle: resume.jobId?.job_title || "Unknown Job",
+        company: resume.jobId?.company || "Unknown Company",
+      }));
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      throw error;
+    }
+  }
 }
 
 function cleanJsonResponse(responseText) {
@@ -134,7 +154,7 @@ function cleanJsonResponse(responseText) {
     const jsonString = responseText
       .substring(7, responseText.length - 3)
       .trim();
-    console.log(jsonString)
+    console.log(jsonString);
     return jsonString;
   } else {
     // If no delimiters, return the original string
