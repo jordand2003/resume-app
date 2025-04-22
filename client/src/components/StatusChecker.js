@@ -24,6 +24,7 @@ const StatusChecker = () => {
 
     // Periodically check for status if processing
     React.useEffect(() => {
+        console.log('lol', loading)
         let timer = setTimeout(() => {
             if (loading)
                 updateStatus();
@@ -46,6 +47,9 @@ const StatusChecker = () => {
     async function updateStatus() {
         console.log("update");
         let resumeId = localStorage.getItem("resumeId");
+        /*for (var i = 0; i < localStorage.length; i++){
+            console.log(localStorage[i]);
+        }*/
         try {
             const token = await getAccessTokenSilently();
             const response = await axios.get("http://localhost:8000/api/resumes/status/" + resumeId, {
@@ -69,6 +73,7 @@ const StatusChecker = () => {
             setLoading(false);
             setFailure(true);
             setErrorMessage("Unable to Retreive Resume Status" + error)
+            console.log("Unable to Retreive Resume Status");
         }
     }
 
