@@ -57,6 +57,7 @@ const educationRoutes = require("./routes/education");
 const statusRoutes = require("./routes/ResumeStatus");
 const jobDescRoutes = require("./routes/job-desc");
 const resumeRoutes = require("./routes/resumeRoutes");
+
 // Routes
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Job Seeker API" });
@@ -74,13 +75,10 @@ app.use("/api/career-history", careerRoutes);
 // Education Routes
 app.use("/api/education", educationRoutes);
 
-// Resume Status Checker Routes
-app.use("/api/resumes/status", statusRoutes);
-
 // Job Description Routes
 app.use("/api/job-desc", jobDescRoutes);
 
-// Resume Generation Routes
+// Resume Generation and Status Routes
 app.use("/api/resumes", resumeRoutes);
 
 // Protected route example
