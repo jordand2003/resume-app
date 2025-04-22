@@ -22,6 +22,7 @@ const ResumeDisplay = () => {
 
   useEffect(() => {
     let intervalId;
+    let updatesCancelled = false;
 
     const fetchResumeStatus = async () => {
       try {
@@ -35,8 +36,12 @@ const ResumeDisplay = () => {
           }
         );
 
-        if (response.data) {
+        console.log("Status updated: data not loading ", response.data); 
+        
+
+        if (response.data && !updatesCancelled) {
           setStatus(response.data.status.toLowerCase());
+          console.log("Status updated: 1 ", response.data.status.toLowerCase());
           if (response.data.status.toLowerCase() === "completed") {
             setResumeContent(response.data.content);
             clearInterval(intervalId);
@@ -54,13 +59,15 @@ const ResumeDisplay = () => {
         }
       } 
       catch (error) {
-        console.error("Error fetching resume status:", error);
-        setErrorMessage(
-          error.response?.data?.error ||
-            error.message ||
-            "Failed to fetch resume status.");
-        setStatus("error");
-        clearInterval(intervalId);
+        if (updatesCancelled){
+          console.error("Error fetching resume status:", error);
+          setErrorMessage(
+            error.response?.data?.error ||
+              error.message ||
+              "Failed to fetch resume status.");
+          setStatus("error");
+          clearInterval(intervalId);
+        }
       }
     };
 
@@ -69,14 +76,19 @@ const ResumeDisplay = () => {
 
     // Check status
     intervalId = setInterval(() => {
-      if (status !== "completed" && status !== "failed") {
+      if (status !== "completed" && status !== "failed" && !updatesCancelled) {
         fetchResumeStatus();
       }
     }, 5000);
 
-    return () => clearInterval(intervalId); 
-  }, 
+    return () => { 
+      clearInterval(intervalId); 
+      updatesCancelled = true;
+    };
+  },
+
     [getAccessTokenSilently, resumeId, navigate]);
+
 
   const handleGoBack = () => {
     navigate("/resumeRoutes"); // Go back to resume gen page
