@@ -7,11 +7,13 @@ const mongoose = require("mongoose");
 router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
     try {
         // Checks if resumeId is undefined/not passed
-        if (!req.paramas.resumeId)
+        if (!req.paramas?.resumeId) {
+            console.log("Here");
             return res.status(404).json({
                 status: "Failed",
-                message: "Resume id is undefined",
+                message: "Resume id is missing",
             });
+        }
         const userId = req.userId;
         const resumeId = req.params.resumeId;
         const connectionState = mongoose.connection.readyState;
@@ -19,7 +21,7 @@ router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
             console.error("MongoDB is not connected. State:", connectionState);
             return res.status(500).json({
                 status: "Failed",
-                message: "Database connection error"
+                message: "Failed to connect to Database"
             });
         }
         // Cursor for Resume lookup in the database
@@ -37,7 +39,7 @@ router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
         // The rest handles the three possible statuses the resume may have.
         // To do: Figure out how to retreive resume generation's fail message in order to have a meaningful error
         if (query.status === "failed")
-            return res.status(200).json({ 
+            return res.status(500).json({ 
                 status: "Failed",
                 message: "Resume generation failed" 
             });
