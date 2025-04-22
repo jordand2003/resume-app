@@ -32,6 +32,10 @@ const ResumeGeneration = () => {
   //const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Clear any existing status when component mounts
+    localStorage.removeItem("status");
+    localStorage.removeItem("resumeId");
+    localStorage.removeItem("error");
     fetchJobList();
   }, [getAccessTokenSilently]); //getAccessTokenSilently, user
 
@@ -98,15 +102,9 @@ const ResumeGeneration = () => {
           response.data.message || "Resume generation started."
         );
 
-        // Clear any existing status
-        localStorage.clear();
         // Set new status
         localStorage.setItem("resumeId", response.data.resumeId);
         localStorage.setItem("status", "Processing");
-        localStorage.setItem(
-          "resumeGenerationStartTime",
-          Date.now().toString()
-        );
       } else {
         throw new Error(
           response.data?.message || "Failed to start resume generation."

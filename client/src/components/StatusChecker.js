@@ -4,78 +4,55 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Stack, CircularProgress, Typography, Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { green } from "@mui/material/colors";
-import { useNavigate } from "react-router-dom";
 
 const StatusChecker = () => {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
   const [failure, setFailure] = React.useState(false);
   const [ErrorMessage, setErrorMessage] = React.useState("");
-  const navigate = useNavigate();
 
-  // Only start checking when a new resume generation begins
+  // Check status only when there's an active generation
   React.useEffect(() => {
-    const startTime = localStorage.getItem("resumeGenerationStartTime");
-    if (!startTime) {
-      // No active resume generation
-      setLoading(false);
-      setSuccess(false);
-      setFailure(false);
-      return;
-    }
+    const status = localStorage.getItem("status");
+    const resumeId = localStorage.getItem("resumeId");
 
-    // Check if this is a stale generation (older than 5 minutes)
-    const now = Date.now();
-    if (now - parseInt(startTime) > 5 * 60 * 1000) {
-      // Clear stale status
-      localStorage.removeItem("resumeId");
-      localStorage.removeItem("status");
-      localStorage.removeItem("error");
-      localStorage.removeItem("resumeGenerationStartTime");
-      setLoading(false);
-      setSuccess(false);
-      setFailure(false);
-      return;
-    }
-
-    if (isAuthenticated) {
-      const status = localStorage.getItem("status");
-      if (status === "Processing") {
-        setLoading(true);
-        setSuccess(false);
-        setFailure(false);
-      } else if (status === "Completed") {
+    // Only start checking if we have both a status and resumeId
+    if (status && resumeId) {
+      if (status === "COMPLETED") {
         setSuccess(true);
         setLoading(false);
-        setFailure(false);
-      } else if (status === "Failed") {
+      } else if (status === "Processing") {
+        setLoading(true);
+        setSuccess(false);
+      } else if (status === "FAILED") {
         setFailure(true);
         setLoading(false);
-        setSuccess(false);
         setErrorMessage(localStorage.getItem("error") || "Generation failed");
       }
     }
-  }, [isAuthenticated]);
+
+    // Cleanup function to clear status on unmount
+    return () => {
+      localStorage.removeItem("status");
+      localStorage.removeItem("resumeId");
+      localStorage.removeItem("error");
+    };
+  }, []);
 
   // Periodically check for status if processing
   React.useEffect(() => {
     let timer;
-    if (loading && isAuthenticated) {
+    if (loading) {
       timer = setTimeout(() => {
         updateStatus();
       }, 2000);
     }
     return () => clearTimeout(timer);
-  }, [loading, isAuthenticated]);
+  }, [loading]);
 
   async function updateStatus() {
-    if (!isAuthenticated) {
-      navigate("/");
-      return;
-    }
-
-    const resumeId = localStorage.getItem("resumeId");
+    let resumeId = localStorage.getItem("resumeId");
     if (!resumeId) {
       setFailure(true);
       setErrorMessage("No resume ID found");
@@ -83,12 +60,7 @@ const StatusChecker = () => {
     }
 
     try {
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: process.env.REACT_APP_AUTH0_AUDIENCE,
-        },
-      });
-
+      const token = await getAccessTokenSilently();
       const response = await axios.get(
         `http://localhost:8000/api/resumes/status/${resumeId}`,
         {
@@ -96,33 +68,23 @@ const StatusChecker = () => {
         }
       );
 
-      if (response.status === 200) {
-        const data = response.data;
-        if (data.status !== localStorage.getItem("status")) {
-          localStorage.setItem("status", data.status);
-          if (data.status === "COMPLETED") {
-            setSuccess(true);
-            setLoading(false);
-          } else if (data.status === "FAILED") {
-            setFailure(true);
-            setLoading(false);
-          }
+      const data = response.data;
+      if (data.status !== localStorage.getItem("status")) {
+        localStorage.setItem("status", data.status);
+        if (data.status === "COMPLETED") {
+          setSuccess(true);
+          setLoading(false);
+        } else if (data.status === "FAILED") {
+          setFailure(true);
+          setLoading(false);
+          setErrorMessage(data.message || "Generation failed");
         }
-      } else {
-        localStorage.setItem("status", "Failed");
-        localStorage.setItem("error", response.data.message);
-        setFailure(true);
-        setLoading(false);
       }
     } catch (error) {
+      console.error("Status check error:", error);
       setLoading(false);
       setFailure(true);
-      if (error.message.includes("Missing Refresh Token")) {
-        navigate("/");
-        return;
-      }
-      setErrorMessage("Unable to Retrieve Resume Status: " + error.message);
-      console.log("Unable to Retrieve Resume Status:", error);
+      setErrorMessage(error.response?.data?.message || error.message);
     }
   }
 
