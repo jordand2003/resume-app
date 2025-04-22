@@ -8,7 +8,7 @@ const ResumeSchema = new mongoose.Schema({
   job_id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: "JobListing",
+    ref: "JobDesc",
   },
   content: {
     type: Object,
