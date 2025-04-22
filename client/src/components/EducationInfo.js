@@ -51,6 +51,7 @@ const EducationInfo = () => {
           _id: edu._id,
           institution: edu.Institute || edu.institution,
           degree: edu.Degree || edu.degree,
+          
           field: edu.Major || edu.field,
           gpa: edu.GPA || edu.gpa,
           startDate: edu.Start_Date || edu.startDate,
