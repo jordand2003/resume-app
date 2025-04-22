@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Button,
@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
 
 
@@ -21,13 +22,17 @@ const ResumeUpload = () => {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
+    handleFile(file);
+  }
+
+  const handleFile = (file) => {
     if (file) {
       // Validate file type
       if (
         !file.name.toLowerCase().endsWith(".docx") &&
         !file.name.toLowerCase().endsWith(".pdf")
       ) {
-        setErrorMessage("Please upload a DOCX or PDF file");
+        setErrorMessage("Please select a DOCX or PDF file");
         return;
       }
       setFile(file);
@@ -35,9 +40,21 @@ const ResumeUpload = () => {
     }
   };
 
+  const handleDrop = useCallback((acceptedFiles) => {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      handleFile(acceptedFiles[0]);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: ".docx,.pdf",
+    onDrop: handleDrop,
+    maxFiles: 1,
+  });
+
   const handleUpload = async () => {
     if (!file) {
-      setErrorMessage("Please select a file first");
+      setErrorMessage("Please select or drop a file first");
       return;
     }
 
@@ -56,19 +73,20 @@ const ResumeUpload = () => {
           "Content-Type": "multipart/form-data",
         },
         onUploadProgress: (progressEvent) => {
-          const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(progress);
         },
         timeout: 60000, // 60 second timeout
       });
+
       console.log("Upload response:", response.data);
+
       if (response.data && response.data.status.toLowerCase() === "success") {
         setUploadStatus("success");
         setFile(null);
         setUploadProgress(0);
-      } else if (response.data && (response.data.status.toLowerCase() === "updated")){
+      } 
+      else if (response.data && (response.data.status.toLowerCase() === "updated")){
         setUploadStatus("updated");
         setFile(null);
         setUploadProgress(0);
@@ -77,10 +95,12 @@ const ResumeUpload = () => {
         setUploadStatus("merged");
         setFile(null);
         setUploadProgress(0);
-      }else {
+      } 
+      else {
         throw new Error(response.data?.message || "Upload failed");
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("Upload error:", error);
       setUploadStatus("error");
       setErrorMessage(
@@ -102,6 +122,31 @@ const ResumeUpload = () => {
           Upload your resume in DOCX or PDF format to automatically parse your
           career history.
         </Typography>
+
+        <Box {...getRootProps()}
+          sx={{ mt: 2, mb: 3, p: 3,
+            border: "2px dashed grey",
+            borderRadius: 1,
+            textAlign: "center",
+            cursor: "pointer",
+            "&:hover": {
+              borderColor: "primary.main",
+            },
+            ...(isDragActive && { borderColor: "primary.dark",
+            backgroundColor: (theme) => theme.palette.action.hover,
+            })
+          }}
+        >
+
+          <input {...getInputProps()} 
+          id="resume-upload" />
+          <CloudUploadIcon sx={{ fontSize: 40, color: "action.active" }} />
+          <Typography variant="body2" color="text.secondary" mt={1}>
+          {isDragActive ? 
+          "Drop your resume here..." :
+          "Drag and drop your resume here, or click \"select file\" "}
+        </Typography>
+        </Box>
 
         <Box sx={{ mt: 2, mb: 3 }}>
           <input

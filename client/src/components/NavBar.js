@@ -25,6 +25,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
 import JobDescIcon from "@mui/icons-material/Book"
+import GenResumeIcon from "@mui/icons-material/AutoFixNormal"
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const NavBar = () => {
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
       <List>
-        {["/", "/resume-upload", "/career-history", "/education", "/job-desc"].map(
+        {["/", "/resume-upload", "/career-history", "/education", "/job-desc", "/resumeRoutes"].map(
           (route, index) => (
             <ListItem key={route} disablePadding>
               <ListItemButton onClick={() => handleDrawerItemClick(route)}>
@@ -67,6 +68,8 @@ const NavBar = () => {
                   {index === 2 && <WorkIcon />}
                   {index === 3 && <SchoolIcon />}
                   {index === 4 && <JobDescIcon /> }
+                  {index === 5 && <GenResumeIcon /> } 
+
                 </ListItemIcon>
                 <ListItemText
                   primary={
@@ -78,7 +81,9 @@ const NavBar = () => {
                       ? "Career History"
                       : index === 3
                       ? "Education"
-                      : "Job Descriptions"
+                      : index === 4
+                      ? "Job Descriptions"
+                      : "Generate Resume"
                   }
                 />
               </ListItemButton>
