@@ -30,8 +30,14 @@ class ResumeService {
         throw new Error("Career history not found");
       }
 
+      // Get Education history
+      const eduHistory = await this.getEduHistory(userId);
+      if (!eduHistory || eduHistory.length === 0) {
+        throw new Error("Education history not found");
+      }
+
       // Construct AI prompt
-      const prompt = this.constructAIPrompt(jobDesc, careerHistory);
+      const prompt = this.constructAIPrompt(jobDesc, careerHistory, eduHistory);
 
       // Call Gemini API
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -82,7 +88,7 @@ class ResumeService {
     };
   }
 
-  static constructAIPrompt(jobDesc, careerHistory) {
+  static constructAIPrompt(jobDesc, careerHistory, eduHistory) {
     return `
 You are a professional resume writer. Generate a structured resume in JSON format based on the following information.
 
@@ -93,6 +99,9 @@ Description: ${jobDesc.description}
 
 Career History:
 ${JSON.stringify(careerHistory, null, 2)}
+
+Eduation History:
+${JSON.stringify(eduHistory, null, 2)}
 
 Return ONLY a JSON object with exactly the following structure, with no additional text or explanation:
 {
@@ -125,6 +134,22 @@ Return ONLY a JSON object with exactly the following structure, with no addition
     // Return the work experience from the parsed data
     return resumeData.parsedData?.work_experience || [];
   }
+
+  static async getEduHistory(userId){
+    // Get the most recent resume data for the user
+    const resumeData = await ResumeData.findOne({ userId })
+      .sort({ createdAt: -1 })
+      .limit(1);
+
+    if (!resumeData) {
+      return null;
+    }
+
+    console.log("Education found")
+    // Return the education from the parsed data
+    return resumeData.parsedData?.education || [];
+  }
+
 
   static async getResumesForUser(userId) {
     try {
