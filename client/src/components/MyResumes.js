@@ -19,6 +19,79 @@ import {
 } from "@mui/material";
 import NavBar from "./NavBar";
 
+const ResumeContent = ({ content }) => {
+  if (!content) return null;
+
+  return (
+    <Box sx={{ p: 2 }}>
+      {/* Summary Section */}
+      <Typography variant="h6" gutterBottom>
+        Professional Summary
+      </Typography>
+      <Typography paragraph>{content.summary}</Typography>
+
+      {/* Experience Section */}
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+        Experience
+      </Typography>
+      {content.experience.map((exp, index) => (
+        <Box key={index} sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            {exp.title} at {exp.company}
+          </Typography>
+          <Typography variant="subtitle2" color="text.secondary">
+            {exp.duration}
+          </Typography>
+          <List dense>
+            {exp.achievements.map((achievement, i) => (
+              <ListItem key={i}>
+                <Typography variant="body2">• {achievement}</Typography>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      ))}
+
+      {/* Skills Section */}
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+        Skills
+      </Typography>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        {content.skills.map((skill, index) => (
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{
+              bgcolor: "primary.main",
+              color: "white",
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+            }}
+          >
+            {skill}
+          </Typography>
+        ))}
+      </Box>
+
+      {/* Education Section */}
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+        Education
+      </Typography>
+      {content.education.map((edu, index) => (
+        <Box key={index} sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            {edu.degree}
+          </Typography>
+          <Typography variant="body2">
+            {edu.institution} • {edu.year}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
 const MyResumes = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [resumes, setResumes] = useState([]);
@@ -148,23 +221,16 @@ const MyResumes = () => {
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { minHeight: "80vh" },
+        }}
       >
         <DialogTitle>
-          {selectedResume && `Resume for ${selectedResume.jobTitle}`}
+          {selectedResume &&
+            `Resume for ${selectedResume.jobTitle} at ${selectedResume.company}`}
         </DialogTitle>
         <DialogContent dividers>
-          {selectedResume && (
-            <Typography
-              component="pre"
-              sx={{
-                whiteSpace: "pre-wrap",
-                fontFamily: "inherit",
-                fontSize: "1rem",
-              }}
-            >
-              {selectedResume.content}
-            </Typography>
-          )}
+          {selectedResume && <ResumeContent content={selectedResume.content} />}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Close</Button>
