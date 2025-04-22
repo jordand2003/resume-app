@@ -6,9 +6,6 @@ import {
   Box,
   Button,
   FormControl,
-  FormLabel,
-  FormControlLabel,
-  Checkbox,
   MenuItem,
   Select,
   InputLabel,
@@ -18,40 +15,41 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+import StatusChecker from "./StatusChecker";
 
 const ResumeGeneration = () => {
     const { getAccessTokenSilently } = useAuth0();
     const [selectedJobId, setSelectedJobId] = useState("");
-    const [generationStatus, setGenerationStatus] = useState("idle"); 
+    const [generationStatus, setGenerationStatus] = useState("idle");
     const [jobList, setJobList] = useState([]);
     const [resumeId, setResumeId] = useState(null);
     const [generatedMessage, setGeneratedMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
-    //const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchJobList();
-      }, [getAccessTokenSilently]); //getAccessTokenSilently, user
+      }, [getAccessTokenSilently]);
 
-
-    // Fetch Job Descriptions
     const fetchJobList = async () => {
         setGenerationStatus("loading");
         setErrorMessage("");
         try {
             const token = await getAccessTokenSilently();
-            //console.log("LOL")
             const response = await axios.get(
-                "http://localhost:8000/api/job-desc", 
+                "http://localhost:8000/api/job-desc",
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
                   },
                 });
     
-            if (response.data) {
+            if (response.data && response.data.data) {
                 setJobList(response.data.data);
+            }
+            else {
+              setErrorMessage("Failed to get job list.");
+              setGenerationStatus("error");
             }
             setGenerationStatus("idle");
         } 
@@ -60,7 +58,7 @@ const ResumeGeneration = () => {
             setErrorMessage(
                 error.response?.data?.message ||
                     error.message ||
-                    "Failed to fetch your data. Please try again."
+                    "Failed to fetch your data. Please try again!"
             );
             setGenerationStatus("error");
         }
@@ -71,12 +69,9 @@ const ResumeGeneration = () => {
         }
     };
 
-    console.log("Sending POST to /api/resumes/generate with jobId:", selectedJobId);
-
-    // Function to generate AI resume
     const handleGenerate = async () => {
         if (!selectedJobId) {
-          setErrorMessage("Please select a job you are applying for.");
+          setErrorMessage("Please select the job you are applying for.");
           return;
         }
     
@@ -87,8 +82,6 @@ const ResumeGeneration = () => {
     
         try {
           const token = await getAccessTokenSilently();
-          //const decodedToken = JSON.parse(atob(token.split('.')[1]));
-          //const userId = decodedToken.sub;
           const response = await axios.post(
             "http://localhost:8000/api/resumes/generate",
             { jobId: selectedJobId },
@@ -98,21 +91,26 @@ const ResumeGeneration = () => {
                 "Content-Type": "application/json",
               },
             });
+            //Using StatusChecker
             if (response.data && response.data.resumeId) {
                 setResumeId(response.data.resumeId);
+                localStorage.setItem("resumeId", response.data.resumeId); 
+                localStorage.setItem("status", response.data.status || "Processing...");
                 setGenerationStatus("success");
-                setGeneratedMessage(response.data.message || "Resume generation started.");
-                navigate(`/resume/status/${response.data.resumeId}`);
-              } else {
+                setGeneratedMessage(response.data.message || "Resume generation started...");
+                //navigate(`/resume/status/${response.data.resumeId}`);
+              } 
+              else {
                 throw new Error(response.data?.message || "Failed to start resume generation.");
               }
-            } catch (error) {
+            } 
+            catch (error) {
               console.error("Error starting resume generation:", error);
               setErrorMessage(
                 error.response?.data?.error || error.message || "Failed to start resume generation."
               );
               setGenerationStatus("error");
-            }
+            } //finally{}
         }
 
     const handleJobChange = (event) => {
@@ -120,7 +118,7 @@ const ResumeGeneration = () => {
     };
     
     return (
-        <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
         <NavBar />
         <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
             <Paper elevation={3} sx={{ p: 3 }}>
@@ -131,7 +129,7 @@ const ResumeGeneration = () => {
             {generationStatus === "loading" && (
                 <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
                 <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Starting resume generation...</Typography>
+                <Typography sx={{ ml: 2 }}>Loading...</Typography>
                 </Box>
             )}
     
@@ -145,25 +143,25 @@ const ResumeGeneration = () => {
                 <>
                 <FormControl fullWidth margin="normal">
                     <InputLabel id="job-listing-label">
-                    Select Job You Are Applying For
+                    Select a Job
                     </InputLabel>
                     <Select
-                    labelId="job-listing-label"
-                    id="job-listing"
-                    value={selectedJobId}
-                    onChange={handleJobChange}
+                      labelId="job-listing-label"
+                      id="job-listing"
+                      value={selectedJobId}
+                      onChange={handleJobChange}
                     >
-                    <MenuItem value="">
+                      <MenuItem value="">
                         <em>None</em>
-                    </MenuItem>
-                    {jobList.map((job) => (
-                        <MenuItem key={job._id} value={job._id}>
-                        {job.job_title || "Job"} at {job.company || "Company"}
-                        </MenuItem>
-                    ))}
-                    {jobList.length === 0 && (
-                        <MenuItem disabled>No job listings available.</MenuItem>
-                    )}
+                      </MenuItem>
+                      {jobList.map((job) => (
+                          <MenuItem key={job._id} value={job._id}>
+                          {job.job_title || "Job"} at {job.company || "Company"}
+                          </MenuItem>
+                      ))}
+                      {jobList.length === 0 && (
+                          <MenuItem disabled>No job listings available.</MenuItem>
+                      )}
                     </Select>
                 </FormControl>
     
@@ -178,26 +176,37 @@ const ResumeGeneration = () => {
                     Generate Resume
                 </Button>
     
-                {generationStatus === "success" && generatedMessage && (
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                    {generatedMessage} - Resume ID: {resumeId}
-                    <Typography variant="body2" color="text.secondary">
-                        You can check the generation status using the Resume ID.
+                {generationStatus === "success" && resumeId && (
+                    <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                        {generatedMessage}
                     </Typography>
-                    </Alert>
+                    <StatusChecker /> {/* Embed StatusChecker here */}
+                    <Typography variant="body2" color="text.secondary">
+                        Resume ID: {resumeId}
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => navigate(`/resume/status/${resumeId}`)}
+                        sx={{ mt: 2 }}
+                    >
+                        Download Resume
+                    </Button>
+                </Box>
                 )}
     
                 {generationStatus === "error" && errorMessage && (
                     <Alert severity="error" sx={{ mt: 2 }}>
-                    {errorMessage}
+                      {errorMessage}
                     </Alert>
                 )}
                 </>
             )}
             </Paper>
-            </Box>
         </Box>
-        );
+      </Box>
+      );
         
       
 }
