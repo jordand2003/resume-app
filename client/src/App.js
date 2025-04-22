@@ -199,14 +199,6 @@ const AppRoutes = () => {
         } 
       />
       <Route path="*" element={<Navigate to="/" />} />
-      <Route
-        path="/test"
-        element={
-          <ProtectedRoute>
-            <StatusChecker />
-          </ProtectedRoute>
-        }
-      />
     </Routes>
   );
 };
