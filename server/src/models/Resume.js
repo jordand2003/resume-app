@@ -1,28 +1,37 @@
 const mongoose = require("mongoose");
 
-const ResumeSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
+const ResumeSchema = new mongoose.Schema(
+  {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      auto: true,
+    },
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "JobDesc",
+    },
+    content: {
+      type: Object,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "COMPLETED", "FAILED"],
+      default: "PENDING",
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  job_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "JobDesc",
-  },
-  content: {
-    type: Object,
-    //required: true,
-  },
-  status: {
-    type: String,
-    enum: ["PENDING", "COMPLETED", "FAILED"],
-    default: "PENDING",
-  },
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
 module.exports = mongoose.model("Resume", ResumeSchema);
