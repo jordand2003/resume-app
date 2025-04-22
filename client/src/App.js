@@ -15,6 +15,7 @@ import ResumeUploadPage from "./components/ResumeUploadPage";
 import CareerHistory from "./components/CareerHistory";
 import EducationInfo from "./components/EducationInfo";
 import Register from "./components/Register";
+import StatusChecker from "./components/StatusChecker";
 import JobDesc from "./components/JobDescriptions";
 import ResumeGeneration from "./components/ResumeGeneration";
 import ResumeDisplay from "./components/ResumeDisplay";
