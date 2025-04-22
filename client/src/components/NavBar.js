@@ -26,6 +26,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
 import JobDescIcon from "@mui/icons-material/Book";
 import GenResumeIcon from "@mui/icons-material/AutoFixNormal";
+import ResumesListIcon from '@mui/icons-material/Assignment';
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ const NavBar = () => {
                 {index === 3 && <SchoolIcon />}
                 {index === 4 && <JobDescIcon />}
                 {index === 5 && <GenResumeIcon />}
-                {index === 6 && <GenResumeIcon />}
+                {index === 6 && <ResumesListIcon  />}
               </ListItemIcon>
               <ListItemText
                 primary={
