@@ -35,13 +35,15 @@ const ResumeGeneration = () => {
       }, [getAccessTokenSilently]); //getAccessTokenSilently, user
 
 
+    // Fetch Job Descriptions
     const fetchJobList = async () => {
         setGenerationStatus("loading");
         setErrorMessage("");
         try {
             const token = await getAccessTokenSilently();
+            //console.log("LOL")
             const response = await axios.get(
-                "http://localhost:8000/api/resumeRoutes", 
+                "http://localhost:8000/api/job-desc", 
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -49,7 +51,7 @@ const ResumeGeneration = () => {
                 });
     
             if (response.data) {
-                setJobList(response.data.jobList);
+                setJobList(response.data.data);
             }
             setGenerationStatus("idle");
         } 
@@ -69,6 +71,9 @@ const ResumeGeneration = () => {
         }
     };
 
+    console.log("Sending POST to /api/resumes/generate with jobId:", selectedJobId);
+
+    // Function to generate AI resume
     const handleGenerate = async () => {
         if (!selectedJobId) {
           setErrorMessage("Please select a job you are applying for.");
@@ -82,6 +87,8 @@ const ResumeGeneration = () => {
     
         try {
           const token = await getAccessTokenSilently();
+          //const decodedToken = JSON.parse(atob(token.split('.')[1]));
+          //const userId = decodedToken.sub;
           const response = await axios.post(
             "http://localhost:8000/api/resumes/generate",
             { jobId: selectedJobId },

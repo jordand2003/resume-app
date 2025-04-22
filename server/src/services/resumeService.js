@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { ResumeData } = require("../services/structuredDataService");
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 class ResumeService {
   static async generateResume(_id, userId) {
@@ -33,21 +33,36 @@ class ResumeService {
       const prompt = this.constructAIPrompt(jobDesc, careerHistory);
 
       // Call Gemini API
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const generatedContent = JSON.parse(response.text());
+
+      if (!response || !response.text) {
+        console.error("No response text received!");
+        throw new Error("Failed to get a valid response from the AI.");
+      }
+
+      const generatedText = cleanJsonResponse(response.text());
+      console.log("Generated text: ", generatedText)
 
       // Update resume with generated content
-      resume.content = generatedContent;
-      resume.status = "COMPLETED";
-      await resume.save();
-
-      return {
-        resumeId: resume._id,
-        status: "COMPLETED",
-      };
-    } catch (error) {
+      try {
+        const generatedContent = JSON.parse(generatedText); 
+        resume.content = generatedContent;
+        resume.status = "COMPLETED";
+        await resume.save();
+        return {
+          resumeId: resume._id,
+          status: "COMPLETED",
+        };
+      } 
+      catch (error) {
+          resume.status = "FAILED";
+          await resume.save();
+          throw new Error("Could not parse Gemini response.");
+      }
+    }
+    catch (error) {
       // If resume was created, update its status to FAILED
       if (resume) {
         resume.status = "FAILED";
@@ -110,6 +125,20 @@ Return ONLY a JSON object with exactly the following structure, with no addition
 
     // Return the work experience from the parsed data
     return resumeData.parsedData?.work_experience || [];
+  }
+}
+
+function cleanJsonResponse(responseText) {
+  if (responseText.startsWith("```json") && responseText.endsWith("```")) {
+    // Extract the JSON string and trim any leading/trailing whitespace
+    const jsonString = responseText
+      .substring(7, responseText.length - 3)
+      .trim();
+    console.log(jsonString)
+    return jsonString;
+  } else {
+    // If no delimiters, return the original string
+    return responseText;
   }
 }
 
