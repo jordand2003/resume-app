@@ -27,6 +27,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import JobDescIcon from "@mui/icons-material/Book";
 import GenResumeIcon from "@mui/icons-material/AutoFixNormal";
 import ResumesListIcon from '@mui/icons-material/Assignment';
+import LogoLight from "../../src/light-mode-logo.png" ;
+import LogoDark from "../../src/dark-mode-logo.png" ;
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -107,21 +109,25 @@ const NavBar = () => {
       </List>
     </Box>
   );
+  //app font Roboto
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ backgroundColor: "#2c3e50" }}>
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, cursor: "pointer" }}
-            onClick={() => navigate("/home")}
-          >
-            Lighthouse
-          </Typography>
+      <AppBar position="static" sx={{ backgroundColor: "#000000", minHeight: 65 }}>
+        <Toolbar sx={{ justifyContent: 'flex-start' }}>
+          <Box sx={{display: 'flex', alignItems: 'center' }}>
+            <img src={LogoDark} alt="Dark Logo" style={{height: 65, marginRight: -15}} ></img>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ cursor: "pointer" , fontSize: 22 , marginBottom: -0.25}}
+              onClick={() => navigate("/home")}
+            >
+              Lighthouse 
+            </Typography>
+          </Box>
           {isAuthenticated && (
-            <>
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
               <Button
                 color="inherit"
                 onClick={handleLogout}
@@ -130,8 +136,8 @@ const NavBar = () => {
               >
                 Logout
               </Button>
-              <Typography variant="body1" sx={{ mr: 2 }}>
-                {user?.name || user?.email}
+              <Typography variant="body1" sx={{ mr: 2 }}> 
+                {user?.name || user?.email}  {/*handleClick("/user-profile")*/}
               </Typography>
               <IconButton
                 size="large"
@@ -168,7 +174,7 @@ const NavBar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={handleClose}>
+                <MenuItem onClick={handleClose}> {/*handleMenuClick("/user-profile")*/}
                   {user?.name || user?.email}
                 </MenuItem>
                 <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
@@ -178,7 +184,7 @@ const NavBar = () => {
                   My Resumes
                 </MenuItem>
               </Menu>
-            </>
+            </Box>
           )}
         </Toolbar>
       </AppBar>
