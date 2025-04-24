@@ -20,6 +20,7 @@ import JobDesc from "./components/JobDescriptions";
 import ResumeGeneration from "./components/ResumeGeneration";
 import ResumeDisplay from "./components/ResumeDisplay";
 import MyResumes from "./components/MyResumes";
+import UserProfile from "./components/UserProfile";
 
 const theme = createTheme({
   palette: {
@@ -211,10 +212,19 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/user-profile"
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/register" element={<Register />} />
       <Route path="/job-descriptions" element={<JobDesc />} />
       <Route path="/resume-generation" element={<ResumeGeneration />} />
       <Route path="/my-resumes" element={<MyResumes />} />
+      <Route path="/user-profile" element={<UserProfile />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
