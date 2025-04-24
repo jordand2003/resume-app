@@ -174,8 +174,8 @@ const NavBar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={handleClose}> {/*handleMenuClick("/user-profile")*/}
-                  {user?.name || user?.email}
+                <MenuItem onClick={ () => handleMenuClick("/user-profile")}>
+                  My Account
                 </MenuItem>
                 <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
                   Resume Generation
