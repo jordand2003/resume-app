@@ -92,7 +92,6 @@ router.post(
       );
       const savedData = await saveStructuredData(result.rawText, req.userId);
       // console.log("Saved data result:", savedData);
-      // console.log("lololol",savedData.status)
 
       res.json({
         status: savedData.status,

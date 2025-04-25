@@ -48,6 +48,7 @@ const Register = () => {
   const [validName, setValidName] = useState(true)
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [approveBox, showApproveBox] = useState(false)
+  const [phoneNum, setPhoneNum] = useState('')
   const navigate = useNavigate();
   const {loginWithRedirect} = useAuth0();
 
@@ -166,6 +167,8 @@ const Register = () => {
         showApproveBox(true)  // Reveal Confirmation Popup
         //navigate('/home');
       }
+      else if (response.status === 400)
+        setError('Email already taken');
       else {
         setError(data.message || 'Registration failed');
       }
@@ -206,7 +209,7 @@ const Register = () => {
               />
             </Button>
           </Box>
-            */}
+          */}
             
           <TextField
             margin="normal"
@@ -301,6 +304,18 @@ const Register = () => {
               } else {
                 setConfirmPasswordError("");
               }
+            }}
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            name="phoneNumber"
+            label="phoneNumber"
+            id="phoneNumber"
+            autoComplete="(###) ###-####"
+            value={phoneNum}
+            onChange={(e) => {
+              setPhoneNum(e.target.value)
             }}
           />
           {confirmPasswordError && (

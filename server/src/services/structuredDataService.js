@@ -76,6 +76,60 @@ const ResumeDataSchema = new mongoose.Schema({
   keywords: [String], // For better duplicate detection
 });
 
+// Schema for Career History
+const CareerHistorySchema = new mongoose.Schema({
+  "Job_Title": String,
+  "Company": String,
+  "Location": String,
+  "Start_Date": String,
+  "End_Date": String,
+  "Responsibilities": {},
+  "user_id": {
+    type: String,
+    required: true,
+    index: true,
+  },
+});
+
+// Schema for Education History
+const EducationHistorySchema = new mongoose.Schema({
+  Institute: {
+    type: String,
+    required: true,
+  },
+  Location: {
+    type: String,
+    required: false,
+  },
+  Degree: {
+    type: String,
+    required: true,
+  },
+  Major: {
+    type: String,
+    required: true,
+  },
+  Start_Date: {
+    type: String,
+    required: true,
+  },
+  End_Date: {
+    type: String,
+    required: true,
+  },
+  GPA: {
+    type: String,
+    required: true,
+  },
+  RelevantCoursework: { type: Array},
+  other: {type: String},
+  user_id: {
+    type: String,
+    required: true,
+    index: true,
+  },
+});
+
 // Create normalized version of content for duplicate checking
 ResumeDataSchema.methods.getNormalizedContent = function () {
   return this.rawContent.toLowerCase().replace(/\s+/g, " ").trim();
@@ -109,7 +163,8 @@ ResumeDataSchema.methods.extractKeywords = function () {
 ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
 
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
-
+const CareerHistory = mongoose.model("careers", CareerHistorySchema);
+const EducationHistory = mongoose.model("educations",EducationHistorySchema);
 /**
  * Extract structured data using AI
  * @param {string} content - Raw content to process
@@ -496,6 +551,102 @@ async function mergeSimilarDocuments(newDoc, similarDocs) {
 }
 
 /**
+ * Save job entries into the careers DB table. Checks for duplicate entries in DB
+ * @param {Array} careerHistory - Array of parsed career data from the resume
+ * @param {string} userId - ID of the user this resume belongs to
+ */
+async function careerHistSave(careerHistory, userId) {
+  if (careerHistory) {
+    // Format Objects
+    let list = [];
+    for (const job of careerHistory) {
+      // Check if the entry already exists
+      const existingEntry = await CareerHistory.findOne({
+        Job_Title: job.Job_Title,
+        Company: job.Company,
+        Location: job.Location,
+        Start_Date: job.Start_Date,
+        End_Date: job.End_Date,
+        user_id: userId,
+      });
+
+      if (!existingEntry) {
+        list.push({
+          Job_Title: job.Job_Title,
+          Company: job.Company,
+          Location: job.Location,
+          Start_Date: job.Start_Date,
+          End_Date: job.End_Date,
+          Responsibilities: job.Responsibilities,
+          user_id: userId,
+        });
+      } else {
+        console.log("Duplicate job")
+      }
+    }
+
+    if (list.length > 0) {
+      const result = await CareerHistory.insertMany(list);
+      console.log("Saved career history to careers cluster");
+    } else {
+      console.log("No new career entries to save.");
+    }
+  }
+}
+
+/**
+ * Save education entries into the educations DB table && Checks for duplicate entries in DB
+ * @param {Array} eduHistory - Array of parsed education data from the resume
+ * @param {string} userId - ID of the user this resume belongs to
+ */
+async function eduHistorySave(eduHistory, userId) {
+  if (eduHistory) {
+    // Format Objects
+    let list = [];
+    for (const edu of eduHistory) {
+      // Check if the entry already exists
+      //console.log(edu)
+      const existingEntry = await EducationHistory.findOne({
+        Institute: edu.Institute,
+        Location: edu.Location,
+        Degree: edu.Degree,
+        Major: edu.Major,
+        Start_Date: edu.Start_Date,
+        End_Date: edu.End_Date,
+        // GPA: edu.GPA,
+        // RelevantCoursework: edu.RelevantCoursework,
+        // other: edu.other,
+        user_id: userId,
+      });
+
+      if (!existingEntry) {
+        list.push({
+          Institute: edu.Institute,
+          Location: edu.Location,
+          Degree: edu.Degree,
+          Major: edu.Major,
+          Start_Date: edu.Start_Date,
+          End_Date: edu.End_Date,
+          GPA: edu.GPA,
+          RelevantCoursework: edu.RelevantCoursework,
+          other: edu.other,
+          user_id: userId,
+        });
+      } else {
+        console.log("Duplicate edu")
+      }
+    }
+
+    if (list.length > 0) {
+      const result = await EducationHistory.insertMany(list);
+      console.log("Saved education history to cluster");
+    } else {
+      console.log("No new education entries to save.");
+    }
+  }
+}
+
+/**
  * Save structured resume data and handle duplicates
  * @param {string} content - Raw content to process
  * @param {string} userId - ID of the user this resume belongs to
@@ -512,6 +663,13 @@ async function saveStructuredData(content, userId) {
   try {
     // Extract structured data
     const parsedData = await extractStructuredData(content);
+
+     // (Added 4/24) Save structured data separetly in individual db tables
+     const careerHist = parsedData.work_experience || [];
+     const eduHist = parsedData.education || [];
+     //const skills = I.O.U => parsedData attribute for skills doesn't exist yet
+     await careerHistSave(careerHist, userId)
+     await eduHistorySave(eduHist, userId)
 
     // Create content hash
     const contentHash = require("crypto")
@@ -585,6 +743,8 @@ async function saveStructuredData(content, userId) {
 module.exports = {
   saveStructuredData,
   ResumeData,
+  CareerHistory,
+  EducationHistory,
 };
 
 

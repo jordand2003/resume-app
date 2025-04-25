@@ -41,11 +41,9 @@ const EducationInfo = () => {
   const fetchEducationInfo = async () => {
     try {
       const token = await getAccessTokenSilently();
-      //const response = await axios.get("http://localhost:8000/api/education/v2", {
-      const response = await axios.get("http://localhost:8000/api/education/v2", {
+      const response = await axios.get("http://localhost:8000/api/education", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Education history response:", response.data);
 
       if (response.data && response.data.data) {
         // Update local state to match the saved data format
@@ -75,7 +73,6 @@ const EducationInfo = () => {
     }
   };
 
-  // Old function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -143,151 +140,6 @@ const EducationInfo = () => {
     }
   };
 
-  // New Delete Function
-  const handleDeleteEducationEntry = async (index) => {
-    setError(null);
-    setSuccessMessage("");
-  
-    const isNew = !education[index]._id; // Check if this is a new, unsaved entry
-    console.log("Is new entry:", isNew);
-  
-    const updated = education.filter((_, i) => i !== index);
-    setEducation(updated);
-    syncValidation(updated);
-  
-    // Only try to delete from backend if it's not a new entry
-    if (!isNew) {
-      try {
-        const token = await getAccessTokenSilently();
-        const edu_id = education[index]._id;
-        const response = await axios.delete("http://localhost:8000/api/education/v2", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          data: { id: edu_id },
-        });
-  
-        if (response.data.status === "Success") {
-          setSuccessMessage("Education entry deleted successfully!");
-        }
-      } catch (err) {
-        console.error("Delete failed:", err);
-        setError(
-          "Failed to delete education entry: " +
-          (err.response?.data?.message || err.message)
-        );
-      }
-    }
-  };
-  
-
-
-  // New Save Function
-  const handleSaveEducationEntry = async (index) => {
-    setError(null);
-    setSuccessMessage("");
-    console.log("Attempting save")
-
-   // Check for empty fields
-   if (
-    !education[index].institution ||
-    !education[index].degree ||
-    !education[index].field ||
-    !education[index].gpa ||
-    !education[index].startDate ||
-    !education[index].endDate
-  ) {
-    setError("Please fill in all required fields.");
-    return;
-  }
-
-  // Check Input and Regex (Combined)
-  const newValidation = [...validation];
-  newValidation[index] = {
-    validGPA: gpa_regex.test(education[index].gpa),
-    validStartDate: date_regex.test(education[index].startDate),
-    validEndDate: date_regex.test(education[index].endDate),
-  };
-  setValidation(newValidation);
-
-  const hasErrors =
-    !newValidation[index].validGPA ||
-    !newValidation[index].validStartDate ||
-    !newValidation[index].validEndDate;
-
-  if (hasErrors) {
-    console.log("Bad Input");
-    setError("Please correct the invalid fields."); // Set a general error message
-    return;
-  }
-
-    // Prepare data for save
-    try {
-      const token = await getAccessTokenSilently();
-      const formattedData = {
-        _id: education[index]._id,
-        Institute: education[index].institution,
-        Location: null, // doesn't exist yet
-        Degree: education[index].degree,
-        Major: education[index].field,
-        GPA: education[index].gpa,
-        Start_Date: education[index].startDate,
-        End_Date: education[index].endDate,
-        RelevantCoursework: null, //edu.RelevantCoursework
-        other: null, //edu.other
-      };
-
-      // Make addition or update existing entry
-      const response = await axios.post(
-        "http://localhost:8000/api/education/v2",
-        { education: [formattedData] }, // Send as an array
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.data.status === "Success") {
-        setSuccessMessage("Education entry saved successfully!");
-        console.log(response.data.data)
-        const updated = [...education];
-
-        if(response.data.newEntry){
-          updated[index] = {
-            _id: response.data.data._id,
-            institution: response.data.data.Institute,
-            degree: response.data.data.Degree,
-            field: response.data.data.Major,
-            gpa: response.data.data.GPA,
-            startDate: response.data.data.Start_Date,
-            endDate: response.data.data.End_Date,
-          };
-        } else {
-          updated[index] = {
-            _id: response.data.data[0]._id,
-            institution: response.data.data[0].Institute,
-            degree: response.data.data[0].Degree,
-            field: response.data.data[0].Major,
-            gpa: response.data.data[0].GPA,
-            startDate: response.data.data[0].Start_Date,
-            endDate: response.data.data[0].End_Date,
-          }}
-        setEducation(updated);
-        syncValidation(education);
-      } else {
-        await fetchEducationInfo();
-      }
-    } catch (err) {
-      console.error("Save failed:", err);
-      setError(
-        "Failed to save education entry: " +
-          (err.response?.data?.message || err.message)
-      );
-    }
-  };
-
   if (loading) {
     return (
       <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
@@ -303,36 +155,7 @@ const EducationInfo = () => {
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
-      {error && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 20, // adjust if needed to not overlap with success
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
-            width: 'auto',
-            maxWidth: 600,
-          }}
-        >
-          <Alert
-            severity="error"
-            variant="filled"
-            onClose={() => setError("")}
-            sx={{
-              padding: '20px',
-              minHeight: '20px',
-              animation: 'fadeIn 0.8s ease-in-out',
-              '@keyframes fadeIn': {
-                from: { opacity: 0 },
-                to: { opacity: 1 },
-              },
-            }}
-          >
-            {error}
-          </Alert>
-        </Box>
-      )}
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {successMessage && (
                   <Box
                     sx={{
@@ -368,9 +191,7 @@ const EducationInfo = () => {
           </Typography>
           <form onSubmit={handleSubmit}>
             {education.map((edu, index) => (
-              <Box key={index} 
-                    data-education-id={edu._id} // Embedding the unique ID
-                    sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}>
+              <Box key={index} sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}>
                 <TextField
                   fullWidth label="Institution" required margin="normal"
                   value={edu.institution || ""}
@@ -443,25 +264,19 @@ const EducationInfo = () => {
                     End date must be a 4-digit year (e.g., 2022)
                   </Typography>
                 )}
-                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                  <Button variant="contained" color="primary" sx={{ mt: 0.25 }} onClick={()=>handleSaveEducationEntry(index)}>
-                    Save Education Entry
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      const updated = education.filter((_, i) => i !== index);
-                      setEducation(updated);
-                      syncValidation(updated);
-                      handleDeleteEducationEntry(index);// Delete function
-                    }}
-                    sx={{ mt: 1 }}
-                  >
-                    Remove Education
-                  </Button>
-                </Box>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => {
+                    const updated = education.filter((_, i) => i !== index);
+                    setEducation(updated);
+                    syncValidation(updated);
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  Remove Education
+                </Button>
               </Box>
             ))}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
@@ -476,9 +291,9 @@ const EducationInfo = () => {
               >
                 Add Another Education
               </Button>
-              {/*<Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary">
                 Save Education
-              </Button>*/}
+              </Button>
             </Box>
           </form>
         </Paper>

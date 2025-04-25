@@ -5,6 +5,7 @@ import { Stack, CircularProgress, Typography, Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { green } from "@mui/material/colors";
 
+
 const StatusChecker = ({ resumeId: propResumeId }) => {
   const { getAccessTokenSilently } = useAuth0();
   const [loading, setLoading] = React.useState(false);
@@ -57,7 +58,7 @@ const StatusChecker = ({ resumeId: propResumeId }) => {
       const response = await axios.get(
         `http://localhost:8000/api/resumes/status/${currentResumeId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },    
         }
       );
 

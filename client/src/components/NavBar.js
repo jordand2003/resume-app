@@ -33,7 +33,7 @@ import LogoDark from "../../src/dark-mode-logo.png" ;
 
 const NavBar = () => {
   const navigate = useNavigate();
-  const { logout, user, isAuthenticated } = useAuth0();
+  const { logout, user } = useAuth0();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
@@ -83,7 +83,7 @@ const NavBar = () => {
           "/resume-upload",
           "/career-history",
           "/education",
-          "/job-desc",
+          "/job-descriptions",
           "/resume-generation",
           "/my-resumes",
         ].map((route, index) => (
@@ -100,19 +100,13 @@ const NavBar = () => {
               </ListItemIcon>
               <ListItemText
                 primary={
-                  index === 0
-                    ? "Home"
-                    : index === 1
-                    ? "Upload Resume"
-                    : index === 2
-                    ? "Career History"
-                    : index === 3
-                    ? "Education"
-                    : index === 4
-                    ? "Job Descriptions"
-                    : index === 5
-                    ? "Generate Resume"
-                    : "My Resumes"
+                    index === 0 ? "Home"
+                  : index === 1 ? "Upload Resume"
+                  : index === 2 ? "Career History"
+                  : index === 3 ? "Education"
+                  : index === 4 ? "Job Descriptions"
+                  : index === 5 ? "Generate Resume"
+                  : "My Resumes"
                 }
               />
             </ListItemButton>
@@ -138,7 +132,6 @@ const NavBar = () => {
               Lighthouse 
             </Typography>
           </Box>
-          {isAuthenticated && (
             <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
               <Button
                 color="inherit"
@@ -186,7 +179,7 @@ const NavBar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={ () => handleMenuClick("/user-profile")}>
+                <MenuItem onClick={() => handleMenuClick("/user-profile")}>
                   My Account
                 </MenuItem>
                 <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
@@ -197,7 +190,6 @@ const NavBar = () => {
                 </MenuItem>
               </Menu>
             </Box>
-          )}
         </Toolbar>
       </AppBar>
     </Box>
