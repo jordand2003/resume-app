@@ -58,14 +58,14 @@ const resumeUpload = async (file) => {
     let json;
     try {
       json = await parse(ai, resume_text.trim("\n"));
-      console.log("Raw Gemini response:", json);
+      //console.log("Raw Gemini response:", json);
     } catch (error) {
       console.error("Error in Gemini AI parsing:", error);
       throw new Error(`Failed to parse resume with AI: ${error.message}`);
     }
 
     const cleanedJson = cleanJsonResponse(json);
-    console.log("Cleaned JSON:", cleanedJson);
+    //console.log("Cleaned JSON:", cleanedJson);
 
     try {
       const parsedJson = JSON.parse(cleanedJson);
@@ -148,7 +148,8 @@ async function parse(ai, resume_text) {
     const response = await result.response;
     const text = response.text();
 
-    console.log("Gemini AI response received:", text);
+    //console.log("Gemini AI response received:", text);
+    console.log("Gemini AI response received:");
     return text;
   } catch (error) {
     console.error("Error in Gemini AI parsing:", error);
