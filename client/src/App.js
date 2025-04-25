@@ -1,26 +1,26 @@
 import React from "react";
 import {
   BrowserRouter as Router,
+  Navigate,
   Routes,
   Route,
-  Navigate,
 } from "react-router-dom";
-import { ThemeProvider, createTheme, CircularProgress } from "@mui/material";
-import CssBaseline from "@mui/material/CssBaseline";
-import { useAuth0 } from "@auth0/auth0-react";
 import Auth0ProviderWithHistory from "./components/Auth0ProviderWithHistory";
-import LandingPage from "./components/LandingPage";
-import HomePage from "./components/HomePage";
-import ResumeUploadPage from "./components/ResumeUploadPage";
 import CareerHistory from "./components/CareerHistory";
+import CssBaseline from "@mui/material/CssBaseline";
 import EducationInfo from "./components/EducationInfo";
-import Register from "./components/Register";
-import StatusChecker from "./components/StatusChecker";
-import JobDesc from "./components/JobDescriptions";
-import ResumeGeneration from "./components/ResumeGeneration";
-import ResumeDisplay from "./components/ResumeDisplay";
+import HomePage from "./components/HomePage";
+import JobDescriptions from "./components/JobDescriptions";
+import LandingPage from "./components/LandingPage";
 import MyResumes from "./components/MyResumes";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Register from "./components/Register";
+import ResumeDisplay from "./components/ResumeDisplay";
+import ResumeGeneration from "./components/ResumeGeneration";
+import ResumeUploadPage from "./components/ResumeUploadPage";
+import { useAuth0 } from "@auth0/auth0-react";
 import UserProfile from "./components/UserProfile";
+import { createTheme, CircularProgress, ThemeProvider } from "@mui/material";
 
 const theme = createTheme({
   palette: {
@@ -107,32 +107,6 @@ const AuthCallback = () => {
   return <Navigate to="/home" />;
 };
 
-// Protected Route component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
-
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
-
 // App Routes component (separated to avoid Auth0 context issues)
 const AppRoutes = () => {
   const { isLoading } = useAuth0();
@@ -189,15 +163,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/job-desc"
-        element={
-          <ProtectedRoute>
-            <JobDesc />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resumeRoutes"
+        path="/resume-generation"
         element={
           <ProtectedRoute>
             <ResumeGeneration />
@@ -213,7 +179,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/user-profile"
+        path="/userProfile"
         element={
           <ProtectedRoute>
             <UserProfile />
@@ -221,10 +187,27 @@ const AppRoutes = () => {
         }
       />
       <Route path="/register" element={<Register />} />
-      <Route path="/job-descriptions" element={<JobDesc />} />
-      <Route path="/resume-generation" element={<ResumeGeneration />} />
-      <Route path="/my-resumes" element={<MyResumes />} />
-      <Route path="/user-profile" element={<UserProfile />} />
+      <Route path="/job-descriptions" 
+        element={
+          <ProtectedRoute>
+            <JobDescriptions />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="/my-resumes" 
+        element={
+          <ProtectedRoute>
+            <MyResumes />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="/user-profile" 
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } 
+      />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

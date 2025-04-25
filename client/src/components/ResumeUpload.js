@@ -46,7 +46,10 @@ const ResumeUpload = () => {
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: ".docx,.pdf",
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    },
     onDrop: handleDrop,
     maxFiles: 1,
   });
@@ -137,7 +140,7 @@ const ResumeUpload = () => {
         >
 
           <input {...getInputProps()} 
-          id="resume-upload" />
+          id="resume-dropzone" /> 
           <CloudUploadIcon sx={{ fontSize: 40, color: "action.active" }} />
           <Typography variant="body2" color="text.secondary" mt={1}>
           {isDragActive ? 

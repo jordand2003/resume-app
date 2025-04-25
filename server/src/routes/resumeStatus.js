@@ -2,14 +2,14 @@ const express = require("express");
 const router = express.Router();
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const mongoose = require("mongoose");
-//const ResumeSchema = require("../models/Resume");
+const ResumeSchema = require("../models/Resume");
 
 router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
     try {
+        console.log("Param:", req.params.resumeId); 
         // Checks if resumeId is undefined/not passed
-        if (!req.paramas?.resumeId) {
-            console.log("Here");
-            return res.status(404).json({
+        if (!req.params?.resumeId) {
+            return res.status(401).json({
                 status: "Failed",
                 message: "Resume id is missing",
             });
@@ -24,12 +24,14 @@ router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
                 message: "Failed to connect to Database"
             });
         }
+        console.log("query");
         // Cursor for Resume lookup in the database
-        const Resumes = mongoose.model("Resumes", ResumeSchema);
         // Actual query 
         // resume_id: resumeId - The query condition, ie. selected resume must have matching resume id. 
         // "user_id status"    - The fields we want to get.
-        const query = await Resumes.findOne({ resume_id: resumeId }, "user_id status").exec();
+        console.log("query");
+        const query = await ResumeSchema.findOne({ job_id: resumeId }, "user_id status").exec();
+        console.log("after query");
         // If query returns nothing
         if (!query) 
             return res.status(404).json({ message: "Resume not found" });
@@ -39,7 +41,7 @@ router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
         // The rest handles the three possible statuses the resume may have.
         // To do: Figure out how to retreive resume generation's fail message in order to have a meaningful error
         if (query.status === "failed")
-            return res.status(500).json({ 
+            return res.status(501).json({ 
                 status: "Failed",
                 message: "Resume generation failed" 
             });
@@ -48,7 +50,7 @@ router.get("/:resumeId", verifyJWT, extractUserId, async (req, res) => {
         if (query.status === "completed")
             return res.status(200).json({ status: "Completed" });
     } catch (error) {
-        return res.status(500).json({
+        return res.status(502).json({
             message: "Network failed to retrieve resume status"
         });
     }

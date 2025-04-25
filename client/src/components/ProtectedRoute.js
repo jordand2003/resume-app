@@ -4,8 +4,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { CircularProgress, Box } from "@mui/material";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading, user, getAccessTokenSilently } =
-    useAuth0();
+  const { isAuthenticated, isLoading, user, getAccessTokenSilently } = useAuth0();
 
   if (isLoading) {
     return (
