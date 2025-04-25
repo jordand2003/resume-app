@@ -166,6 +166,8 @@ const Register = () => {
         showApproveBox(true)  // Reveal Confirmation Popup
         //navigate('/home');
       }
+      else if (response.status === 400)
+        setError('Email already taken');
       else {
         setError(data.message || 'Registration failed');
       }

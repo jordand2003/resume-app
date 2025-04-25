@@ -6,16 +6,15 @@ import {
     Avatar,
     Box,
     Typography,
-    CircularProgress,
   } from "@mui/material";
 
 const UserProfile  = () => {
-    const { user, isAuthenticated } = useAuth0();
+    const { user } = useAuth0();
     const navigate = useNavigate();
     
     useEffect(() => {
 
-        if (!isAuthenticated || !user) {
+        if (!user) {
             <div>Please log in to view your profile.</div>;
             navigate('/');
         }
