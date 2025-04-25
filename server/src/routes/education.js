@@ -1,10 +1,129 @@
 const express = require("express");
 const router = express.Router();
 const { verifyJWT, extractUserId } = require("../middleware/auth");
-const { ResumeData } = require("../services/structuredDataService");
+const { ResumeData, EducationHistory } = require("../services/structuredDataService");
 const mongoose = require("mongoose");
 
-// Get education information
+
+// Get education information (Version 2)
+router.get("/v2", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log("Fetching education for user:", userId);
+
+    // Check MongoDB connection
+    const connectionState = mongoose.connection.readyState;
+    console.log("MongoDB connection state:", connectionState);
+    if (connectionState !== 1) {
+      console.error("MongoDB is not connected. State:", connectionState);
+      return res.status(500).json({
+        status: "Failed",
+        message: "Database connection error",
+      });
+    }
+
+    // Gather all jobs with user_id
+    const education = await EducationHistory.find({ user_id: userId })
+
+    if (!education || education.length === 0) {
+      return res.status(200).json({
+        status: "Success",
+        message: "No education information found",
+        data: []
+      });
+    }
+    
+    // Set headers to prevent caching
+    res.set("Cache-Control", "no-store");
+
+    res.status(200).json({
+      status: "Success",
+      message: "Education information retrieved successfully",
+      data: education,
+    });
+  } catch (error) {
+    console.error("Error getting education information:", error);
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed to get education information",
+      error: error.message,
+    });
+  }
+});
+
+// POST api for Education History (Version 2.0)
+router.post("/v2", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { education } = req.body;
+
+    console.log("Received education data for user");
+
+    if (!education || !Array.isArray(education)) {
+      console.log("No education array provided in request");
+      return res.status(400).json({
+        status: "Failed",
+        message: "Education data is required and must be an array",
+      });
+    }
+
+    //console.log("hype testing", education[0], education[0].gpa,)
+    // Attempt to update job_id if it exists
+    const updateDocument = {
+      $set: {
+        Institute: education[0].Institute,
+        Location: education[0].Location,
+        Degree: education[0].Degree,
+        Major: education[0].Major,
+        GPA: education[0].GPA,
+        Start_Date: education[0].Start_Date,
+        End_Date: education[0].End_Date,
+        RelevantCoursework: education[0].RelevantCoursework, 
+        other: education[0].other, 
+      },
+   };
+    const result = await EducationHistory.updateOne({ _id: education[0]._id }, updateDocument)
+    newEntry = false;         // default response
+    responseData = education; // default response
+    //console.log(result.matchedCount, education._id)
+    if(result.matchedCount === 0){ // Add new entry if no update made
+      console.log("adding...")
+      console.log(education[0])
+      const newEducation = new EducationHistory({
+        user_id: userId,
+        Institute: education[0].Institute,
+        Location: education[0].Location,
+        Degree: education[0].Degree,
+        Major: education[0].Major,
+        GPA: education[0].GPA,
+        Start_Date: education[0].Start_Date,
+        End_Date: education[0].End_Date,
+        RelevantCoursework: education[0].RelevantCoursework, // doesn't exist yet
+        other: education[0].other, // doesn't exist yet
+      });
+      await newEducation.save();
+      responseData = newEducation;
+      newEntry = true;
+    } 
+
+    res.json({
+      status: "Success",
+      message: "Education entry submitted successfully",
+      data: responseData,
+      newEntry: newEntry
+    });
+
+  } catch (error) {
+    console.error("Submit Education error:", error);
+    res.status(500).json({
+      status: "Failed",
+      message: "Submit Education failed due to internal error.",
+      error: error.message,
+    });
+  }
+});
+
+// Get education information (ORIGINAL version)
 router.get("/", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
@@ -58,7 +177,7 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
   }
 });
 
-// Submit education information
+// Submit education information (ORIGINAL)
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
@@ -145,5 +264,33 @@ router.post("/extract", verifyJWT, async (req, res) => {
     res.status(500).json({ error: "Failed to extract education information" });
   }
 });
+
+// Delete entry
+router.delete("/v2", verifyJWT, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.body;
+
+    console.log("Received delete education request for user:", userId, " w/ education_id: " + id);
+
+    if (!id) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Must pass in an education_id",
+      });
+    }
+
+    result = await EducationHistory.findOneAndDelete({ _id: id, userId: userId });  // Delete if job id + userId match
+    res.status(200).json({
+      status: "Success",
+      message: "Sucessfully deleted education information",
+      data: result,
+    })
+  } catch (error) {
+    console.error("Error deleting education information:", error);
+    res.status(500).json({ error: "Failed to delete education information" });
+  }
+});
+
 
 module.exports = router;

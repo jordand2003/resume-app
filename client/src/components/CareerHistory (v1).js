@@ -18,7 +18,6 @@ const CareerHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const [edit] = useState(true)
   
   // State variables for validation
   const [careerErrors, setCareerErrors] = useState([]);
@@ -32,8 +31,7 @@ const CareerHistory = () => {
   const fetchCareerHistory = async () => {
     try {
       const token = await getAccessTokenSilently();
-      //const response = await axios.get("http://localhost:8000/api/career-history/history", {
-      const response = await axios.get("http://localhost:8000/api/career-history/history_v2", {
+      const response = await axios.get("http://localhost:8000/api/career-history/history", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -221,13 +219,12 @@ const CareerHistory = () => {
             Career History
           </Typography>
           <form onSubmit={handleSubmit}>
-            {careerHistory.map((job, index) => edit && (
+            {careerHistory.map((job, index) => (
               <Box
                 key={index}
-                data-job-id={job._id} // Embedding the unique ID
                 sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
               >
-                 <TextField
+                <TextField
                   fullWidth
                   label="Company"
                   value={job.company || ""}
@@ -315,26 +312,21 @@ const CareerHistory = () => {
                   required
                   placeholder="Enter job responsibilities and achievements"
                 />
-                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                  <Button type="submit" variant="contained" color="primary" sx={{ mt: 0.25 }}>
-                    Save Career Entry
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      const newCareerHistory = careerHistory.filter(
-                        (_, i) => i !== index
-                      );
-                      setCareerHistory(newCareerHistory);
-                      setCareerErrors(newCareerHistory.map(() => ({})));
-                    }}
-                    sx={{ mt: 1 }}
-                  >
-                    Remove Job
-                  </Button>
-                </Box>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => {
+                    const newCareerHistory = careerHistory.filter(
+                      (_, i) => i !== index
+                    );
+                    setCareerHistory(newCareerHistory);
+                    setCareerErrors(newCareerHistory.map(() => ({})));
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  Remove Job
+                </Button>
               </Box>
             ))}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
@@ -348,9 +340,9 @@ const CareerHistory = () => {
               >
                 Add Another Job
               </Button>
-              {/*<Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary">
                 Save Career History
-              </Button>*/}
+              </Button>
             </Box>
           </form>
         </Paper>

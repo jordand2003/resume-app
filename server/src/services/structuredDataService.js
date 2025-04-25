@@ -76,6 +76,60 @@ const ResumeDataSchema = new mongoose.Schema({
   keywords: [String], // For better duplicate detection
 });
 
+// Schema for Career History
+const CareerHistorySchema = new mongoose.Schema({
+  "Job_Title": String,
+  "Company": String,
+  "Location": String,
+  "Start_Date": String,
+  "End_Date": String,
+  "Responsibilities": {},
+  "user_id": {
+    type: String,
+    required: true,
+    index: true,
+  },
+});
+
+// Schema for Education History
+const EducationHistorySchema = new mongoose.Schema({
+  Institute: {
+    type: String,
+    required: true,
+  },
+  Location: {
+    type: String,
+    required: false,
+  },
+  Degree: {
+    type: String,
+    required: true,
+  },
+  Major: {
+    type: String,
+    required: true,
+  },
+  Start_Date: {
+    type: String,
+    required: true,
+  },
+  End_Date: {
+    type: String,
+    required: true,
+  },
+  GPA: {
+    type: String,
+    required: true,
+  },
+  RelevantCoursework: { type: Array},
+  other: {type: String},
+  user_id: {
+    type: String,
+    required: true,
+    index: true,
+  },
+});
+
 // Create normalized version of content for duplicate checking
 ResumeDataSchema.methods.getNormalizedContent = function () {
   return this.rawContent.toLowerCase().replace(/\s+/g, " ").trim();
@@ -109,7 +163,8 @@ ResumeDataSchema.methods.extractKeywords = function () {
 ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
 
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
-
+const CareerHistory = mongoose.model("careers", CareerHistorySchema);
+const EducationHistory = mongoose.model("educations",EducationHistorySchema);
 /**
  * Extract structured data using AI
  * @param {string} content - Raw content to process
@@ -502,23 +557,6 @@ async function mergeSimilarDocuments(newDoc, similarDocs) {
  */
 async function careerHistSave(careerHistory, userId) {
   if (careerHistory) {
-    // Schema for Career History
-    const CareerHistorySchema = new mongoose.Schema({
-      "Job_Title": String,
-      "Company": String,
-      "Location": String,
-      "Start_Date": String,
-      "End_Date": String,
-      "Responsibilities": {},
-      "user_id": {
-        type: String,
-        required: true,
-        index: true,
-      },
-    });
-
-    const CareerHistory = mongoose.model("careers", CareerHistorySchema);
-
     // Format Objects
     let list = [];
     for (const job of careerHistory) {
@@ -563,35 +601,21 @@ async function careerHistSave(careerHistory, userId) {
  */
 async function eduHistorySave(eduHistory, userId) {
   if (eduHistory) {
-    // Schema for Education History
-    const EducationHistorySchema = new mongoose.Schema({
-      Institute: String,
-      Location: String,
-      Degree: String,
-      Start_Date: String,
-      End_Date: String,
-      GPA: String,
-      RelevantCoursework: {},
-      other: String,
-      user_id: {
-        type: String,
-        required: true,
-        index: true,
-      },
-    });
-
-    const EducationHistory = mongoose.model("educations",EducationHistorySchema);
-
     // Format Objects
     let list = [];
     for (const edu of eduHistory) {
       // Check if the entry already exists
+      //console.log(edu)
       const existingEntry = await EducationHistory.findOne({
         Institute: edu.Institute,
         Location: edu.Location,
         Degree: edu.Degree,
+        Major: edu.Major,
         Start_Date: edu.Start_Date,
         End_Date: edu.End_Date,
+        // GPA: edu.GPA,
+        // RelevantCoursework: edu.RelevantCoursework,
+        // other: edu.other,
         user_id: userId,
       });
 
@@ -600,6 +624,7 @@ async function eduHistorySave(eduHistory, userId) {
           Institute: edu.Institute,
           Location: edu.Location,
           Degree: edu.Degree,
+          Major: edu.Major,
           Start_Date: edu.Start_Date,
           End_Date: edu.End_Date,
           GPA: edu.GPA,
@@ -718,6 +743,8 @@ async function saveStructuredData(content, userId) {
 module.exports = {
   saveStructuredData,
   ResumeData,
+  CareerHistory,
+  EducationHistory,
 };
 
 

@@ -146,14 +146,22 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/*<Route
         path="/career-history"
         element={
           <ProtectedRoute>
-            <CareerHistory />
+            <CareerHistory_v2 />
           </ProtectedRoute>
         }
-      />
+      />*/}
+      <Route
+      path="/career-history"
+      element={
+        <ProtectedRoute>
+          <CareerHistory />
+        </ProtectedRoute>
+      }
+    />
       <Route
         path="/education"
         element={
