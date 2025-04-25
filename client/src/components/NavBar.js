@@ -21,6 +21,7 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import MuiMenuItem from '@mui/material/MenuItem';
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
 import HomeIcon from "@mui/icons-material/Home";
@@ -38,7 +39,18 @@ const NavBar = () => {
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
-  };
+  }; 
+
+  /*const OptionsMenu = () => {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => {
+      setAnchorEl(event.currentTarget);
+    }; */
+
+  /*const MenuItem = styled(MuiMenuItem)({
+    margin: '2px 0',
+  }); */
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -132,7 +144,7 @@ const NavBar = () => {
                 color="inherit"
                 onClick={handleLogout}
                 startIcon={<LogoutIcon />}
-                sx={{ mr: 2 }}
+                sx={{ mr: 2 , fontSize: 15 }}
               >
                 Logout
               </Button>
