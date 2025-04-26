@@ -17,7 +17,7 @@ import {
 import { styled, keyframes } from "@mui/material/styles";
 import ParticlesBackground from "./ParticlesBackground";
 import { Link } from 'react-router-dom';
-import Logo from "./Logo";
+import Logo from './Logo';
 
 const fadeIn = keyframes`
   from {
