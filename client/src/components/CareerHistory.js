@@ -140,12 +140,44 @@ const CareerHistory = () => {
         }
     };
 
-    const handleRemoveCareerEntry = (index) => {
+    const handleRemoveCareerEntry = async (index) => {
         const newCareerHistory = careerHistory.filter((_, i) => i !== index);
         setCareerHistory(newCareerHistory);
         setCareerErrors(newCareerHistory.map(() => ({})));
+        
+        setError(null);
+        setSuccessMessage("");
+      
+        const isNew = !careerHistory[index]._id; // Check if this is a new, unsaved entry
+        console.log("Is new entry:", isNew);
+      
+        // Only try to delete from backend if it's not a new entry
+        if (!isNew) {
+          try {
+            const token = await getAccessTokenSilently();
+            const edu_id = careerHistory[index]._id;
+            const response = await axios.delete("http://localhost:8000/api/career-history/history_v2", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              data: { id: edu_id },
+            });
+      
+            if (response.data.status === "Success") {
+              setSuccessMessage("Education entry deleted successfully!");
+            }
+          } catch (err) {
+            console.error("Delete failed:", err);
+            setError(
+              "Failed to delete education entry: " +
+              (err.response?.data?.message || err.message)
+            );
+          }
+        }
     };
-
+        
+    
     const handleAddCareerEntry = () => {
         setCareerHistory([...careerHistory, {}]);
         setCareerErrors([...careerErrors, {}]);

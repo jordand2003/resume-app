@@ -161,7 +161,7 @@ router.post("/history_v2", verifyJWT, extractUserId, async (req, res) => {
         Responsibilities: work_experience[0].Responsibilities, 
       },
    };
-   console.log("mario",updateDocument)
+
     const result = await CareerHistory.updateOne({ _id: work_experience[0]._id }, updateDocument)
     newEntry = false;         // default response
     responseData = work_experience; // default response
@@ -261,6 +261,33 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
       message: "Submit Career History failed due to internal error.",
       error: error.message,
     });
+  }
+});
+
+// Delete entry
+router.delete("/history_v2", verifyJWT, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.body;
+
+    console.log("Received delete Career request for user:", userId, " w/ Career_id: " + id);
+
+    if (!id) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Must pass in an _id",
+      });
+    }
+
+    result = await CareerHistory.findOneAndDelete({ _id: id, userId: userId });  // Delete if job id + userId match
+    res.status(200).json({
+      status: "Success",
+      message: "Sucessfully deleted Career information",
+      data: result,
+    })
+  } catch (error) {
+    console.error("Error deleting Career information:", error);
+    res.status(500).json({ error: "Failed to delete Career information" });
   }
 });
 
