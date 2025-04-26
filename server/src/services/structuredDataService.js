@@ -78,12 +78,27 @@ const ResumeDataSchema = new mongoose.Schema({
 
 // Schema for Career History
 const CareerHistorySchema = new mongoose.Schema({
-  "Job_Title": String,
-  "Company": String,
-  "Location": String,
-  "Start_Date": String,
-  "End_Date": String,
-  "Responsibilities": {},
+  "Job_Title": {
+    type: String,
+    required: true,
+  },
+  "Company": {
+    type: String,
+    required: true,
+  },
+  "Location": {
+    type: String,
+    required: false,
+  },
+  "Start_Date": {
+    type: String,
+    required: true,
+  },
+  "End_Date": {
+    type: String,
+    required: true,
+  },
+  "Responsibilities": { type:Array },
   "user_id": {
     type: String,
     required: true,
