@@ -67,4 +67,21 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
   }
 });
 
+//Get Formatted Resume
+router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    // Two ways to get the resumeId -> cache or database
+    // 1. IDK
+    // 2. get formatted resume here with a mongodb call...
+    res.status(200).download(
+      /* path: dirname__ */'', 
+      /* filename */ `resume${resume.id}.${resume.file_type}`
+    );
+  } catch (error) {
+    console.error("Error downloading formatted resume:", error);
+    res.status(500).json({ message: "Failed to download resume" });
+  }
+});
+
 module.exports = router;
