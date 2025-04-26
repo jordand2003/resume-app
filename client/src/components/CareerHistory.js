@@ -311,9 +311,17 @@ const CareerHistory = () => {
                                 value={job.description || ""}
                                 onChange={(e) => handleInputChange(index, "description", e.target.value)}
                                 margin="normal"
-                                required
                                 placeholder="Enter job responsibilities and achievements"
                             />
+                            {/*
+                            <TextField
+                                fullWidth
+                                label="Location"
+                                value={job.location || ""}
+                                onChange={(e) => handleInputChange(index, "location", e.target.value)}
+                                margin="normal"
+                                placeholder="Enter location"
+                            />*/}
                             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                                 <Button
                                     type="button"
