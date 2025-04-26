@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { keyframes } from "@mui/system";
+import LandingPageLogo from "../../src/landing-page-logo-nbg.png" ;
 
 const gradientShift = keyframes`
   0% {
@@ -16,42 +17,18 @@ const gradientShift = keyframes`
 
 const Logo = () => {
   return (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
-      <Box
-        sx={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "12px",
-          background:
-            "linear-gradient(-45deg, #FF6B6B, #4ECDC4, #45b8b0, #FF6B6B)",
-          backgroundSize: "400% 400%",
-          animation: `${gradientShift} 3s ease infinite`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          mr: 2,
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            color: "white",
-            fontWeight: 700,
-            textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          }}
-        >
-          L
-        </Typography>
-      </Box>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <img src={LandingPageLogo} alt="Logo" style={{height: 60, marginBottom: 12}} ></img>
       <Typography
         variant="h5"
         sx={{
           fontWeight: 700,
-          background: "linear-gradient(45deg, #FF6B6B, #4ECDC4)",
+          background: "linear-gradient(45deg, #FFFFE0, #4ECDC4)",
           backgroundClip: "text",
           textFillColor: "transparent",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
+          alignContent: "right"
         }}
       >
         Lighthouse

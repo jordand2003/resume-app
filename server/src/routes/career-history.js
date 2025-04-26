@@ -143,60 +143,58 @@ router.post("/history_v2", verifyJWT, extractUserId, async (req, res) => {
     });
 
     if (!work_experience || !Array.isArray(work_experience)) {
-      console.log("No work experience array provided in request");
+      console.log("No education array provided in request");
       return res.status(400).json({
         status: "Failed",
-        message: "Career history data is required and must be an array",
+        message: "work_experience data is required and must be an array",
       });
     }
 
-    // Remove duplicates passed in
-    const cleanedWorkExp = work_experience => new Set(work_experience).size === work_experience.length;
+    // Attempt to update job_id if it exists
+    const updateDocument = {
+      $set: {
+        Job_Title: work_experience[0].Job_Title,
+        Company: work_experience[0].Company,
+        Location: work_experience[0].Location,
+        Start_Date: work_experience[0].Start_Date,
+        End_Date: work_experience[0].End_Date,
+        Responsibilities: work_experience[0].Responsibilities, 
+      },
+   };
 
-    let list = []
-
-    // Append to table
-    for (const job of cleanedWorkExp) {
-      // Check if the entry already exists
-      const existingEntry = await CareerHistory.findOne({
-        Job_Title: job.Job_Title,
-        Company: job.Company,
-        Location: job.Location,
-        Start_Date: job.Start_Date,
-        End_Date: job.End_Date,
+    const result = await CareerHistory.updateOne({ _id: work_experience[0]._id }, updateDocument)
+    newEntry = false;         // default response
+    responseData = work_experience; // default response
+    //console.log(result.matchedCount, education._id)
+    if(result.matchedCount === 0){ // Add new entry if no update made
+      console.log("adding...")
+      console.log(work_experience[0])
+      const newCareer = new CareerHistory({
         user_id: userId,
+        Job_Title: work_experience[0].Job_Title,
+        Company: work_experience[0].Company,
+        Location: work_experience[0].Location,
+        Start_Date: work_experience[0].Start_Date,
+        End_Date: work_experience[0].End_Date,
+        Responsibilities: work_experience[0].Responsibilities,
       });
-
-      if (!existingEntry) {
-        list.push({
-          Job_Title: job.Job_Title,
-          Company: job.Company,
-          Location: job.Location,
-          Start_Date: job.Start_Date,
-          End_Date: job.End_Date,
-          Responsibilities: job.Responsibilities,
-          user_id: userId,
-        });
-      }
-    }
-
-    if (list.length > 0) {
-      const result = await CareerHistory.insertMany(list);
-      console.log("Saved career history to careers cluster");
-    } else {
-      console.log("No new career entries to save.");
-    }
+      await newCareer.save();
+      responseData = newCareer;
+      newEntry = true;
+    } 
 
     res.json({
       status: "Success",
-      message: "Career history submitted successfully",
-      data: result,
+      message: "Education entry submitted successfully",
+      data: responseData,
+      newEntry: newEntry
     });
+
   } catch (error) {
-    console.error("Submit Career History error:", error);
+    console.error("Submit Education error:", error);
     res.status(500).json({
       status: "Failed",
-      message: "Submit Career History failed due to internal error.",
+      message: "Submit Education failed due to internal error.",
       error: error.message,
     });
   }
@@ -263,6 +261,33 @@ router.post("/history", verifyJWT, extractUserId, async (req, res) => {
       message: "Submit Career History failed due to internal error.",
       error: error.message,
     });
+  }
+});
+
+// Delete entry
+router.delete("/history_v2", verifyJWT, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.body;
+
+    console.log("Received delete Career request for user:", userId, " w/ Career_id: " + id);
+
+    if (!id) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Must pass in an _id",
+      });
+    }
+
+    result = await CareerHistory.findOneAndDelete({ _id: id, userId: userId });  // Delete if job id + userId match
+    res.status(200).json({
+      status: "Success",
+      message: "Sucessfully deleted Career information",
+      data: result,
+    })
+  } catch (error) {
+    console.error("Error deleting Career information:", error);
+    res.status(500).json({ error: "Failed to delete Career information" });
   }
 });
 

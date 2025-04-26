@@ -180,7 +180,7 @@ const NavBar = () => {
                 onClose={handleClose}
               >
                 <MenuItem onClick={() => handleMenuClick("/user-profile")}>
-                  My Account
+                  My Profile
                 </MenuItem>
                 <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
                   Resume Generation
