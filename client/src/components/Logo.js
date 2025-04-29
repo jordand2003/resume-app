@@ -20,7 +20,7 @@ const Logo = () => {
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <img src={LandingPageLogo} alt="Logo" style={{height: 60, marginBottom: 12}} ></img>
       <Typography
-        variant="h5"
+        variant="h4"
         sx={{
           fontWeight: 700,
           background: "linear-gradient(45deg, #FFFFE0, #4ECDC4)",
