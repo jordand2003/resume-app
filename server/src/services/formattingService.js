@@ -1,5 +1,5 @@
-const { plaintext_options, markup_options, pdf_options } = require("../options.js");
-const { marked } = require('marked');
+const { plaintext_options, markup_options, pdf_options, html_options } = require("../options.js");
+//const { marked } = require('marked');
 const mongoose = require("mongoose");
 
 
@@ -102,12 +102,57 @@ class FormattingService {
      *     with properties like title, company, duration, and achievements.
      *   - education: An array of objects, where each object represents an education entry
      *     with properties like degree, institution, and year.
-     * @param {string} style - Specificy what color style you want
+     * @param {string} template - Specificy what color template you want
      * @returns {string} - A string containing the formatted HTML resume.
      */
-    static async htmlResume(resumeContent, style){
-        // May replace later
-        return marked.parse(this.markupResume(resumeContent, style))
+    static async htmlResume(resumeContent, template){
+        // Get markup template
+        const selectedTemplate = html_options.template[template] || html_options.template["basic"]; 
+        let html = selectedTemplate
+
+        // Replace skills
+        if (resumeContent.skills && resumeContent.skills.length) {
+            const skillsList = resumeContent.skills.map(skill => `<li>${skill}</li>`).join('');
+            html = html.replace('{{skills}}', `<ul>${skillsList}</ul>`);
+        } else {
+            html = html.replace('<h2>Skills</h2>\n{{skills}}', ''); // Remove section if no skills
+        }
+
+        // Replace experience
+        if (resumeContent.experience && resumeContent.experience.length) {
+            let experienceEntries = '';
+            resumeContent.experience.forEach(job => {
+                experienceEntries += `<h3>${job.title}</h3>\n`;
+                experienceEntries += `<p><strong>Company:</strong> ${job.company}</p>\n`;
+                experienceEntries += `<p><strong>Duration:</strong> ${job.duration}</p>\n`;
+                if (job.achievements && job.achievements.length) {
+                    experienceEntries += `<p><strong>Achievements:</strong></p>\n<ul>\n`;
+                    job.achievements.forEach(achievement => {
+                        experienceEntries += `<li>${achievement}</li>\n`;
+                    });
+                    experienceEntries += `</ul>\n`;
+                }
+                experienceEntries += `\n`;
+            });
+            html = html.replace('{{experience}}', experienceEntries);
+        } else {
+            html = html.replace('<h2>Experience</h2>\n{{experience}}', ''); // Remove section if no experience
+        }
+
+        // Replace education
+        if (resumeContent.education && resumeContent.education.length) {
+            let educationEntries = '';
+            resumeContent.education.forEach(edu => {
+                educationEntries += `<h3>${edu.degree}</h3>\n`;
+                educationEntries += `<p><strong>Institution:</strong> ${edu.institution}</p>\n`;
+                educationEntries += `<p><strong>Year:</strong> ${edu.year}</p>\n\n`;
+            });
+            html = html.replace('{{education}}', educationEntries);
+        } else {
+            html = html.replace('<h2>Education</h2>\n{{education}}', ''); // Remove section if no education
+        }
+
+        return html;
     }
 
     /**
@@ -120,76 +165,95 @@ class FormattingService {
      *     with properties like title, company, duration, and achievements.
      *   - education: An array of objects, where each object represents an education entry
      *     with properties like degree, institution, and year.
-     * @param {string} style - Specificy what color style you want
+     * @param {string} template - Specificy what color style you want
      * @returns {string} - A string containing the formatted markup resume.
      */
-    static async markupResume(resumeContent, style){
+    static async markupResume(resumeContent, template){
 
-        // Get markup style
-        const selectedStyle = markup_options[style] || markup_options["basic"]; 
-        
-        let markdown = `# {{fullName}}\n#### {{position}}\n{{phoneNumber}}|{{emailAddress}}|{{websites}}\n\n{{Location}}\n`
+        // Get markup template
+        const selectedTemplate = markup_options.template[template] || markup_options.template["basic"]; 
+        let markdown = selectedTemplate
 
         /// Populate Summary
         if (resumeContent.summary) {
-            markdown += `## Summary\n${resumeContent.summary}\n\n`;
+            markdown = markdown.replace('{{summary}}', resumeContent.summary);
+        } else {
+            markdown = markdown.replace('##Summary\n{{summary}}\n\n', ''); // Remove section if no summary
         }
 
-        // Populate Skills
+        // Populate skills
         if (resumeContent.skills && resumeContent.skills.length) {
-            markdown += `## Skills\n${resumeContent.skills.map(skill => `* ${skill}`).join('\n')}\n\n`;
+            const skillsText = resumeContent.skills.map(skill => `* ${skill}`).join('\n');
+            markdown = markdown.replace('{{skills}}', skillsText);
+        } else {
+            markdown = markdown.replace('## Skills\n{{skills}}\n\n', ''); // Remove section if no skills
         }
 
-        // Populate Experience
+        // Populate experience
         if (resumeContent.experience && resumeContent.experience.length) {
-            markdown += `## Experience\n`;
-            resumeContent.experience.forEach(job => {
-                markdown += `### ${job.title}\n`;
-                markdown += `* **Company:** ${job.company}\n`;
-                markdown += `* **Duration:** ${job.duration}\n`;
+            let experienceText = '';
+            resumeContent.experience.forEach((job, index) => {
+                experienceText += `### {{experience${index + 1}Title}}\n`;
+                experienceText += `* **Company:** {{experience${index + 1}Company}}\n`;
+                experienceText += `* **Duration:** {{experience${index + 1}Duration}}\n`;
                 if (job.achievements && job.achievements.length) {
-                    markdown += `* **Achievements:**\n`;
+                    experienceText += `* **Achievements:**\n`;
                     job.achievements.forEach(achievement => {
-                        markdown += `    * ${achievement}\n`;
+                        experienceText += `    * {{experience${index + 1}Achievement}}\n`.replace('{{experience' + (index + 1) + 'Achievement}}', achievement);
                     });
                 }
-                markdown += `\n`;
+                experienceText += `\n`;
+
+                markdown = markdown.replace(`{{experience${index + 1}Title}}`, job.title || '');
+                markdown = markdown.replace(`{{experience${index + 1}Company}}`, job.company || '');
+                markdown = markdown.replace(`{{experience${index + 1}Duration}}`, job.duration || '');
             });
+            markdown = markdown.replace('{{experience}}', experienceText);
+        } else {
+            markdown = markdown.replace('## Experience\n{{experience}}\n', ''); // Remove section if no experience
         }
 
-        // Populate Education
+        // Populate education
         if (resumeContent.education && resumeContent.education.length) {
-            markdown += `## Education\n`;
-            resumeContent.education.forEach(edu => {
-                markdown += `### ${edu.degree}\n`;
-                markdown += `* **Institution:** ${edu.institution}\n`;
-                markdown += `* **Year:** ${edu.year}\n`;
-                markdown += `\n`;
+            let educationText = '';
+            resumeContent.education.forEach((edu, index) => {
+                educationText += `### {{education${index + 1}Degree}}\n`;
+                educationText += `* **Institution:** {{education${index + 1}Institution}}\n`;
+                educationText += `* **Year:** {{education${index + 1}Year}}\n\n`;
+
+                markdown = markdown.replace(`{{education${index + 1}Degree}}`, edu.degree || '');
+                markdown = markdown.replace(`{{education${index + 1}Institution}}`, edu.institution || '');
+                markdown = markdown.replace(`{{education${index + 1}Year}}`, edu.year || '');
             });
+            markdown = markdown.replace('{{education}}', educationText);
+        } else {
+            markdown = markdown.replace('## Education\n{{education}}\n', ''); // Remove section if no education
         }
 
-        // INCOMPLETE CERTIFICATIONS & AWARDS
+        // Populate certifications and awards
         if (resumeContent.certificationsAndAwards && resumeContent.certificationsAndAwards.length) {
-            markdown += `## Certifications & Awards\n`;
-            resumeContent.certificationsAndAwards.forEach(item => {
-                markdown += `* ${item}\n`;
-            });
-            markdown += `\n`;
+            const certificationsText = resumeContent.certificationsAndAwards.map(item => `* ${item}`).join('\n');
+            markdown = markdown.replace('{{certificationsAndAwards}}', certificationsText);
+        } else {
+            markdown = markdown.replace('## Certifications & Awards\n{{certificationsAndAwards}}\n\n', ''); // Remove section if none
         }
 
-        // INCOMPLETE PROJECTS
+        // Populate projects
         if (resumeContent.projects && resumeContent.projects.length) {
-            markdown += `## Projects\n`;
-            resumeContent.projects.forEach(project => {
-                markdown += `### ${project.name}\n`;
-                markdown += `* ${project.description}\n`;
-                // Add more project details as needed
-                markdown += `\n`;
+            let projectsText = '';
+            resumeContent.projects.forEach((project, index) => {
+                projectsText += `### {{project${index + 1}Name}}\n`;
+                projectsText += `* {{project${index + 1}Description}}\n\n`;
+
+                markdown = markdown.replace(`{{project${index + 1}Name}}`, project.name || '');
+                markdown = markdown.replace(`{{project${index + 1}Description}}`, project.description || '');
             });
+            markdown = markdown.replace('{{projects}}', projectsText);
+        } else {
+            markdown = markdown.replace('## Projects\n{{projects}}\n', ''); // Remove section if no projects
         }
 
-        // Return markup
-        return markdown
+        return markdown;
     }
 }
 
@@ -224,6 +288,7 @@ module.exports = {
     optionsList: FormattingService.optionsList,
     plainTextResume: FormattingService.plainTextResume,
     markupResume: FormattingService.markupResume,
+    htmlResume: FormattingService.htmlResume,
     FormattedContent
   };
   

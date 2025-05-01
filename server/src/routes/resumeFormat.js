@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const Resume = require("../models/Resume");
 // const FormattingService = require("../services/formattingService")
-const { plainTextResume, markupResume, optionsList, FormattedContent } = require("../services/formattingService");
+const { plainTextResume, markupResume, htmlResume, optionsList, FormattedContent } = require("../services/formattingService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 
 // MISSING DESCRIPTION
@@ -24,8 +24,8 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
         //const { resumeId, formatType, templateId, styleId, user_id } = req.body
         ///*
         const resumeId = '6807f29b8d05206b4f804cc0'
-        let formatType = 'plain-text BAD'
-        const styleId = 'bad input'
+        let formatType = 'html'
+        const templateId = 'bad input'
         const user_id = '6807e89d111668d948a8ef9b'
         //*/
 
@@ -57,11 +57,11 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
                 break;
             case "html":
                 // fetch template
-                response = await htmlResume(resume.content, styleId);
+                response = await htmlResume(resume.content, templateId);
                 break;
             default:    // markup
                 formatType = "markup"
-                response = await markupResume(resume.content, styleId);
+                response = await markupResume(resume.content, templateId);
                 break;
         }
 
