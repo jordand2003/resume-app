@@ -165,7 +165,7 @@ router.post("/history_v2", verifyJWT, extractUserId, async (req, res) => {
     const result = await CareerHistory.updateOne({ _id: work_experience[0]._id }, updateDocument)
     newEntry = false;         // default response
     responseData = work_experience; // default response
-    //console.log(result.matchedCount, education._id)
+
     if(result.matchedCount === 0){ // Add new entry if no update made
       console.log("adding...")
       console.log(work_experience[0])

@@ -56,6 +56,7 @@ const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const jobDescRoutes = require("./routes/job-desc");
 const resumeRoutes = require("./routes/resumeRoutes");
+const format = require("./routes/resumeFormat")
 
 // Routes
 app.get("/", (req, res) => {
@@ -79,6 +80,9 @@ app.use("/api/job-desc", jobDescRoutes);
 
 // Resume Generation and Status Routes
 app.use("/api/resumes", resumeRoutes);
+
+// Resume 
+app.use("/api/format", format)
 
 // Protected route example
 app.get("/protected", checkJwt, (req, res) => {
