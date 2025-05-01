@@ -83,10 +83,7 @@ const CareerHistory = () => {
             errors.startDate = "Invalid start date format. Use MM-YYYY or Month YYYY.";
             hasError = true;
         }
-        if (!job.endDate) {
-            errors.endDate = "End date is required.";
-            hasError = true;
-        } else if (!/^(?:(?:[A-Z][a-z]*|\d{1,2})\s)*\d{4}|[Pp]resent$/.test(job.endDate)) {
+        if (job.endDate && !/^(?:(?:[A-Z][a-z]*|\d{1,2})\s)*\d{4}|[Pp]resent$/.test(job.endDate)) {
             errors.endDate = "Invalid end date format. Must include Month YYYY or Present.";
             hasError = true;
         }
@@ -104,7 +101,7 @@ const CareerHistory = () => {
                 Job_Title: job.position,
                 Company: job.company,
                 Start_Date: job.startDate,
-                End_Date: job.endDate,
+                End_Date: job.endDate || "Present",
                 Responsibilities: job.description ? job.description.split("\n") : [],
             };
 

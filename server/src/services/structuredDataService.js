@@ -78,28 +78,29 @@ const ResumeDataSchema = new mongoose.Schema({
 
 // Schema for Career History
 const CareerHistorySchema = new mongoose.Schema({
-  "Job_Title": {
+  Job_Title: {
     type: String,
     required: true,
   },
-  "Company": {
+  Company: {
     type: String,
     required: true,
   },
-  "Location": {
+  Location: {
     type: String,
     required: false,
   },
-  "Start_Date": {
+  Start_Date: {
     type: String,
     required: true,
   },
-  "End_Date": {
+  End_Date: {
     type: String,
-    required: true,
+    required: false,
+    default: "Present",
   },
-  "Responsibilities": { type:Array },
-  "user_id": {
+  Responsibilities: { type: Array },
+  user_id: {
     type: String,
     required: true,
     index: true,
@@ -136,8 +137,8 @@ const EducationHistorySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  RelevantCoursework: { type: Array},
-  other: {type: String},
+  RelevantCoursework: { type: Array },
+  other: { type: String },
   user_id: {
     type: String,
     required: true,
@@ -179,7 +180,7 @@ ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
 
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
 const CareerHistory = mongoose.model("careers", CareerHistorySchema);
-const EducationHistory = mongoose.model("educations",EducationHistorySchema);
+const EducationHistory = mongoose.model("educations", EducationHistorySchema);
 /**
  * Extract structured data using AI
  * @param {string} content - Raw content to process
@@ -596,7 +597,7 @@ async function careerHistSave(careerHistory, userId) {
           user_id: userId,
         });
       } else {
-        console.log("Duplicate job")
+        console.log("Duplicate job");
       }
     }
 
@@ -648,7 +649,7 @@ async function eduHistorySave(eduHistory, userId) {
           user_id: userId,
         });
       } else {
-        console.log("Duplicate edu")
+        console.log("Duplicate edu");
       }
     }
 
@@ -679,12 +680,12 @@ async function saveStructuredData(content, userId) {
     // Extract structured data
     const parsedData = await extractStructuredData(content);
 
-     // (Added 4/24) Save structured data separetly in individual db tables
-     const careerHist = parsedData.work_experience || [];
-     const eduHist = parsedData.education || [];
-     //const skills = I.O.U => parsedData attribute for skills doesn't exist yet
-     await careerHistSave(careerHist, userId)
-     await eduHistorySave(eduHist, userId)
+    // (Added 4/24) Save structured data separetly in individual db tables
+    const careerHist = parsedData.work_experience || [];
+    const eduHist = parsedData.education || [];
+    //const skills = I.O.U => parsedData attribute for skills doesn't exist yet
+    await careerHistSave(careerHist, userId);
+    await eduHistorySave(eduHist, userId);
 
     // Create content hash
     const contentHash = require("crypto")
@@ -700,7 +701,7 @@ async function saveStructuredData(content, userId) {
 
     if (existingDoc) {
       // Update existing document
-      console.log("Existing document found. Updating...")
+      console.log("Existing document found. Updating...");
       existingDoc.rawContent = content;
       existingDoc.parsedData = parsedData;
       existingDoc.keywords = existingDoc.extractKeywords();
@@ -761,7 +762,6 @@ module.exports = {
   CareerHistory,
   EducationHistory,
 };
-
 
 /*
 // Check for Duplicate Response; abort if found
