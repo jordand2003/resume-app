@@ -21,13 +21,13 @@ router.get("/options", verifyJWT, async (req, res) => {
 // MISSING JWT !!!!!!!!! (NOte to self)
 router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
     try {
-        const { resumeId, formatType, templateId, styleId, user_id } = req.body
-        /*
+        //const { resumeId, formatType, templateId, styleId, user_id } = req.body
+        ///*
         const resumeId = '6807f29b8d05206b4f804cc0'
         let formatType = 'plain-text BAD'
         const styleId = 'bad input'
         const user_id = '6807e89d111668d948a8ef9b'
-        */
+        //*/
 
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
@@ -55,9 +55,12 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
             case "pdf":
                 // fetch template
                 break;
+            case "html":
+                // fetch template
+                response = await htmlResume(resume.content, styleId);
+                break;
             default:    // markup
-                console.log("Generating markup");
-                formatType = "Markup"
+                formatType = "markup"
                 response = await markupResume(resume.content, styleId);
                 break;
         }
@@ -74,14 +77,7 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
               new: true,    // Return the updated document
             }
         );
-        /*
-        const formattedContent = new FormattedContent({
-            content: response,
-            fileType: formatType,
-            user_id: user_id,
-            resume_id: resumeId,
-        })
-        await formattedContent.save();*/
+
         
         // Populate with User Info 
         /*
@@ -89,6 +85,8 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
         {{phoneNumber}}
         {{emailAddress}}
         */
+
+        console.log(response)
 
         // Response 
         res.status(200).json({

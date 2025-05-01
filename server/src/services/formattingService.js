@@ -93,6 +93,24 @@ class FormattingService {
     }
 
     /**
+     * Generates an HTML resume from the provided resume content.
+     *
+     * @param {Object} resumeContent - An object containing the resume data, including:
+     *   - summary: A string representing the resume summary.
+     *   - skills: An array of strings representing the resume skills.
+     *   - experience: An array of objects, where each object represents a job experience
+     *     with properties like title, company, duration, and achievements.
+     *   - education: An array of objects, where each object represents an education entry
+     *     with properties like degree, institution, and year.
+     * @param {string} style - Specificy what color style you want
+     * @returns {string} - A string containing the formatted HTML resume.
+     */
+    static async htmlResume(resumeContent, style){
+        // May replace later
+        return marked.parse(this.markupResume(resumeContent, style))
+    }
+
+    /**
      * Generates a markup resume from the provided resume content.
      *
      * @param {Object} resumeContent - An object containing the resume data, including:
@@ -110,7 +128,7 @@ class FormattingService {
         // Get markup style
         const selectedStyle = markup_options[style] || markup_options["basic"]; 
         
-        let markdown = `# {{fullName}}\n## {{position}}\n{{Location}}\n{{phoneNumber}}|{{emailAddress}}|{{websites}}`
+        let markdown = `# {{fullName}}\n#### {{position}}\n{{phoneNumber}}|{{emailAddress}}|{{websites}}\n\n{{Location}}\n`
 
         /// Populate Summary
         if (resumeContent.summary) {
@@ -171,7 +189,7 @@ class FormattingService {
         }
 
         // Return markup
-        return marked.parse(markdown)
+        return markdown
     }
 }
 
