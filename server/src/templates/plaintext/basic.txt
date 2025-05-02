@@ -1,0 +1,27 @@
+INFO
+{{fullName}}
+{{position}}
+{{location}}
+{{phoneNumber}}
+{{emailAddress}}
+{{websites}}
+        
+SUMMARY
+{{summary}}
+        
+SKILLS
+{{skills}}
+        
+EXPERIENCE
+{{experience}}
+
+        
+EDUCATION
+{{education}}
+        
+        
+CERTIFICATIONS & AWARDS
+{{certifications+awards}}
+        
+PROJECTS
+{{projects}}
