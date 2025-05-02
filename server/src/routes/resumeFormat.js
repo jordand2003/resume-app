@@ -74,7 +74,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         }
 
         // Populate with User Info 
-        const u = await User.findOne({user_id: user_id})
+        const u = await User.findOne({user_id: userId})
         response = response.replace("{{fullName", u.name).replace("{{emailAddress}}", u.email)
         if (u.phone) {  // Phone #
             response = response.replace("{{phoneNumber}}", u.phone);
@@ -94,14 +94,14 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         // Try finding jobTitle
         let jobTitle = resume.jobTitle
         if (!jobTitle){
-            const j = await JobDesc.findOne({ _id: resume.jobId, userId: user_id})
+            const j = await JobDesc.findOne({ _id: resume.jobId, userId: userId})
             jobTitle =  j.job_title || '[Missing Job Title]'
         }
         response = response.replace("{{position}}", jobTitle)
 
         // Add to DB if it doesn't exist (lifetime of 30 minutes)
         await FormattedContent.findOneAndUpdate(
-            { user_id: user_id, resume_id: resumeId, fileType: formatType }, // Search filter
+            { user_id: userId, resume_id: resumeId, fileType: formatType }, // Search filter
             {
               content: response,
               createdAt: new Date(), // Reset TTL timer
