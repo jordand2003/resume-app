@@ -61,7 +61,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         // Check formatType
         let response;
         switch(formatType.toLocaleLowerCase()){
-            case "plain-text":
+            case "plaintext":
                 response = await plainTextResume(resume.content);
                 break;
             case "pdf":
