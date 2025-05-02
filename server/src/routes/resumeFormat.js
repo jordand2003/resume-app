@@ -3,31 +3,43 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const Resume = require("../models/Resume");
 // const FormattingService = require("../services/formattingService")
-const { plainTextResume, markupResume, htmlResume, optionsList, FormattedContent } = require("../services/formattingService");
+const { plainTextResume, markupResume, htmlResume, latexResume, optionsList, allOptions, FormattedContent } = require("../services/formattingService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 
-// MISSING DESCRIPTION
-router.get("/options", verifyJWT, async (req, res) => {
-    const { formatType } = req.body
-
-    const response = optionsList(formatType)
-
-    res.status(200).json({
-        message: "Styles & Templates for " + formatType,
-        content: response,
-    })
-})
-
-// MISSING JWT !!!!!!!!! (NOte to self)
-router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
+// Get an object of all available templates for a specific formatType
+router.get("/options/:formatType", async (req, res) => {
+    const { formatType } = req.params;
+  
     try {
-        //const { resumeId, formatType, templateId, styleId, user_id } = req.body
-        ///*
+      const response = await optionsList(formatType);
+      res.status(200).json({
+        message: `Templates for ${formatType}`,
+        content: response,
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to fetch options",
+        message: error.message,
+      });
+    }
+});
+
+router.get("/options", async (req, res) => {
+    res.status(200).json({
+        data: await allOptions()
+    });
+});
+
+// Generates a formatted resume using a specified template and format type (pdf, plaintext, html, markup)
+router.post("/", verifyJWT, extractUserId, async (req, res) => {
+    try {
+        const { resumeId, formatType, templateId, styleId, user_id } = req.body
+        /*
         const resumeId = '6807f29b8d05206b4f804cc0'
-        let formatType = 'html'
+        let formatType = 'plaintext'
         const templateId = 'bad input'
         const user_id = '6807e89d111668d948a8ef9b'
-        //*/
+        */
 
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
@@ -53,17 +65,24 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
                 response = await plainTextResume(resume.content);
                 break;
             case "pdf":
-                // fetch template
+            case "latex":
+                response = await latexResume(resume.content);
                 break;
             case "html":
-                // fetch template
-                response = await htmlResume(resume.content, templateId);
+                response = await htmlResume(resume.content, templateId || 'basic');
                 break;
             default:    // markup
                 formatType = "markup"
-                response = await markupResume(resume.content, templateId);
+                response = await markupResume(resume.content, templateId || 'basic');
                 break;
         }
+
+        // Populate with User Info 
+        /*
+        {{fullName}}
+        {{phoneNumber}}
+        {{emailAddress}}
+        */
 
         // Add to DB if it doesn't exist (lasts for 30 minutes)
         await FormattedContent.findOneAndUpdate(
@@ -78,22 +97,9 @@ router.post("/", /*verifyJWT, extractUserId,*/ async (req, res) => {
             }
         );
 
-        
-        // Populate with User Info 
-        /*
-        {{fullName}}
-        {{phoneNumber}}
-        {{emailAddress}}
-        */
-
-        console.log(response)
-
-        // Response 
-        res.status(200).json({
-            message: formatType + " FORMATTED",
-            resumeID: resumeId,
-            content: response,
-        })
+        console.log("Formatted resume: ", resumeId, " as ", formatType)
+        res.set('Content-Type', 'text/html');
+        res.status(200).send(response);
     }
     catch(error) {
         console.log("Error formatting resume: ", error)

@@ -1,0 +1,88 @@
+<style>
+    #halves_container {
+    display: flex;
+    flex-direction: row;
+    gap: 50px
+    }
+
+    #left-side *:not(#name):not(#pos) {
+        flex: 1;
+        font-size: .80em
+    }
+
+    #left-side {
+        max-width: 30%;
+    }
+    
+    #right-side {
+        flex: 1.5;
+        max-width: 70%;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #f7f9fc;
+        color: #333;
+    }
+
+    h1 {
+        font-size: 2.2em;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    h2 {
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 5px;
+        color: #2980b9;
+        margin-top: 30px;
+    }
+
+    h3 {
+        color: #34495e;
+        margin-top: 20px;
+    }
+        p, li {
+        font-size: 0.95em;
+    }
+
+    ul {
+        margin: 10px 0 20px 20px;
+    }
+
+    strong {
+        color: #2c3e50;
+    }
+</style>
+<div id='halves_container'>
+    <div id='left-side'>
+        <h1 id='name'>{{fullName}}</h1>
+        <div id='info'>
+            <h2 id='pos'>{{position}}</h2>
+            <p id='location'>{{Location}}</p>
+            {{phoneNumber}}|{{emailAddress}}|{{websites}}
+        </div>
+        <div id='summary'>
+            <h2>Summary</h2>
+                {{summary}}
+        </div>
+        <div id='skills'>
+            <h2>Skills</h2>
+                {{skills}}
+        </div>
+    </div>
+    <div id='right-side'>
+        <div id='experience'>
+            <h2>Experience</h2>
+                {{experience}}
+        </div>
+        <div id='education'>
+            <h2>Education</h2>
+                {{education}}
+        </div>
+    </div>
+</div>

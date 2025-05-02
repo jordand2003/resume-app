@@ -1,0 +1,16 @@
+# {{name}}
+#### {{position}}
+{{phoneNumber}}|{{emailAddress}}|{{websites}}
+
+{{Location}}
+## Summary
+{{summary}}
+
+## Skills
+{{skills}}
+
+## Experience
+{{experience}}
+
+## Education
+{{education}}
