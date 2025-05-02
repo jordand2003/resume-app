@@ -1,7 +1,7 @@
 INFO
 {{fullName}}
 {{position}}
-{{Location}}
+{{location}}
 {{phoneNumber}}
 {{emailAddress}}
 {{websites}}

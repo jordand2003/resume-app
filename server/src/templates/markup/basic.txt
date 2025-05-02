@@ -1,8 +1,8 @@
 # {{name}}
-#### {{position}}
 {{phoneNumber}}|{{emailAddress}}|{{websites}}
+{{location}}
+### {{position}}
 
-{{Location}}
 ## Summary
 {{summary}}
 

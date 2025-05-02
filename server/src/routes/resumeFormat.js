@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Resume = require("../models/Resume");
-// const FormattingService = require("../services/formattingService")
+const User = require("../models/Users")
+const JobDesc  = require("../models/JobDesc");
 const { plainTextResume, markupResume, htmlResume, latexResume, optionsList, allOptions, FormattedContent } = require("../services/formattingService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 
@@ -33,13 +34,8 @@ router.get("/options", async (req, res) => {
 // Generates a formatted resume using a specified template and format type (pdf, plaintext, html, markup)
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
     try {
-        const { resumeId, formatType, templateId, styleId, user_id } = req.body
-        /*
-        const resumeId = '6807f29b8d05206b4f804cc0'
-        let formatType = 'plaintext'
-        const templateId = 'bad input'
-        const user_id = '6807e89d111668d948a8ef9b'
-        */
+        const { resumeId, formatType, templateId, styleId } = req.body
+        const userId = req.userId;
 
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
@@ -78,13 +74,32 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         }
 
         // Populate with User Info 
-        /*
-        {{fullName}}
-        {{phoneNumber}}
-        {{emailAddress}}
-        */
+        const u = await User.findOne({user_id: user_id})
+        response = response.replace("{{fullName", u.name).replace("{{emailAddress}}", u.email)
+        if (u.phone) {  // Phone #
+            response = response.replace("{{phoneNumber}}", u.phone);
+        } else {
+            response = response.replace(/{{phoneNumber}}\n?/, "");
+        }
+        if (u.location){    // location
+            response = response.replace("{{location}}", u.location);
+        } else {
+            response = response.replace(/{{location}}\n?/, "");
+        }
 
-        // Add to DB if it doesn't exist (lasts for 30 minutes)
+        // websites not implemented yet, so remove from template
+        response = response.replace(/{{websites}}\n?/, "");
+        //console.log("User's websites ", u.websites)
+
+        // Try finding jobTitle
+        let jobTitle = resume.jobTitle
+        if (!jobTitle){
+            const j = await JobDesc.findOne({ _id: resume.jobId, userId: user_id})
+            jobTitle =  j.job_title || '[Missing Job Title]'
+        }
+        response = response.replace("{{position}}", jobTitle)
+
+        // Add to DB if it doesn't exist (lifetime of 30 minutes)
         await FormattedContent.findOneAndUpdate(
             { user_id: user_id, resume_id: resumeId, fileType: formatType }, // Search filter
             {

@@ -16,6 +16,10 @@ const ResumeSchema = new mongoose.Schema(
       required: true,
       ref: "JobDesc",
     },
+    jobTitle: {
+      type: String,
+      required: false,
+    },
     content: {
       type: Object,
     },

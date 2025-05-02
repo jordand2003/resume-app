@@ -18,6 +18,14 @@ const userSchema = new Schema({
     phone: {
         type: String,
         required: false,
+    },
+    location: {
+        type: String,
+        required: false,
+    },
+    websites: {
+        type: Object,
+        required: false,
     }
 }, { collection: 'Users' }); // Specify the collection name as 'Users'
 

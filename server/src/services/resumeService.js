@@ -55,7 +55,8 @@ class ResumeService {
       // Update resume with generated content
       try {
         const generatedContent = JSON.parse(generatedText);
-        resume.content = generatedContent;
+        resume.jobTitle = jobDesc.job_title,                  // New addition <-------------------
+        resume.content = generatedContent;          
         resume.status = "COMPLETED";
         await resume.save();
         return {
