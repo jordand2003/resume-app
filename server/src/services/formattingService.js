@@ -33,6 +33,8 @@ class FormattingService {
             return plaintext_options;
         case "pdf":
             return pdf_options;
+        case "html":
+            return html_options;
         default: // markup
             return markup_options;
         }
@@ -130,10 +132,11 @@ class FormattingService {
    * with properties like title, company, duration, and achievements.
    * - education: An array of objects, where each object represents an education entry
    * with properties like degree, institution, and year.
-   * @param {string} template - Specificy what color template you want
+   * @param {string} template - Optional: Key value specifiying what color template you want (Uses basic template if not specified)
+   * @param {string} style - Optional: Key value that specifiying the style you'll choose (Uses default style if not specified)
    * @returns {string} - A string containing the formatted HTML resume.
    */
-  static async htmlResume(resumeContent, template) {
+  static async htmlResume(resumeContent, template, style) {
     if (!html_options || !html_options.template) {
       console.warn('HTML templates not yet loaded.');
       return '';
@@ -141,6 +144,10 @@ class FormattingService {
     // Get markup template
     const selectedTemplate = html_options.template[template] || html_options.template["basic"];
     let html = selectedTemplate;
+
+    // Get style (if not specified use default style)
+    const selectedStyle =  html_options['style'][template][style] || html_options['style'][template]['default']
+    html = html.replace("/*{{style}}*/", selectedStyle)
 
     // Replace skills
     if (resumeContent.skills && resumeContent.skills.length) {
@@ -298,7 +305,7 @@ const formattedContentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  "fileType": {
+  "file": {
     type: String,
     required: true,
   },
@@ -315,6 +322,16 @@ const formattedContentSchema = new mongoose.Schema({
     default: Date.now,
     expires: 1800 // 30 minutes
   },
+  lastUsed_templateId: {
+    type: String,
+    default: "basic",
+    required: false,
+  },
+  lastUsed_styleId: {
+    type: String,
+    default: "default",
+    required: false,
+  }
 });
 const FormattedContent = mongoose.model('FormattedContent', formattedContentSchema);
 

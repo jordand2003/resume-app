@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Menu,
+  MenuItem
 } from "@mui/material";
 import NavBar from "./NavBar";
 
@@ -99,6 +101,7 @@ const MyResumes = () => {
   const [error, setError] = useState("");
   const [selectedResume, setSelectedResume] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
   useEffect(() => {
     fetchResumes();
@@ -132,6 +135,36 @@ const MyResumes = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedResume(null);
+  };
+
+  const handleMenuClick = async(resume, format) => {
+    try {
+          const token = await getAccessTokenSilently();
+          const response = await axios.post(
+            "http://localhost:8000/api/format",
+            { resumeId: resume,
+              format: format
+             },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+    
+        } catch (error) {
+          console.error("Error getting formatted resume:", error);
+        }
+  };
+
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  }; 
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   const formatDate = (dateString) => {
@@ -202,7 +235,7 @@ const MyResumes = () => {
                           variant="outlined"
                           size="small"
                           onClick={() => handleViewResume(resume)}
-                          sx={{ mt: 1 }}
+                          sx={{ mt: 1, margin: '2px' }}
                         >
                           View Resume
                         </Button>
@@ -233,8 +266,34 @@ const MyResumes = () => {
           {selectedResume && <ResumeContent content={selectedResume.content} />}
         </DialogContent>
         <DialogActions>
+          <Button onClick={handleMenu}>Download as...</Button>
           <Button onClick={handleCloseDialog}>Close</Button>
         </DialogActions>
+        <Menu
+                id="download_options"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "center",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "bottom",
+                  horizontal: "center",
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={() => handleMenuClick(selectedResume, "plaintext")}>
+                  Plaintext
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuClick(selectedResume, "html")}>
+                  HTML
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuClick(selectedResume, "markup")}>
+                  Markup
+                </MenuItem>
+          </Menu>
       </Dialog>
     </Box>
   );

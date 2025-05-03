@@ -1,5 +1,4 @@
-<style>
-    body {
+body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         line-height: 1.6;
         max-width: 800px;
@@ -61,28 +60,3 @@
         border-bottom: 1px solid #ccc;
         margin-top: 10px;
     }
-</style>
-<div>
-    <div id='info'>
-        <h1>{{fullName}}</h1>
-        <h2>{{position}}</h2>
-        <p>{{location}}</p>
-        {{phoneNumber}}|{{emailAddress}}|{{websites}}
-    </div>
-    <div id='summary'>
-        <h2>Summary</h2>
-            {{summary}}
-    </div>
-    <div id='skills'>
-        <h2>Skills</h2>
-            {{skills}}
-    </div>
-    <div id='experience'>
-        <h2>Experience</h2>
-            {{experience}}
-    </div>
-    <div id='education'>
-        <h2>Education</h2>
-            {{education}}
-    </div>
-</div>
