@@ -3,6 +3,7 @@ const router = express.Router();
 const ResumeService = require("../services/resumeService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const mongoose = require("mongoose");
+const { FormattedContent } = require("../services/formattingService");
 
 // POST /api/resumes/generate
 router.post("/generate", verifyJWT, extractUserId, async (req, res) => {
@@ -71,19 +72,19 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
 router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
-    const { resumeId } = req.params;
+    const { formattedResumeId } = req.params;
     /* Make sure we have the resume id */
     if (!resumeId) {
       console.error("Where is the resssssumee??");
       res.status(404).json({ message: "No Resume Passed" });
     }
 
-    const resume = new File(["file"], "filename");
-    // Two ways to get the resumeId -> cache or database
-    // 1. IDK
-    // 2. get formatted resume here with a mongodb call...
-    res.setHeader('Content-Disposition', `attachment; filename="${resume.filename}"`);
-    res.setHeader('Content-Type', resume.mimeType || 'text/markdown');
+    const resume_content = await FormattedContent.findOne(
+      { user_id: userId, resume_id: formattedResumeId }              // Search filter
+    );
+    
+    res.setHeader('Content-Disposition', `attachment; filename="resume"`);
+    res.setHeader('Content-Type', resume_content.filetype || 'text/markdown');
     
     res.status(200).send(resume);
   } catch (error) {

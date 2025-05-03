@@ -56,7 +56,7 @@ const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const jobDescRoutes = require("./routes/job-desc");
 const resumeRoutes = require("./routes/resumeRoutes");
-const format = require("./routes/resumeFormat")
+const format = require("./routes/resumeFormat");
 const jobAdviceRoutes = require("./routes/job-advice");
 
 // Routes
