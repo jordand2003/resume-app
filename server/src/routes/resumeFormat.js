@@ -7,14 +7,14 @@ const JobDesc  = require("../models/JobDesc");
 const { plainTextResume, markupResume, htmlResume, latexResume, optionsList, allOptions, FormattedContent } = require("../services/formattingService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 
-// Get an object of all available templates for a specific formatType
-router.get("/options/:formatType", async (req, res) => {
-    const { formatType } = req.params;
+// Get an object of all available templates for a specific format
+router.get("/options/:format", async (req, res) => {
+    const { format } = req.params;
   
     try {
-      const response = await optionsList(formatType);
+      const response = await optionsList(format);
       res.status(200).json({
-        message: `Templates for ${formatType}`,
+        message: `Templates for ${format}`,
         content: response,
       });
     } catch (error) {
@@ -34,12 +34,12 @@ router.get("/options", async (req, res) => {
 // Generates a formatted resume using a specified template and format type (pdf, plaintext, html, markup)
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
     try {
-        const { resumeId, templateId, styleId } = req.body
-        let formatType = req.body.formatType
+        const { resumeId } = req.body
+        const templateId = req.body.templateId || 'basic'
+        let format  = req.body.format || 'bad input'
+        let styleId  = req.body.styleId || 'default'
         const userId = req.userId;
         
-        
-
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
         console.log("MongoDB connection state:", connectionState);
@@ -57,22 +57,22 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
           throw new Error("Resume not found");
         }
 
-        // Check formatType
+        // Check format
         let response;
-        switch(formatType.toLocaleLowerCase()){
+        switch(format.toLocaleLowerCase()){
             case "plaintext":
                 response = await plainTextResume(resume.content);
                 break;
             case "pdf":
-            case "latex":
+            case "latex": // no functionality yet
                 response = await latexResume(resume.content);
                 break;
             case "html":
-                response = await htmlResume(resume.content, templateId || 'basic');
+                response = await htmlResume(resume.content, templateId, styleId);
                 break;
             default: // markup
-                formatType = "markup"
-                response = await markupResume(resume.content, templateId || 'basic');
+                format = "markup"
+                response = await markupResume(resume.content, templateId);
                 break;
         }
 
@@ -104,18 +104,27 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
 
         // Add to DB if it doesn't exist (lifetime of 30 minutes)
         await FormattedContent.findOneAndUpdate(
-            { user_id: userId, resume_id: resumeId, fileType: formatType }, // Search filter
-            {
-              content: response,
-              createdAt: new Date(), // Reset TTL timer
-            },
-            {
-              upsert: true, // Insert if not found
-              new: true,    // Return the updated document
-            }
+          { user_id: userId, resume_id: resumeId, file: format, lastUsed_styleId: styleId || 'basic', lastUsed_templateId: templateId || 'default' }, // Search filter
+          {
+            content: response,
+            createdAt: new Date(), // Reset TTL timer
+          },
+          {
+            upsert: true, // Insert if not found
+            new: true,    // Return the updated document
+          }
         );
 
-        console.log("Formatted resume: ", resumeId, " as ", formatType)
+        // Update original Resume entry with styleID & resumeId
+        await Resume.findOneAndUpdate(
+          { _id: resumeId, jobId: resume.jobId }, // Search filter
+          {
+            lastUsed_format: format, 
+            lastUsed_styleId: styleId, 
+            lastUsed_templateId: templateId
+        })
+
+        console.log("Formatted resume: ", resumeId, " as ", format)
         res.set('Content-Type', 'text/html');
         res.status(200).send(response);
     }

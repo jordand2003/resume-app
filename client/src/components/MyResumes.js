@@ -143,7 +143,7 @@ const MyResumes = () => {
           const response = await axios.post(
             "http://localhost:8000/api/format",
             { resumeId: resume,
-              formatType: format
+              format: format
              },
             {
               headers: {
