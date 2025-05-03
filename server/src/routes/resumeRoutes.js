@@ -68,28 +68,54 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
   }
 });
 
-//Get Formatted Resume
+
+
+/* Get Formatted Resume
+  Does not much, calls database and returns the content of the formatted resume
+
+  Front End Example:
+
+  const blob = new Blob([response.data.content]);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.type = response.headers;
+  link.download = `resume.${response.data.file}`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+
+  This will 
+*/
 router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
     const { formattedResumeId } = req.params;
+
     /* Make sure we have the resume id */
-    if (!resumeId) {
-      console.error("Where is the resssssumee??");
-      res.status(404).json({ message: "No Resume Passed" });
+    if (!formattedResumeId) {
+      console.log("Where is the resssssumee??");
+      return res.status(404).json({ message: "No Resume Passed" });
     }
 
     const resume_content = await FormattedContent.findOne(
       { user_id: userId, resume_id: formattedResumeId }              // Search filter
     );
+
+    if (!resume_content) {
+      console.log("Resume does not exist or expired in collections");
+      return res.status(405).json({ message: "Resume not found" });
+    }
     
+    // I have no idea how to access Cantent-Disposition, maybe you know
     res.setHeader('Content-Disposition', `attachment; filename="resume"`);
-    res.setHeader('Content-Type', resume_content.filetype || 'text/markdown');
+    res.setHeader('Content-Type', `text/${resume_content.file}`);
     
-    res.status(200).send(resume);
+    return res.status(200).send(resume_content);
   } catch (error) {
     console.error("Error downloading formatted resume:", error);
-    res.status(500).json({ message: "Failed to download resume" });
+    return res.status(500).json({ message: "Failed to download resume" });
   }
 });
 
