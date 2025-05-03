@@ -100,19 +100,29 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         response = response.replace("{{position}}", jobTitle)
 
         // Add to DB if it doesn't exist (lifetime of 30 minutes)
-        await FormattedContent.findOneAndUpdate(
-            { user_id: userId, resume_id: resumeId, fileType: formatType }, // Search filter
-            {
-              content: response,
-              createdAt: new Date(), // Reset TTL timer
-            },
-            {
-              upsert: true, // Insert if not found
-              new: true,    // Return the updated document
-            }
+        const updatedOrCreatedDoc = await FormattedContent.findOneAndUpdate(
+          { user_id: userId, resume_id: resumeId, file: format, lastUsed_styleId: styleId || 'basic', lastUsed_templateId: templateId || 'default' }, // Search filter
+          {
+            content: response,
+            createdAt: new Date(), // Reset TTL timer
+          },
+          {
+            upsert: true, // Insert if not found
+            new: true,    // Return the updated document
+          }
         );
 
-        console.log("Formatted resume: ", resumeId, " as ", formatType)
+        // Update original Resume entry with styleID & resumeId
+        await Resume.findOneAndUpdate(
+          { _id: resumeId, jobId: resume.jobId }, // Search filter
+          {
+            lastUsed_format: format, 
+            lastUsed_styleId: styleId, 
+            lastUsed_templateId: templateId,
+            last_formattedResumeId: updatedOrCreatedDoc._id,
+        })
+
+        console.log("Formatted resume: ", resumeId, " as ", format)
         res.set('Content-Type', 'text/html');
         res.status(200).send(response);
     }
