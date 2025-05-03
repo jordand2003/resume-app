@@ -3,22 +3,24 @@ const path = require('path');
 
 const templatesFolderPath = path.join(__dirname, 'templates');
 
+// Reads all files in the templates directory
 async function loadTemplates() {
     const plaintext_options = { template: {} };
     const markup_options = { template: {} };
-    const html_options = { template: {} };
+    const html_options = { style: {}, template: {} };
     const pdf_options = { style: {}, template: {} };
 
     try {
         const entries = await fs.readdir(templatesFolderPath);
-        const subDirectories = entries.filter(async entry => { // Changed to async filter callback
+        const subDirectories = entries.filter(async entry => { 
             const entryPath = path.join(templatesFolderPath, entry);
-            const stats = await fs.stat(entryPath); // Use await with fs.stat (returns a Promise)
+            const stats = await fs.stat(entryPath); //(returns a Promise)
             return stats.isDirectory();
         });
 
         const resolvedSubDirectories = await Promise.all(subDirectories); // Resolve the array of Promises
 
+        // Search each folder in templates, and categorize the templates
         await Promise.all(resolvedSubDirectories.map(async folderName => {
             const folderPath = path.join(templatesFolderPath, folderName);
             let currentDict;

@@ -34,8 +34,11 @@ router.get("/options", async (req, res) => {
 // Generates a formatted resume using a specified template and format type (pdf, plaintext, html, markup)
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
     try {
-        const { resumeId, formatType, templateId, styleId } = req.body
+        const { resumeId, templateId, styleId } = req.body
+        let formatType = req.body.formatType
         const userId = req.userId;
+        
+        
 
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
@@ -67,7 +70,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
             case "html":
                 response = await htmlResume(resume.content, templateId || 'basic');
                 break;
-            default:    // markup
+            default: // markup
                 formatType = "markup"
                 response = await markupResume(resume.content, templateId || 'basic');
                 break;
@@ -75,7 +78,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
 
         // Populate with User Info 
         const u = await User.findOne({user_id: userId})
-        response = response.replace("{{fullName", u.name).replace("{{emailAddress}}", u.email)
+        response = response.replace("{{fullName}}", u.name).replace("{{emailAddress}}", u.email)
         if (u.phone) {  // Phone #
             response = response.replace("{{phoneNumber}}", u.phone);
         } else {
