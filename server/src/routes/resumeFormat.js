@@ -103,7 +103,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         response = response.replace("{{position}}", jobTitle)
 
         // Add to DB if it doesn't exist (lifetime of 30 minutes)
-        await FormattedContent.findOneAndUpdate(
+        const updatedOrCreatedDoc = await FormattedContent.findOneAndUpdate(
           { user_id: userId, resume_id: resumeId, file: format, lastUsed_styleId: styleId || 'basic', lastUsed_templateId: templateId || 'default' }, // Search filter
           {
             content: response,
@@ -121,7 +121,8 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
           {
             lastUsed_format: format, 
             lastUsed_styleId: styleId, 
-            lastUsed_templateId: templateId
+            lastUsed_templateId: templateId,
+            last_formattedResumeId: updatedOrCreatedDoc._id,
         })
 
         console.log("Formatted resume: ", resumeId, " as ", format)

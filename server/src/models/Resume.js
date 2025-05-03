@@ -49,6 +49,11 @@ const ResumeSchema = new mongoose.Schema(
     lastUsed_styleId: {
       type: String,
       required: false,
+    },
+    last_formattedResumeId:
+    {
+      type: String,
+      required: false,
     }
   },
   {
