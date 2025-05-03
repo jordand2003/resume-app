@@ -74,7 +74,7 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
   Front End Example -
 
   // You may want to use a try statement here to catch the 'no resume found' error
-  response = await axios.get(`http://localhost:8000/api/resumes/download/${resumes.data.data[0]._id}`, {
+  response = await axios.get(`http://localhost:8000/api/resumes/download/${parameters go here}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
@@ -109,7 +109,7 @@ router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req,
 
     // Will get the first resume with the same resume_id. Will be modified to get the appropriate resume later
     const resume = await FormattedContent.findOne(
-      { user_id: userId, resume_id: formattedResumeId }              // Search filter
+      { user_id: userId, formattedResumeId: formattedResumeId }              // Search filter
     );
 
     // Nikko will use this to call format again
@@ -150,5 +150,63 @@ router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req,
     return res.status(500).json({ message: "Failed to download resume" });
   }
 });
+
+/*
+// Multiple parameters version
+router.get("/download/:resumeId/:formatType/:styleId/:templateId", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { resumeId, formatType, styleId, templateId } = req.params;
+
+    // Make sure we have the resume id
+    if (!formattedResumeId) {
+      console.log("Where is the resssssumee??");
+      return res.status(404).json({ message: "No Resume Passed" });
+    }
+
+    // Will get the first resume with the same resume_id. Will be modified to get the appropriate resume later
+    const resume = await FormattedContent.findOne(
+      { user_id: userId, resume_id: resumeId, file: formatType, lastUsed_styleId: styleId, lastUsed_templateId: templateId }              // Search filter
+    );
+
+    // Nikko will use this to call format again
+    if (!resume) {
+      console.log("Resume does not exist or expired in collections");
+      return res.status(405).json({ message: "Resume not found" });
+    }
+
+    var extension;
+
+    // Update this part when adding new types
+    switch (resume.file) {
+      case "markup":
+        res.setHeader('Content-Type', 'text/markup');
+        extension = 'md';
+        break;
+      case "pdf":
+        res.setHeader('Content-Type', 'application/pdf');
+        extension = 'pdf';
+        break;
+      case "plaintext":
+        res.setHeader('Content-Type', 'text/plain');
+        extension = 'txt';
+        break;
+      default:
+        res.setHeader('Content-Type', `text/${resume.file}`);
+        extension = resume.file;
+    }
+
+    // This one line was very hard to find, it exposes the Content-Disposition header to client
+    res.header('Access-Control-Expose-Headers', 'Content-Disposition');
+    res.appendHeader('Content-Disposition', `attachment; filename="resume.${extension}"`);
+
+    // Return content only
+    return res.status(200).send( resume.content );
+  } catch (error) {
+    console.error("Error downloading formatted resume:", error);
+    return res.status(500).json({ message: "Failed to download resume" });
+  }
+});
+*/
 
 module.exports = router;
