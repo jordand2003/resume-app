@@ -34,7 +34,7 @@ router.get("/options", async (req, res) => {
 // Generates a formatted resume using a specified template and format type (pdf, plaintext, html, markup)
 router.post("/", verifyJWT, extractUserId, async (req, res) => {
     try {
-        const { resumeId, formatType, templateId, styleId } = req.body
+        var { resumeId, formatType, templateId, styleId } = req.body
         const userId = req.userId;
 
         // Check MongoDB connection
@@ -101,7 +101,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
 
         // Add to DB if it doesn't exist (lifetime of 30 minutes)
         const updatedOrCreatedDoc = await FormattedContent.findOneAndUpdate(
-          { user_id: userId, resume_id: resumeId, file: format, lastUsed_styleId: styleId || 'basic', lastUsed_templateId: templateId || 'default' }, // Search filter
+          { user_id: userId, resume_id: resumeId, file: formatType, lastUsed_styleId: styleId || 'basic', lastUsed_templateId: templateId || 'default' }, // Search filter
           {
             content: response,
             createdAt: new Date(), // Reset TTL timer
@@ -116,13 +116,13 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         await Resume.findOneAndUpdate(
           { _id: resumeId, jobId: resume.jobId }, // Search filter
           {
-            lastUsed_format: format, 
+            lastUsed_format: formatType, 
             lastUsed_styleId: styleId, 
             lastUsed_templateId: templateId,
             last_formattedResumeId: updatedOrCreatedDoc._id,
         })
 
-        console.log("Formatted resume: ", resumeId, " as ", format)
+        console.log("Formatted resume: ", resumeId, " as ", formatType)
         res.set('Content-Type', 'text/html');
         res.status(200).send(response);
     }

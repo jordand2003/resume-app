@@ -217,13 +217,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      <Route path="/test"
-        element= {
-          <ProtectedRoute>
-            <Test />
-          </ProtectedRoute>
-        }
-      />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

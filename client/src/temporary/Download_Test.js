@@ -2,6 +2,7 @@ import { Box, Button } from "@mui/material";
 import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
+// You can use this file to test resume download
 const Temp = () => {
     const { getAccessTokenSilently } = useAuth0();
     const handleClick = async () => {
@@ -11,10 +12,21 @@ const Temp = () => {
                 Authorization: `Bearer ${token}`
             }
         });
+        // Call format and download afterwards
+        await axios.post("http://localhost:8000/api/format", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            resumeId: resumes.data.data[0]._id, 
+            formatType: "markdown   ", 
+            templateId: "basic"
+        });
+
         var response;
         try {
             response = await axios.get(`http://localhost:8000/api/resumes/download/${resumes.data.data[0]._id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
             });
         } catch (error) {
             console.log("Error", error);
@@ -24,26 +36,30 @@ const Temp = () => {
                     Authorization: `Bearer ${token}`
                 },
                 resumeId: resumes.data.data[0]._id, 
-                format: "", 
+                formatType: "", 
                 templateId: "basic"
             });
             response = await axios.get(`http://localhost:8000/api/resumes/download/${resumes.data.data[0]._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         }
+  // Create an URL for link tag
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement('a');
 
-        console.log(response);
-        
-        const blob = new Blob([response.data.content]);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.type = response.headers;
-        link.download = `resume.${response.data.file}`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+  // Add resume details to link tag
+  link.href = url;
+  link.type = response.headers.get('content-type');
+  // Gets filename from content-disposition
+  link.download = response.headers.get('content-disposition').match(/filename="?([^"]+)"?/)[1];
+  document.body.appendChild(link);
+
+  // Download file
+  link.click();
+
+  // Garbage cleanup
+  link.remove();
+  window.URL.revokeObjectURL(url);
     };
 
     return (
