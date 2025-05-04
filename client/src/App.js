@@ -21,7 +21,6 @@ import ResumeUploadPage from "./components/ResumeUploadPage";
 import { useAuth0 } from "@auth0/auth0-react";
 import UserProfile from "./components/UserProfile";
 import { createTheme, CircularProgress, ThemeProvider } from "@mui/material";
-import Test from "./components/Test";
 
 const theme = createTheme({
   palette: {
