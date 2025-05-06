@@ -75,7 +75,7 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
 
         // Populate with User Info 
         const u = await User.findOne({user_id: userId})
-        response = response.replace("{{fullName", u.name).replace("{{emailAddress}}", u.email)
+        response = response.replace("{{fullName}}", u.name).replace("{{emailAddress}}", u.email)
         if (u.phone) {  // Phone #
             response = response.replace("{{phoneNumber}}", u.phone);
         } else {
