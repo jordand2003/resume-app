@@ -13,18 +13,26 @@ import {
   Divider,
   CircularProgress,
   Alert,
+  TextField,
 } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
 import EditIcon from "@mui/icons-material/Edit";
+import Chip from '@mui/material/Chip';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 
 const Dashboard = () => {
   const { getAccessTokenSilently } = useAuth0();
   const navigate = useNavigate();
   const [careerHistory, setCareerHistory] = useState([]);
   const [education, setEducation] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [isAddingSkill, setIsAddingSkill] = useState(false)
+  const [newSkill, setNewSkill] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [skillError, setSkillError] = useState(false);
+  const [skillErrorMsg, setSkillErrorMsg] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -53,6 +61,16 @@ const Dashboard = () => {
       });
       console.log("Education response:", educationResponse.data);
       setEducation(educationResponse.data.data || []);
+
+      // Fetch Skills
+      const skillResponse = await axios.get("http://localhost:8000/api/skills", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+      });
+      console.log("Skill response:", skillResponse.data);
+      setSkills(skillResponse.data.data)
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       setError("Failed to load dashboard data");
@@ -78,8 +96,148 @@ const Dashboard = () => {
     return <Alert severity="error">{error}</Alert>;
   }
 
+  // Opens textbox
+  const addSkill = () => {
+    setIsAddingSkill(true)
+  }
+
+  // Handles the removal of skill chips
+  const handleDelete = async (skill) => {
+    try {
+      const token = await getAccessTokenSilently(); // Get token
+      const skillResponse = await axios.delete(`http://localhost:8000/api/skills/${skill}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+      });
+  
+      if (skillResponse.status === 200) {
+        // Remove the skill from the local state by filtering out the deleted skill
+        setSkills(prevSkills => prevSkills.filter(s => s !== skill));
+      }
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+    }
+  };
+
+  // Handle Saving New Skill or Canceling it
+  const handleKeyDown = async (e) => {
+    try{
+      if(e.key === 'Enter'){
+        // Initial Screening
+        newSkillValid()
+        setSkillError(false)
+        
+        // Call api to add newSkill (blocks duplicates)
+        await addSkill_2_Db(newSkill);
+
+        // Cleanup
+        setNewSkill("")
+        setIsAddingSkill(false)
+      }else if (e.key === 'Escape'){  // Cancel
+        setIsAddingSkill(false)
+      }}
+    catch (error) { // Illegal entry (dup or space)
+      console.log('Bad skill input')
+      setSkillErrorMsg(error.message)
+    }
+  }
+
+  // Call API to add Skill
+    const addSkill_2_Db = async (newSkill) => {
+      try {
+        const token = await getAccessTokenSilently(); // Get token
+        const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { // Correct URL
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+        });
+  
+        if (skillResponse.status === 200) {
+          // Update local state
+          setSkills(prevSkills => [...prevSkills, newSkill]);
+        }
+      } catch (error) {
+        console.error("Error adding skill:", error);
+      }
+    };
+
+  // Gatekeep skill input (no pure whitespace)
+  const newSkillValid = () =>{
+    newSkill.trim().length > 0 || (() => { setSkillError(true); throw new Error("'Nothing' isn't a skill. Entry must not be empty. "); })();
+  }
+
+  // Call API to delete skill
+  const deleteSkill_2_Db = async (newSkill) => {
+    try {
+      const token = await getAccessTokenSilently(); // Get token
+      const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { // Correct URL
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (skillResponse.status === 200) {
+        // Update local state
+        setSkills(prevSkills => [...prevSkills, newSkill]);
+      }
+    } catch (error) {
+      console.error("Error adding skill:", error);
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
+      {/* Skill Display */}
+      <Paper elevation={0} sx={{ p: 3, mb: 3 }}>
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <AutoStoriesIcon sx={{ mr: 1 }} />
+            Skills (WIP)
+          </Typography>
+          <Box sx={{ alignItems: "center" ,
+            display: 'flex',
+            flexWrap: 'wrap', 
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 1.5,
+            backgroundColor: '#f0f0f0',
+            p: '30px'
+          }}>
+            {skills.length > 0 && skills.map((s, index) => (
+              <Chip key={index} 
+                label={s} 
+                variant="outlined"
+                sx={{color:'white', background:'#6495ED'}}
+                //onDoubleClick={editChip(index)}
+                onDelete ={() => handleDelete(s)}/>
+            ))}
+            {!isAddingSkill 
+              ? <Chip onClick={addSkill} variant="outlined" label="+ New Skill" sx={{borderWidth:"3px", fontWeight:"light", borderColor: "#6495ED"}}></Chip> 
+              : <TextField placeholder="Type here" variant="standard" autoFocus 
+                  sx={{ '& .MuiInputBase-input': { fontSize: '12px', }, }}
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                > </TextField>
+            }
+          </Box>
+            {/*Default msg*/ skills.length === 0 && (
+              <Typography
+                sx={{ textAlign: "center", fontWeight: 'bold', color:'#636363', padding:'16px'}}
+              >Add in your skills!</Typography>)}
+            {/* Error msg for skills */ skillError && (
+              <Alert severity="error">{skillErrorMsg}</Alert>
+            )}
+        </Box>
+      </Paper>
+
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Box
           sx={{

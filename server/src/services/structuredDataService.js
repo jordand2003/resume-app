@@ -2,6 +2,7 @@ const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 const mongoose = require("mongoose");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { arrayBuffer } = require("stream/consumers");
 
 // Debug logging for API key
 console.log(
@@ -146,6 +147,19 @@ const EducationHistorySchema = new mongoose.Schema({
   },
 });
 
+// Schema for SkillList
+const SkillListSchema = new mongoose.Schema({
+  user_id: {
+    type: String,
+    required: true,
+    index: true,
+  },
+  skills: {
+    type: [String],
+    default: [],
+  }
+})
+
 // Create normalized version of content for duplicate checking
 ResumeDataSchema.methods.getNormalizedContent = function () {
   return this.rawContent.toLowerCase().replace(/\s+/g, " ").trim();
@@ -181,6 +195,7 @@ ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
 const CareerHistory = mongoose.model("careers", CareerHistorySchema);
 const EducationHistory = mongoose.model("educations", EducationHistorySchema);
+const SkillList = mongoose.model("Skills", SkillListSchema)
 /**
  * Extract structured data using AI
  * @param {string} content - Raw content to process
@@ -761,6 +776,7 @@ module.exports = {
   ResumeData,
   CareerHistory,
   EducationHistory,
+  SkillList,
 };
 
 /*

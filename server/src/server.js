@@ -52,6 +52,7 @@ mongoose
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
+const skillRoutes = require("./routes/skills")
 const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const jobDescRoutes = require("./routes/job-desc");
@@ -75,6 +76,9 @@ app.use("/api/career-history", careerRoutes);
 
 // Education Routes
 app.use("/api/education", educationRoutes);
+
+// Skill Routes
+app.use("/api/skills", skillRoutes)
 
 // Job Description Routes
 app.use("/api/job-desc", jobDescRoutes);
