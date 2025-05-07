@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const resumeUpload = require("../resumeUpload");
-const { saveStructuredData } = require("../services/structuredDataService");
+const { saveStructuredData, getResumesForUser, ResumeData } = require("../services/structuredDataService");
 const JobHistory = require("../models/JobHistory");
 
 // Configure multer for file upload
@@ -25,6 +25,44 @@ const upload = multer({
       cb(new Error("Invalid file type. Only PDF and DOCX files are allowed."));
     }
   },
+});
+
+// Endpoint to get all resume's associated with a user
+router.get("/", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const resumes = await getResumesForUser(userId)
+    res.json({ success: true, data: resumes });
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch resumes" });
+  }
+});
+
+// Endpoint to delete a resume
+router.delete("/:resume_id", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const resumeId = req.params.resume_id; // Extract the resume_id from req.params
+    console.log("Preparing to delete resume w/ id: ", resumeId);
+    const deletedResume = await ResumeData.findOneAndDelete({ _id: resumeId, userId: userId });
+
+
+    if (!deletedResume) { // Non exisent
+      return res.status(404).json({ success: false, message: "Resume not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Succesfully deleted resume" });
+  } catch (error) {
+    console.error("Error finding resume:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete resume"});
+  }
 });
 
 // New endpoint for resume upload with text parsing and storage

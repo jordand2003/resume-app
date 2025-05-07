@@ -191,7 +191,6 @@ ResumeDataSchema.methods.extractKeywords = function () {
 
 // Create compound index for userId and contentHash
 ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
-
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
 const CareerHistory = mongoose.model("careers", CareerHistorySchema);
 const EducationHistory = mongoose.model("educations", EducationHistorySchema);
@@ -771,12 +770,33 @@ async function saveStructuredData(content, userId) {
   }
 }
 
+// Function to get all resumes
+async function getResumesForUser(userId) {
+  try {
+    const resumes = await ResumeData.find({ userId })
+      .sort({ createdAt: -1 });
+
+    // Populate entries
+    return resumes.map((resume) => ({
+      _id: resume._id,
+      parsedData: resume.parsedData,
+      createdAt: resume.createdAt,
+      isMergedDocument: resume.isMergedDocument,
+    }));
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    throw error;
+  }
+}
+
+
 module.exports = {
   saveStructuredData,
   ResumeData,
   CareerHistory,
   EducationHistory,
   SkillList,
+  getResumesForUser,
 };
 
 /*

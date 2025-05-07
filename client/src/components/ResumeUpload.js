@@ -11,6 +11,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
+import UploadedHistory from "./UploadedHistory";
 
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -113,8 +114,8 @@ const ResumeUpload = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, p: 3 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
+    <Box sx={{ maxWidth: "100%", minWidth: "50%", mx: "auto", mt: 4, p: 10,  }}>
+      <Paper elevation={3} sx={{ p: 3, maxWidth: "60%", mx: "auto" }} >
         <Typography variant="h5" gutterBottom>
           Upload Your Resume
         </Typography>
@@ -225,6 +226,11 @@ const ResumeUpload = () => {
         >
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}
         </Button>
+      </Paper>
+
+      {/* Resume History */}
+      <Paper sx={{ mt: 4 }}>
+        <UploadedHistory />
       </Paper>
     </Box>
   );
