@@ -54,6 +54,7 @@ const ResumeDataSchema = new mongoose.Schema({
         Responsibilities: [String],
       },
     ],
+    skills: [String],
   },
   similarDocuments: [
     {
@@ -120,11 +121,11 @@ const EducationHistorySchema = new mongoose.Schema({
   },
   Degree: {
     type: String,
-    required: true,
+    required: false,
   },
   Major: {
     type: String,
-    required: true,
+    required: false,
   },
   Start_Date: {
     type: String,
@@ -136,7 +137,7 @@ const EducationHistorySchema = new mongoose.Schema({
   },
   GPA: {
     type: String,
-    required: true,
+    required: false,
   },
   RelevantCoursework: { type: Array },
   other: { type: String },
@@ -203,6 +204,7 @@ const SkillList = mongoose.model("Skills", SkillListSchema)
 async function extractStructuredData(content) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    console.log("Check out content-->", content)
 
     const prompt = `Extract structured information from the following resume text. Format the response as a JSON object with the following structure:
 {
@@ -232,7 +234,8 @@ async function extractStructuredData(content) {
         ...
       ]
     }
-  ]
+  ],
+  "skills": []
 }
 
 Resume Text:
@@ -248,6 +251,8 @@ Return only valid JSON without any additional text or explanation.`;
     if (text.startsWith("```")) {
       text = text.replace(/^```json\n/, "").replace(/\n```$/, "");
     }
+
+    console.log("text that'll be parsed", text)
 
     try {
       return JSON.parse(text);

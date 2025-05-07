@@ -104,13 +104,18 @@ function docx2Text(fbuffer) {
 }
 
 function pdf2Text(fbuffer) {
-  // Processing message + JSON
-
-  // Convert into pure text data
+  const delimiter = '\n|----|\n';
   return pdfParse(fbuffer)
     .then((result) => {
-      let pure_text = result.text;
-      return pure_text;
+      let rawText = result.text;
+
+      // Split on lines and large whitespace gaps
+      let chunks = rawText
+        .split(/\n|\s{2,}/g)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      return chunks.join(delimiter);
     })
     .catch((err) => {
       console.error("Error processing the PDF file:");

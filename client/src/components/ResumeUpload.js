@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ const ResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
+  const [refreshHistory, setRefreshHistory] = useState(false)
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -84,20 +85,25 @@ const ResumeUpload = () => {
 
       console.log("Upload response:", response.data);
 
-      if (response.data && response.data.status.toLowerCase() === "success") {
+      const the_status = response.data.status
+      if (response.data && (the_status.toLowerCase() === "success"  || the_status.toLowerCase() === "saved")) {
         setUploadStatus("success");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
+        // reload resume dashboard
       } 
-      else if (response.data && (response.data.status.toLowerCase() === "updated")){
+      else if (response.data && (the_status.toLowerCase() === "updated")){
         setUploadStatus("updated");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
       } 
-      else if (response.data && (response.data.status.toLowerCase() === 'merged')){
+      else if (response.data && (the_status.toLowerCase() === 'merged')){
         setUploadStatus("merged");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
       } else {
         throw new Error(response.data?.message || "Upload failed");
       }
@@ -230,7 +236,7 @@ const ResumeUpload = () => {
 
       {/* Resume History */}
       <Paper sx={{ mt: 4 }}>
-        <UploadedHistory />
+        <UploadedHistory triggerUploadRefresh={refreshHistory}/>
       </Paper>
     </Box>
   );

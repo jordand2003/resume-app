@@ -34,7 +34,7 @@ const ResumeContent = ({ content }) => {
         Education
       </Typography>
       {content.education.map((edu, index) => (
-        <Box key={index} sx={{ mb: 2 }}>
+        <Box key={index} sx={{ mb: 2, ml: 2}}>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             {edu.institute || edu.Institute}, {edu.location || edu.Location}
           </Typography>
@@ -47,9 +47,10 @@ const ResumeContent = ({ content }) => {
           <Typography variant="body2" color="text.secondary">
             {edu.startDate || edu.Start_Date} - {edu.endDate || edu.End_Date}
           </Typography>
-          {edu.relevantCoursework && (
-            <Typography variant="body2" color="text.secondary">
-              Relevant Coursework: {edu.relevantCoursework || edu.RelevantCoursework}
+          <Typography color="text.primary"  sx={{ fontSize: '12px', fontWeight: "bold"}}>Relevant Coursework: </Typography>
+          {(edu.relevantCoursework || edu.RelevantCoursework) && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', ml: 4  }}>
+              {edu.relevantCoursework || edu.RelevantCoursework}
             </Typography>
           )}
         </Box>
@@ -64,7 +65,7 @@ const ResumeContent = ({ content }) => {
         Career
       </Typography>
       {content.work_experience.map((exp, index) => (
-        <Box key={index} sx={{ mb: 2 }}>
+        <Box key={index} sx={{ mb: 2, ml: 2}}>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             {exp.Job_Title} at {exp.Company}
           </Typography>
@@ -74,7 +75,7 @@ const ResumeContent = ({ content }) => {
           <Typography variant="body2" sx={{ mt: 1 }}>
             {exp.Responsibilities && (
               exp.Responsibilities.map((r, i) => (
-                <ListItem key={i}>
+                <ListItem key={i} sx={{ml: 2}}>
                   <Typography variant="body2">• {r}</Typography>
                 </ListItem>
               )))}
@@ -121,7 +122,7 @@ const ResumeContent = ({ content }) => {
   );
 };
 
-const UploadedHistory = () => {
+const UploadedHistory = ({triggerUploadRefresh}) => {
   const { getAccessTokenSilently } = useAuth0();
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,11 +134,13 @@ const UploadedHistory = () => {
   const [expanded, setExpand] = useState(false)
   const [deleteWarningPopUp, showDeleteWarningPopUp] = useState(false)
   const [successMessage, setSuccessMessage] = useState("");
+  const [refresh, setRefresh] = useState(false)
 
 
   useEffect(() => {
+    setRefresh(false)
     fetchResumes();
-  }, [getAccessTokenSilently]);
+  }, [getAccessTokenSilently, refresh, triggerUploadRefresh]);
 
   const fetchResumes = async () => {
     try {
@@ -165,7 +168,7 @@ const UploadedHistory = () => {
   };
 
   const handleOpenDialog = () => {
-    setExpand(true);  // This will open the dialog
+    setExpand(true); 
   };
 
   const handleCloseDialog = () => {
@@ -209,8 +212,9 @@ const UploadedHistory = () => {
     });
     // console.log(response.message)
     showDeleteWarningPopUp(false)
+    setSelectedResume(null)
     setSuccessMessage("Resume File Deleted")
-    fetchResumes();
+    setRefresh(true)
   }
 
   return (
