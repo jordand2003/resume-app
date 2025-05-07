@@ -214,11 +214,11 @@ const UploadedHistory = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100", backgroundColor: "#e1e1e3" }}>
+    <Box sx={{ minHeight: "1000", backgroundColor: "#e1e1e3" }}>
       <Box sx={{ maxWidth: 1800, mx: "auto", p: 3 , display: 'flex'}}>
         <Paper elevation={12} sx={{ p: 3, width: 400, overflow: 'auto'}}>
           <Typography variant="h5" gutterBottom>
-            My Resumes
+            My Parsed Resumes
           </Typography>
 
           {/** Toast Message */}
@@ -292,7 +292,7 @@ const UploadedHistory = () => {
                   <ListItemText
                     primary={
                       <Typography variant="subtitle1" component="div">
-                        Resume Entry # {/*{resume.jobTitle} at {resume.company}*/}
+                        {resume.nickName || "New Resume Entry"}
                       </Typography>
                     }
                     secondary={<>
@@ -311,10 +311,10 @@ const UploadedHistory = () => {
         <Paper sx={{ p: 3, maxWidth: 1600, bgcolor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 900, height: 700}}>
           {!selectedResume && <p>Tap a Resume to See Details</p>}
           {selectedResume && 
-            <Box sx={{maxWidth: 800,  maxHeight: "100vh",  height:600, overflow: 'auto',  margin: 'auto' }}>
-              <Paper elevation={3} sx={{ p: 2, maxWidth: '100%', maxHeight: '90vh', overflow: 'auto', display: 'flex', flexDirection: 'column'  }}>
+            <Box sx={{maxWidth: 800,  maxHeight: 1000,  height:600, overflow: 'auto',  margin: 'auto' }}>
+              <Paper elevation={3} sx={{ p: 2, maxWidth: '100%',  display: 'flex', flexDirection: 'column'  }}>
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h6">Resume Entry</Typography>
+                    <Typography variant="h6">{selectedResume.nickName || "New Resume Entry"}</Typography>
                     <div>
                       <Button><OpenInFullIcon onClick={handleOpenDialog}></OpenInFullIcon></Button>
                       <Button variant="outlined" size="small"
@@ -372,7 +372,7 @@ const UploadedHistory = () => {
           {selectedResume && <ResumeContent content={selectedResume?.parsedData} />}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleMenu}><DeleteIcon /></Button>
+          <Button onClick={() => deleteWarning(selectedResume)}><DeleteIcon /></Button>
         </DialogActions>
       </Dialog>
     </Box>

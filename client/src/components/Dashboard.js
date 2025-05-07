@@ -192,7 +192,7 @@ const Dashboard = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Skill Display */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3 }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Box>
           <Typography
             variant="h6"
