@@ -682,6 +682,47 @@ async function eduHistorySave(eduHistory, userId) {
 }
 
 /**
+ * Save Skill entries into the skills DB table && Checks for duplicate entries in DB
+ * @param {Array} skillArray - Array of parsed education data from the resume
+ * @param {string} userId - ID of the user this resume belongs to
+ */
+async function skillSave(skillArray, userId) {
+  if (!skillArray || skillArray.length === 0) {
+    console.log("No skills to save.");
+    return;
+  }
+
+  try {
+    // Find the existing SkillList document for the user
+    let skillList = await SkillList.findOne({ user_id: userId });
+
+    if (!skillList) {
+      // If no SkillList exists, create a new one
+      skillList = new SkillList({ user_id: userId, skills: [] });
+    }
+
+    // Create a Set of existing skills for efficient checking
+    const existingSkills = new Set(skillList.skills);
+
+    // Add new skills to the skillList
+    for (const skill of skillArray) {
+      const trimmedSkill = skill.trim(); // Trim whitespace
+      if (trimmedSkill && !existingSkills.has(trimmedSkill)) {
+        skillList.skills.push(trimmedSkill);
+        existingSkills.add(trimmedSkill); // Update the Set
+      }
+    }
+
+    // Save the updated SkillList document
+    await skillList.save();
+    console.log("Skills saved/updated successfully.");
+  } catch (error) {
+    console.error("Error saving skills:", error);
+    throw error; // Re-throw to handle it upstream
+  }
+}
+
+/**
  * Save structured resume data and handle duplicates
  * @param {string} content - Raw content to process
  * @param {string} userId - ID of the user this resume belongs to
@@ -702,9 +743,10 @@ async function saveStructuredData(content, userId) {
     // (Added 4/24) Save structured data separetly in individual db tables
     const careerHist = parsedData.work_experience || [];
     const eduHist = parsedData.education || [];
-    //const skills = I.O.U => parsedData attribute for skills doesn't exist yet
+    const skills = parsedData.skills || []
     await careerHistSave(careerHist, userId);
     await eduHistorySave(eduHist, userId);
+    await skillSave(skills, userId)
 
     // Create content hash
     const contentHash = require("crypto")
