@@ -199,7 +199,7 @@ const Dashboard = () => {
             sx={{ display: "flex", alignItems: "center" }}
           >
             <AutoStoriesIcon sx={{ mr: 1 }} />
-            Skills (WIP)
+            Skills
           </Typography>
           <Box sx={{ alignItems: "center" ,
             display: 'flex',
