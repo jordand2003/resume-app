@@ -120,7 +120,6 @@ const HomePage = () => {
             <Tab label="Upload Resume" />
           </Tabs>
         </Paper>
-
         {currentTab === 0 && <Dashboard />}
         {currentTab === 1 && <ResumeUpload />}
       </Container>

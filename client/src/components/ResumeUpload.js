@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
@@ -11,6 +11,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
+import UploadedHistory from "./UploadedHistory";
 
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -18,6 +19,7 @@ const ResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
+  const [refreshHistory, setRefreshHistory] = useState(false)
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -83,20 +85,25 @@ const ResumeUpload = () => {
 
       console.log("Upload response:", response.data);
 
-      if (response.data && response.data.status.toLowerCase() === "success") {
+      const the_status = response.data.status
+      if (response.data && (the_status.toLowerCase() === "success"  || the_status.toLowerCase() === "saved")) {
         setUploadStatus("success");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
+        // reload resume dashboard
       } 
-      else if (response.data && (response.data.status.toLowerCase() === "updated")){
+      else if (response.data && (the_status.toLowerCase() === "updated")){
         setUploadStatus("updated");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
       } 
-      else if (response.data && (response.data.status.toLowerCase() === 'merged')){
+      else if (response.data && (the_status.toLowerCase() === 'merged')){
         setUploadStatus("merged");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev)
       } else {
         throw new Error(response.data?.message || "Upload failed");
       }
@@ -113,8 +120,8 @@ const ResumeUpload = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, p: 3 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
+    <Box sx={{ maxWidth: "100%", minWidth: "50%", mx: "auto", mt: 4, p: 10,  }}>
+      <Paper elevation={3} sx={{ p: 3, maxWidth: "60%", mx: "auto" }} >
         <Typography variant="h5" gutterBottom>
           Upload Your Resume
         </Typography>
@@ -225,6 +232,11 @@ const ResumeUpload = () => {
         >
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}
         </Button>
+      </Paper>
+
+      {/* Resume History */}
+      <Paper sx={{ mt: 4 }}>
+        <UploadedHistory triggerUploadRefresh={refreshHistory}/>
       </Paper>
     </Box>
   );

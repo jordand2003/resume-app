@@ -2,6 +2,7 @@ const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 const mongoose = require("mongoose");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { arrayBuffer } = require("stream/consumers");
 
 // Debug logging for API key
 console.log(
@@ -53,6 +54,7 @@ const ResumeDataSchema = new mongoose.Schema({
         Responsibilities: [String],
       },
     ],
+    skills: [String],
   },
   similarDocuments: [
     {
@@ -78,28 +80,29 @@ const ResumeDataSchema = new mongoose.Schema({
 
 // Schema for Career History
 const CareerHistorySchema = new mongoose.Schema({
-  "Job_Title": {
+  Job_Title: {
     type: String,
     required: true,
   },
-  "Company": {
+  Company: {
     type: String,
     required: true,
   },
-  "Location": {
+  Location: {
     type: String,
     required: false,
   },
-  "Start_Date": {
+  Start_Date: {
     type: String,
     required: true,
   },
-  "End_Date": {
+  End_Date: {
     type: String,
-    required: true,
+    required: false,
+    default: "Present",
   },
-  "Responsibilities": { type:Array },
-  "user_id": {
+  Responsibilities: { type: Array },
+  user_id: {
     type: String,
     required: true,
     index: true,
@@ -118,11 +121,11 @@ const EducationHistorySchema = new mongoose.Schema({
   },
   Degree: {
     type: String,
-    required: true,
+    required: false,
   },
   Major: {
     type: String,
-    required: true,
+    required: false,
   },
   Start_Date: {
     type: String,
@@ -134,16 +137,29 @@ const EducationHistorySchema = new mongoose.Schema({
   },
   GPA: {
     type: String,
-    required: true,
+    required: false,
   },
-  RelevantCoursework: { type: Array},
-  other: {type: String},
+  RelevantCoursework: { type: Array },
+  other: { type: String },
   user_id: {
     type: String,
     required: true,
     index: true,
   },
 });
+
+// Schema for SkillList
+const SkillListSchema = new mongoose.Schema({
+  user_id: {
+    type: String,
+    required: true,
+    index: true,
+  },
+  skills: {
+    type: [String],
+    default: [],
+  }
+})
 
 // Create normalized version of content for duplicate checking
 ResumeDataSchema.methods.getNormalizedContent = function () {
@@ -176,10 +192,10 @@ ResumeDataSchema.methods.extractKeywords = function () {
 
 // Create compound index for userId and contentHash
 ResumeDataSchema.index({ userId: 1, contentHash: 1 }, { unique: true });
-
 const ResumeData = mongoose.model("ResumeData", ResumeDataSchema);
 const CareerHistory = mongoose.model("careers", CareerHistorySchema);
-const EducationHistory = mongoose.model("educations",EducationHistorySchema);
+const EducationHistory = mongoose.model("educations", EducationHistorySchema);
+const SkillList = mongoose.model("Skills", SkillListSchema)
 /**
  * Extract structured data using AI
  * @param {string} content - Raw content to process
@@ -188,6 +204,7 @@ const EducationHistory = mongoose.model("educations",EducationHistorySchema);
 async function extractStructuredData(content) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    console.log("Check out content-->", content)
 
     const prompt = `Extract structured information from the following resume text. Format the response as a JSON object with the following structure:
 {
@@ -217,7 +234,8 @@ async function extractStructuredData(content) {
         ...
       ]
     }
-  ]
+  ],
+  "skills": []
 }
 
 Resume Text:
@@ -233,6 +251,8 @@ Return only valid JSON without any additional text or explanation.`;
     if (text.startsWith("```")) {
       text = text.replace(/^```json\n/, "").replace(/\n```$/, "");
     }
+
+    console.log("text that'll be parsed", text)
 
     try {
       return JSON.parse(text);
@@ -596,7 +616,7 @@ async function careerHistSave(careerHistory, userId) {
           user_id: userId,
         });
       } else {
-        console.log("Duplicate job")
+        console.log("Duplicate job");
       }
     }
 
@@ -648,7 +668,7 @@ async function eduHistorySave(eduHistory, userId) {
           user_id: userId,
         });
       } else {
-        console.log("Duplicate edu")
+        console.log("Duplicate edu");
       }
     }
 
@@ -658,6 +678,47 @@ async function eduHistorySave(eduHistory, userId) {
     } else {
       console.log("No new education entries to save.");
     }
+  }
+}
+
+/**
+ * Save Skill entries into the skills DB table && Checks for duplicate entries in DB
+ * @param {Array} skillArray - Array of parsed education data from the resume
+ * @param {string} userId - ID of the user this resume belongs to
+ */
+async function skillSave(skillArray, userId) {
+  if (!skillArray || skillArray.length === 0) {
+    console.log("No skills to save.");
+    return;
+  }
+
+  try {
+    // Find the existing SkillList document for the user
+    let skillList = await SkillList.findOne({ user_id: userId });
+
+    if (!skillList) {
+      // If no SkillList exists, create a new one
+      skillList = new SkillList({ user_id: userId, skills: [] });
+    }
+
+    // Create a Set of existing skills for efficient checking
+    const existingSkills = new Set(skillList.skills);
+
+    // Add new skills to the skillList
+    for (const skill of skillArray) {
+      const trimmedSkill = skill.trim(); // Trim whitespace
+      if (trimmedSkill && !existingSkills.has(trimmedSkill)) {
+        skillList.skills.push(trimmedSkill);
+        existingSkills.add(trimmedSkill); // Update the Set
+      }
+    }
+
+    // Save the updated SkillList document
+    await skillList.save();
+    console.log("Skills saved/updated successfully.");
+  } catch (error) {
+    console.error("Error saving skills:", error);
+    throw error; // Re-throw to handle it upstream
   }
 }
 
@@ -679,12 +740,13 @@ async function saveStructuredData(content, userId) {
     // Extract structured data
     const parsedData = await extractStructuredData(content);
 
-     // (Added 4/24) Save structured data separetly in individual db tables
-     const careerHist = parsedData.work_experience || [];
-     const eduHist = parsedData.education || [];
-     //const skills = I.O.U => parsedData attribute for skills doesn't exist yet
-     await careerHistSave(careerHist, userId)
-     await eduHistorySave(eduHist, userId)
+    // (Added 4/24) Save structured data separetly in individual db tables
+    const careerHist = parsedData.work_experience || [];
+    const eduHist = parsedData.education || [];
+    const skills = parsedData.skills || []
+    await careerHistSave(careerHist, userId);
+    await eduHistorySave(eduHist, userId);
+    await skillSave(skills, userId)
 
     // Create content hash
     const contentHash = require("crypto")
@@ -700,7 +762,7 @@ async function saveStructuredData(content, userId) {
 
     if (existingDoc) {
       // Update existing document
-      console.log("Existing document found. Updating...")
+      console.log("Existing document found. Updating...");
       existingDoc.rawContent = content;
       existingDoc.parsedData = parsedData;
       existingDoc.keywords = existingDoc.extractKeywords();
@@ -755,13 +817,34 @@ async function saveStructuredData(content, userId) {
   }
 }
 
+// Function to get all resumes
+async function getResumesForUser(userId) {
+  try {
+    const resumes = await ResumeData.find({ userId })
+      .sort({ createdAt: -1 });
+
+    // Populate entries
+    return resumes.map((resume) => ({
+      _id: resume._id,
+      parsedData: resume.parsedData,
+      createdAt: resume.createdAt,
+      isMergedDocument: resume.isMergedDocument,
+    }));
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    throw error;
+  }
+}
+
+
 module.exports = {
   saveStructuredData,
   ResumeData,
   CareerHistory,
   EducationHistory,
+  SkillList,
+  getResumesForUser,
 };
-
 
 /*
 // Check for Duplicate Response; abort if found

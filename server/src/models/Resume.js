@@ -16,6 +16,10 @@ const ResumeSchema = new mongoose.Schema(
       required: true,
       ref: "JobDesc",
     },
+    jobTitle: {
+      type: String,
+      required: false,
+    },
     content: {
       type: Object,
     },
@@ -34,6 +38,23 @@ const ResumeSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    lastUsed_format: {
+      type: String,
+      required: false,
+    },
+    lastUsed_templateId: {
+      type: String,
+      required: false,
+    },
+    lastUsed_styleId: {
+      type: String,
+      required: false,
+    },
+    last_formattedResumeId:
+    {
+      type: String,
+      required: false,
+    }
   },
   {
     timestamps: true,

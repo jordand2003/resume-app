@@ -22,6 +22,14 @@ const userSchema = new Schema({
     phone: {
         type: String,
         required: false,
+    },
+    location: {
+        type: String,
+        required: false,
+    },
+    websites: {
+        type: Object,
+        required: false,
     }, 
     profile_photo:{
         type: Buffer,
