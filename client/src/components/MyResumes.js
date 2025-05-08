@@ -30,7 +30,7 @@ const ResumeContent = ({ content }) => {
       <Typography variant="h6" gutterBottom>
         Professional Summary
       </Typography>
-      <Typography paragraph>{content.summary}</Typography>
+      <Typography>{content.summary}</Typography>
 
       {/* Experience Section */}
       <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
@@ -100,14 +100,21 @@ const MyResumes = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedResume, setSelectedResume] = useState(null);
+  const [advice, setAdvice] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openAdviceDialog, setOpenAdviceDialog] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [formattedResume, setFormattedResume] = useState(null);
+  const [job, setJob] = useState(null);
+  const [company, setCompany] = useState(null);
+
 
 
   useEffect(() => {
     fetchResumes();
+    fetchAdvice();
   }, [getAccessTokenSilently]);
+
 
   const fetchResumes = async () => {
     try {
@@ -134,10 +141,42 @@ const MyResumes = () => {
     setOpenDialog(true);
   };
 
+  const fetchAdvice = async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      console.log("Token: ", token);
+      const response = await axios.post("http://localhost:8000/api/jobs/advice", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setAdvice(response.data.data);
+      }
+    } 
+    catch (error) {
+      console.error("Error fetching advice:", error);
+      setError(error.response?.data?.message || "Failed to fetch advice.");
+    } 
+    finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewAdvice = (resumeAdvice, position, company) => {
+    setJob(position);
+    setCompany(company);
+    setAdvice(resumeAdvice);
+    setOpenAdviceDialog(true);
+  }
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setOpenAdviceDialog(false);
     setSelectedResume(null);
     setFormattedResume(null);
+    setAdvice(null);
   };
 
   const handleMenuClick = async(resume, format) => {
@@ -162,7 +201,6 @@ const MyResumes = () => {
           console.error("Error getting formatted resume:", error);
         }
   };
-
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -244,6 +282,14 @@ const MyResumes = () => {
                         >
                           View Resume
                         </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleViewAdvice(resume , resume.jobTitle, resume.company)}
+                          sx={{ mt: 1, margin: '2px' }}
+                        >
+                          View Advice
+                        </Button>
                       </>
                     }
                   />
@@ -253,7 +299,8 @@ const MyResumes = () => {
           </List>
         </Paper>
       </Box>
-
+      
+      {/*View Resume*/}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -300,8 +347,41 @@ const MyResumes = () => {
             </MenuItem>
           </Menu>
       </Dialog>
+      
+      {/*View Advice************************************************/}
+      <Dialog
+        open={openAdviceDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { minHeight: "80vh" },
+        }}
+      >
+        <DialogTitle>
+          Advice for {job} at {company}
+        </DialogTitle>
+        {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+        )}
+        <DialogContent>
+          {advice}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
+};
+
+{/*Advice preview* **********************************************/}
+const AdviceContent = ({ content }) => {
+  if (!content) return null;
+{/*Format???*/}
+  return content;
 };
 
 export default MyResumes;
