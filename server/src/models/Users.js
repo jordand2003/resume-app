@@ -15,8 +15,16 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    email_2:{
+        type: String,
+        required: false,
+    },
     phone: {
         type: String,
+        required: false,
+    }, 
+    profile_photo:{
+        type: Buffer,
         required: false,
     }
 }, { collection: 'Users' }); // Specify the collection name as 'Users'
