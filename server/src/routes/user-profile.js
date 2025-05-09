@@ -29,8 +29,7 @@ const upload = multer({
 });
 
 router.post("/upload_photo", verifyJWT, extractUserId,
-    upload.single("image"),
-    async (req, res) => {
+    upload.single("image"), async (req, res) => {
         try {
           console.log("Upload image request received:", {
             file: req.file
@@ -42,7 +41,9 @@ router.post("/upload_photo", verifyJWT, extractUserId,
               : null,
             userId: req.userId,
           });
-    
+
+        const userId = req.userId; //Oauth ID
+        
           if (!req.file) {
             console.log("No photo uploaded");
             return res.status(400).json({
@@ -51,7 +52,7 @@ router.post("/upload_photo", verifyJWT, extractUserId,
             });
           }
     
-          if (!req.userId) {
+          if (!userId) {
             console.log("No userId found in request");
             return res.status(400).json({
               status: "Failed",
@@ -66,7 +67,13 @@ router.post("/upload_photo", verifyJWT, extractUserId,
           });
     
           // Process the photo
-          const result = await resumeUpload(req.file);
+          const { photo } = req.body;
+          const updatedUser = await User.findOneAndUpdate(
+            { user_id: userId },
+            { $set: { photo: upload_photo } },
+            { new: true, upsert: false }
+          );
+      
           console.log("Resume processing result:", {
             hasData: !!result,
             hasParsedData: result?.parsedData ? true : false,
@@ -86,29 +93,20 @@ router.post("/upload_photo", verifyJWT, extractUserId,
 router.get("/phone", verifyJWT, extractUserId, async (req, res) => {
     try {
         const userId = req.userId; //Oauth id
-        console.log("here is user info:", userId);
 
         // Check MongoDB connection
-        const connectionState = mongoose.connection.readyState;
-        console.log("MongoDB connection state:", connectionState);
-        if (connectionState !== 1) {
-            console.error("MongoDB is not connected. State:", connectionState);
-            return res.status(500).json({
-            status: "Failed",
-            message: "Database connection error",
-            });
-        }
-
+        //const connectionState = mongoose.connection.readyState;
+        //console.log("MongoDB connection state:", connectionState);
+        
         const user = await User.findOne({user_id: userId}); //this ID matches Oauth ID in db
+        
         if (!user) {
             return res.status(404).json({ status: "Failed", message: "User not found" });
         }
-
-        console.log("Here is user info:", user);
         
-        if (user.phone){
-            const phoneNumber = user.phone; //found
-            return res.status(200).json({ status: "Success", phoneNumber });
+        const phoneNumber = user.phone; //found
+        if (phoneNumber){
+            return res.status(200||304).json({ status: "Success", phoneNumber });
         }
         else {
             const phoneNumber = "";
@@ -122,31 +120,89 @@ router.get("/phone", verifyJWT, extractUserId, async (req, res) => {
     }
 );
 
+//POST API to retrieve phone number
 router.post("/phone", verifyJWT, extractUserId, async (req, res) => {
-    console.log("Incoming POST request body:", req.body);   
     try {
         const userId = req.userId; //Oauth ID
-        const {phoneNumber} = req.body;
-        const user = await User.findOne({user_id: userId});
-        
-        if (!user) {
-            return res.status(404).json({ status: "Failed", message: "User not found" });
-        }
-        
-        if (!phoneNumber){
-            return res.status(400).json({ status: "Failed", message: "No phone number found"});
-        }
-        
-        user.phone = phoneNumber;
-        const updatedUser= await user.save();
+        const { phone } = req.body;
+        const updatedUser = await User.findOneAndUpdate(
+          { user_id: userId },
+          { $set: { phone: phone } },
+          { new: true, upsert: false }
+        );
 
+        if (!updatedUser) {
+            return res.status(404).json({ status: "Failed", message: "User not found." });
+        }
+
+        if (!phone){
+            return res.status(400).json({ status: "Failed", message: "No phone number entered."});
+        }
+        
         return res.status(200).json({ status: "Success", message: "Phone number updated successfully.", user: updatedUser });
        }
-       catch {
+       catch (error) {
         console.error("Cannot update phone number:", error);
         return res.status(500).json({ status: "Failed"});
        }
     }
+);
+
+//GET API to retrieve secondary email
+router.get("/email2", verifyJWT, extractUserId, async (req, res) => {
+  try {
+      const userId = req.userId; //Oauth id
+
+      // Check MongoDB connection
+      //const connectionState = mongoose.connection.readyState;
+      //console.log("MongoDB connection state:", connectionState);
+
+      const user = await User.findOne({user_id: userId}); //this ID matches Oauth ID in db
+      if (!user) {
+          return res.status(404).json({ status: "Failed", message: "User not found" });
+      }
+      
+      const secondaryEmail = user.email_2;
+
+      if (secondaryEmail){   
+        return res.status(200).json({ status: "Success", secondaryEmail })
+      }
+      else {
+        secondaryEmail = "";
+        return res.status(204).json({status: "Success", message: "Second email does not exists.", secondaryEmail});
+      }
+
+     }
+     catch(error){
+      return res.status(500).json({ status: "Failed", message: "Cant get second email."});
+     }
+  }
+);
+
+//POST API to set secondary email
+router.post("/email2", verifyJWT, extractUserId, async (req, res) => {
+  try {
+      const userId = req.userId; //Oauth ID
+      const { email_2: secondaryEmail } = req.body; //get email_2 set to
+      const updatedUser = await User.findOneAndUpdate(
+        { user_id: userId },
+        { $set: { email_2: secondaryEmail } },
+        { new: true, upsert: false }
+      );
+
+      if (!updatedUser) {
+          return res.status(404).json({ status: "Failed", message: "Could not update." });
+      }
+
+      return !secondaryEmail
+          ? res.status(400).json({ status: "Failed", message: "No secondary email entered."})
+          : res.status(200).json({ status: "Success", message: "Email updated successfully.", user: updatedUser });
+     }
+     catch (error) {
+      console.error("Cannot update secondary email:", error);
+      return res.status(500).json({ status: "Failed"});
+     }
+  }
 );
 
 module.exports = router;

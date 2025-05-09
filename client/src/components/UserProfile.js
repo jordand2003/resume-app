@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from "./NavBar";
 import {
     Avatar,
+    Alert,
     Box,
     Paper,
     Button,
@@ -30,11 +31,12 @@ const UserProfile  = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);   
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [secondaryEmail, setSecondaryEmail] = useState('');
-    const [isEditingSecondEmail, setIsEditingSecondEmail] = useState(false);
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [tempPhoneNumber, setTempPhoneNumber] = useState("");
+    const [secondaryEmail, setSecondaryEmail] = useState("");
+    const [tempSecondaryEmail, setTempSecondaryEmail] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
     const [error, setError] = useState(null);
@@ -43,7 +45,6 @@ const UserProfile  = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     useEffect(() => {
-
         if (!isAuthenticated || !user) {
             navigate('/');
             return;
@@ -51,7 +52,8 @@ const UserProfile  = () => {
         const fullName = user?.name?.split(' ')||[];
         setFirstName(fullName[0]);
         setLastName(fullName.slice(1).join(' ')|| '');
-        setPhoneNumber(user?.phone || '');
+        fetchPhoneNumber();
+        fetchSecondaryEmail();
     }, [isAuthenticated, navigate])
 
     const handleMenuOpen = (event) => {
@@ -67,103 +69,173 @@ const UserProfile  = () => {
         handleMenuClose();
     };
 
-    //handle Phone Number Update
-    const handleSetPhoneNumber = async () => {
-        setIsPhoneNumberDialogOpen(true);
+    //Get Phone Number
+    const fetchPhoneNumber = async () => {
         try {
             const token = await getAccessTokenSilently();
-            console.log("Phone number being sent:", phoneNumber);
             const response = await axios.get("http://localhost:8000/api/user-profile/phone", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-
-            console.log("Phone number response:", response.data);
             
             if (response.status === 204){
                 console.log("User has no existing phone number. 204");
-                setPhoneNumber('');
+                setPhoneNumber("");
             }
-            else  if (response.status === 200){
-                console.log("User has no existing phone number. 200");
-                setPhoneNumber(response.data.phoneNumber || '');
+            else  if (response.status === 200 || response.status === 304){
+                console.log("User has existing phone number. 200");
+                setPhoneNumber(response.data.phoneNumber);
             }
         }
         catch (error){
             console.error("Error saving phone number:", error);
             setError("Failed to save phone number."); 
         }
-    }
+    };
 
-    const handleClosePhoneDialog = () => { //does not update
-        setIsPhoneNumberDialogOpen(false);
-        //setPhoneNumber(user.phoneNumber || '');
+    const handleSetPhoneNumber = async () => {
+        setTempPhoneNumber(phoneNumber);
+        setIsPhoneNumberDialogOpen(true);
+    };
+
+    const handleClosePhoneDialog = () => { 
+        setIsPhoneNumberDialogOpen(false); 
+        setTempPhoneNumber("");
     };
     
     const handlePhoneInputChange = (event) => {
-        console.log(phoneNumber)
-        setPhoneNumber(event.target.value);
+        setTempPhoneNumber(event.target.value); //update temp and still display old number until save
     };
 
     const handleSavePhone = async () => {
+        setPhoneNumber(tempPhoneNumber);
         setIsPhoneNumberDialogOpen(false);
-        if (phoneNumber === "") {
+        if (tempPhoneNumber === "") {
             console.log("Phone number field is empty.");
+            setError("Phone number field is empty.");
             return;
         }
-        try{
+
+        try {
             const token = await getAccessTokenSilently();
             const response = await axios.post("http://localhost:8000/api/user-profile/phone", 
-                {phone: phoneNumber},
+                {phone: tempPhoneNumber},
                 {headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            console.log("Phone number response2:", response.data);
-            setSuccessMessage("Successfully saved phone number.");
+            if (response.data && response.data.data && response.data.user.phone) {
+                setPhoneNumber(response.data.user.phone);
+                setSuccessMessage("Successfully saved phone number.");
+            }
+            else if (response.data && response.data.data){
+                setSuccessMessage(response.data.message);
+                setError(null);
+            }
+            setTempPhoneNumber("");
         }
         catch (error) {
             console.error("Error saving phone number:", error);
             setError("Failed to save phone number."); 
+            setSuccessMessage("");
+            setTempPhoneNumber("");
         }
     }
 
-    //handle Email Update
-    const handleSetSecondEmail = () => { 
-        setIsEmailDialogOpen(true);
-    }
-
-    const handleCloseEmailDialog = () => { //does not update
-        setIsEmailDialogOpen(false);
-        setSecondaryEmail(user.email_2 || '');
-    };
-
-    /*
-    async function handleSetSecondEmail(event) {
-        setIsEditingSecondEmail(true);
-        const setSecondaryEmail = event.target.files[0];
-
-        if(!emailRegex.test(secondaryEmail)){
-            setIsEditingSecondEmail(false);
+     //Get Second Email
+     const fetchSecondaryEmail = async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const response = await axios.get("http://localhost:8000/api/user-profile/email2", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             
-            return;
-          }  
-    } */
-    
-    const handleEmailInputChange = (event) => {
-        setPhoneNumber(event.target.value);
+            if (response.status === 204){
+                console.log("User has no existing secondary email. 204");
+                setSecondaryEmail("");
+            }
+            else  if (response.status === 200 || response.status === 304){
+                console.log("User has existing secondary email. 200");
+                setSecondaryEmail(response.data.secondaryEmail);
+            }
+        }
+        catch (error){
+            console.error("Error saving secondary email:", error);
+            setError("Failed to save secondary email."); 
+        }
     };
 
-    const handleSaveEmail = () => {
-        user.email_2 = secondaryEmail;
+    //handle Email Update
+    const handleSetSecondEmail = () => {
+        setTempSecondaryEmail(secondaryEmail);
+        setIsEmailDialogOpen(true);
+    } 
+
+    const handleCloseEmailDialog = () => {
         setIsEmailDialogOpen(false);
+        setTempSecondaryEmail("");
+    };
+
+    const handleEmailInputChange = (event) => {
+        setTempSecondaryEmail(event.target.value);
+    };
+
+    const handleSaveEmail = async () => {
+        setIsEmailDialogOpen(false);
+
+        // Check for valid Email syntax
+        if(emailRegex.test(tempSecondaryEmail)){ //if email input is right
+            setSecondaryEmail(tempSecondaryEmail);
+            console.log("in regex here")
+        }
+        else {
+            setError("Incorrect format, try username@domain.tld");
+            console.log("out regex here")
+            return;
+        }
+
+        if (tempSecondaryEmail === "") {
+            console.log("Email2 field is empty.");
+            setError("Secondary Email field is empty.");
+            return;
+        }
+
+        try {
+            const token = await getAccessTokenSilently();
+            const response = await axios.post("http://localhost:8000/api/user-profile/email2", 
+                {email_2: tempSecondaryEmail},
+                {headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.data && response.data.data && response.data.user.email_2) {
+                setSecondaryEmail(response.data.user.email_2);
+                console.log("Secondary email post response2:", response.data.data);
+                setSuccessMessage("Successfully saved secondary email.");
+            }
+            else if (response.data && response.data.data){
+                setSuccessMessage(response.data.message);
+                setError(null);
+            }
+            setTempSecondaryEmail("");
+        }
+        catch (error) {
+            console.error("Error saving email 2:", error);
+            setError("Failed to save secondary email."); 
+            setSuccessMessage("");
+            setTempPhoneNumber("");
+        }
     }
    
-    const handleChangeTheme = () => {
+    const handleChangeTheme = () => { 
     };
 
+    // Upload profile photo
     async function handleAvatarUpload(event) {
         const file = event.target.files[0];
         if (file) {
@@ -183,11 +255,23 @@ const UserProfile  = () => {
         setUploadError(null);
 
         try {
-          //console.log('Saving here:', avatarUrl); api call?
-          setIsUploading(false);
+            const token = await getAccessTokenSilently();
+            const response = await axios.post("http://localhost:8000/api/user-profile/upload_photo", 
+                {photo: avatarUrl},
+                {headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.data && response.data.data) {
+                setAvatarUrl(response.data.data);
+                console.log("Photo saved to db: ", response.data.data);
+                setSuccessMessage("Successfully updated photo.");
+                setIsUploading(false);
+            }
         } 
         catch (error) {
-          setUploadError('Failed to save photo.');
+          setUploadError("Failed to save photo.");
           setIsUploading(false);
         }
     }
@@ -281,7 +365,7 @@ const UserProfile  = () => {
                         Email(s)
                         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
                             Primary: {user.email} <br></br>
-                            Secondary: {user?.secondaryEmail || 'None'}  
+                            Secondary: {secondaryEmail || 'None'}  
                         </Typography>
                         <IconButton 
                                 onClick={handleSetSecondEmail}
@@ -296,6 +380,11 @@ const UserProfile  = () => {
                                 }}>
                                 <EditIcon />
                         </IconButton>
+                        {error && (
+                            <Alert severity="error" sx={{ mb: 2 }}>
+                                {error}
+                            </Alert>
+                        )}
                     </Typography>
                 </Box>
                 
@@ -304,7 +393,7 @@ const UserProfile  = () => {
                     <Typography variant="h6" color="textPrimary" gutterBottom>
                         Phone Number
                         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                            Primary: {user?.phoneNumber || 'None'} <br></br>
+                            Primary: {phoneNumber || 'None'} <br></br>
                         </Typography>
                         <IconButton 
                             onClick={handleSetPhoneNumber}
@@ -390,15 +479,13 @@ const UserProfile  = () => {
             type="tel"
             fullWidth
             variant="outlined"
-            defaultValue={phoneNumber}
+            defaultValue={tempPhoneNumber}
             onChange={handlePhoneInputChange}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePhoneDialog}>Cancel</Button>
-          <Button onClick={handleSavePhone} color="primary">
-            Save
-          </Button>
+          <Button onClick={handleSavePhone} color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </Box>

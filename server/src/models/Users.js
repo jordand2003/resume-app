@@ -31,7 +31,7 @@ const userSchema = new Schema({
         type: Object,
         required: false,
     }, 
-    profile_photo:{
+    photo:{
         type: Buffer,
         required: false,
     }
