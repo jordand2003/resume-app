@@ -173,11 +173,14 @@ const MyResumes = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setOpenAdviceDialog(false);
     setSelectedResume(null);
     setFormattedResume(null);
-    setAdvice(null);
   };
+
+  const handleCloseAdviceDialog =() => {
+    setOpenAdviceDialog(false);
+    setAdvice(null);
+  }
 
   const handleMenuClick = async(resume, format) => {
     try {
@@ -351,7 +354,7 @@ const MyResumes = () => {
       {/*View Advice************************************************/}
       <Dialog
         open={openAdviceDialog}
-        onClose={handleCloseDialog}
+        onClose={handleCloseAdviceDialog}
         maxWidth="md"
         fullWidth
         PaperProps={{
@@ -367,21 +370,17 @@ const MyResumes = () => {
             </Alert>
         )}
         <DialogContent>
-          {advice}
+          {/*    {advice && advice.content}
+          This is commmented out due to the issue with the advice api
+          */}
+          Advice here! Uncomment previous line.
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button onClick={handleCloseAdviceDialog}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
-
-{/*Advice preview* **********************************************/}
-const AdviceContent = ({ content }) => {
-  if (!content) return null;
-{/*Format???*/}
-  return content;
 };
 
 export default MyResumes;
