@@ -96,6 +96,7 @@ router.get("/", verifyJWT, extractUserId, async (req, res) => {
   link.remove();
   window.URL.revokeObjectURL(url);
 */
+/* single param version
 router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId;
@@ -150,8 +151,8 @@ router.get("/download/:formattedResumeId", verifyJWT, extractUserId, async (req,
     return res.status(500).json({ message: "Failed to download resume" });
   }
 });
+*/
 
-/*
 // Multiple parameters version
 router.get("/download/:resumeId/:formatType/:styleId/:templateId", verifyJWT, extractUserId, async (req, res) => {
   try {
@@ -159,7 +160,7 @@ router.get("/download/:resumeId/:formatType/:styleId/:templateId", verifyJWT, ex
     const { resumeId, formatType, styleId, templateId } = req.params;
 
     // Make sure we have the resume id
-    if (!formattedResumeId) {
+    if (!resumeId) {
       console.log("Where is the resssssumee??");
       return res.status(404).json({ message: "No Resume Passed" });
     }
@@ -207,6 +208,5 @@ router.get("/download/:resumeId/:formatType/:styleId/:templateId", verifyJWT, ex
     return res.status(500).json({ message: "Failed to download resume" });
   }
 });
-*/
 
 module.exports = router;
