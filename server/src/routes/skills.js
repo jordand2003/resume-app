@@ -55,8 +55,8 @@ router.put("/:newSkill", verifyJWT, extractUserId, async (req, res) => {
         // Fetch the skill list
         const skillList = await SkillList.findOne({ user_id: userId });
 
+        // Create a new document if none exists
         if (!skillList) {
-            // Create a new document if none exists
             const newSkillList = new SkillList({
                 user_id: userId,
                 skills: [newSkill],
@@ -67,7 +67,7 @@ router.put("/:newSkill", verifyJWT, extractUserId, async (req, res) => {
 
         // Check if skill is already present
         if (skillList.skills.includes(newSkill)) {
-            return res.status(200).json({ message: "Skill already exists" });
+            return res.status(400).json({ message: "You already have this skill listed." });
         }
 
         // If not present, add it

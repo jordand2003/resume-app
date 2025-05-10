@@ -148,7 +148,7 @@ const Dashboard = () => {
     const addSkill_2_Db = async (newSkill) => {
       try {
         const token = await getAccessTokenSilently(); // Get token
-        const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { // Correct URL
+        const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { 
           headers: {
             Authorization: `Bearer ${token}`,
             "Cache-Control": "no-cache",
@@ -158,9 +158,16 @@ const Dashboard = () => {
         if (skillResponse.status === 200) {
           // Update local state
           setSkills(prevSkills => [...prevSkills, newSkill]);
+          setSkillError(false)
+        } else {
+          console.log(skillResponse)
+          setSkillError(true); 
+          setSkillErrorMsg(skillResponse.data?.message || "Failed to add skill")
         }
       } catch (error) {
         console.error("Error adding skill:", error);
+        setSkillError(true);
+        setSkillErrorMsg(error.response?.data?.message || "Failed to add skill due to an error."); 
       }
     };
 
