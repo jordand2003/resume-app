@@ -111,7 +111,7 @@ const MyResumes = () => {
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
 
-  const [selectedIndex, setSelectedIndex] = React.useState(1);
+  const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const open = Boolean(anchorEl);
 
   const format_options = [
@@ -386,7 +386,7 @@ const MyResumes = () => {
           >
           <ListItemText
             primary="Format as:"
-            secondary={format_options[selectedIndex]}
+            secondary={selectedIndex === -1 ? "Select a format" : format_options[selectedIndex]}
           />
           </ListItemButton>
         </List>
@@ -410,7 +410,7 @@ const MyResumes = () => {
             </MenuItem>
           ))}
         </Menu>
-          <Button onClick={() => handleDownload(selectedResume)}>Download</Button>
+          <Button onClick={() => handleDownload(selectedResume)} disabled={selectedIndex === -1}>Download</Button>
           <Button onClick={handleCloseDialog}>Close</Button>
         </DialogActions>
         <Menu
