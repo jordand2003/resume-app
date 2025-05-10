@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
+import ReactMarkdown from 'react-markdown';
 import {
   Box,
   Typography,
@@ -47,7 +48,7 @@ const ResumeContent = ({ content }) => {
           <List dense>
             {exp.achievements.map((achievement, i) => (
               <ListItem key={i}>
-                <Typography variant="body2">• {achievement}</Typography>
+                <Typography variant="body2" component="span">• {achievement}</Typography>
               </ListItem>
             ))}
           </List>
@@ -101,6 +102,8 @@ const MyResumes = () => {
   const [error, setError] = useState("");
   const [selectedResume, setSelectedResume] = useState(null);
   const [advice, setAdvice] = useState(null);
+  const [adviceLoading, setAdviceLoading] = useState(false);
+  const [adviceError, setAdviceError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openAdviceDialog, setOpenAdviceDialog] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -112,7 +115,7 @@ const MyResumes = () => {
 
   useEffect(() => {
     fetchResumes();
-    fetchAdvice();
+    //fetchAdvice();
   }, [getAccessTokenSilently]);
 
 
@@ -137,37 +140,46 @@ const MyResumes = () => {
   };
 
   const handleViewResume = (resume) => {
+    console.log(resume);
     setSelectedResume(resume);
     setOpenDialog(true);
   };
 
-  const fetchAdvice = async () => {
+  const fetchAdvice = async (resumeId) => {
     try {
+      setAdviceLoading(true);
+      setAdviceError('');
       const token = await getAccessTokenSilently();
       console.log("Token: ", token);
-      const response = await axios.post("http://localhost:8000/api/jobs/advice", {
+      const response = await axios.post("http://localhost:8000/api/jobs/advice", 
+        {
+          resumeId: resumeId
+          //jobId:
+      },
+      {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (response.data && response.data.data) {
+        console.log(response.data.data);
         setAdvice(response.data.data);
       }
     } 
     catch (error) {
       console.error("Error fetching advice:", error);
-      setError(error.response?.data?.message || "Failed to fetch advice.");
+      setAdviceError(error.response?.data?.message || "Failed to fetch advice.");
     } 
     finally {
-      setLoading(false);
+      setAdviceLoading(false);
     }
   };
 
   const handleViewAdvice = (resumeAdvice, position, company) => {
     setJob(position);
     setCompany(company);
-    setAdvice(resumeAdvice);
+    //setAdvice(resumeAdvice);
+    fetchAdvice(resumeAdvice);
     setOpenAdviceDialog(true);
   }
 
@@ -288,7 +300,7 @@ const MyResumes = () => {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleViewAdvice(resume , resume.jobTitle, resume.company)}
+                          onClick={() => handleViewAdvice(resume, resume.jobTitle, resume.company)}
                           sx={{ mt: 1, margin: '2px' }}
                         >
                           View Advice
@@ -370,11 +382,19 @@ const MyResumes = () => {
             </Alert>
         )}
         <DialogContent>
-          {/*    {advice && advice.content}
-          This is commmented out due to the issue with the advice api
-          */}
-          Advice here! Uncomment previous line.
+          {adviceLoading ? (
+            <Typography>Loading advice...</Typography>
+          ) : advice ? (
+            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{advice}</pre>
+          ) : (
+            <Typography>No advice available.</Typography>
+          )}
         </DialogContent>
+        {adviceError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {adviceError}
+          </Alert>
+        )}
         <DialogActions>
           <Button onClick={handleCloseAdviceDialog}>Close</Button>
         </DialogActions>
