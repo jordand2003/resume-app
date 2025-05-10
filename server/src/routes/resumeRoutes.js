@@ -173,7 +173,7 @@ router.get("/download/:resumeId/:formatType/:styleId/:templateId", verifyJWT, ex
     // Nikko will use this to call format again
     if (!resume) {
       console.log("Resume does not exist or expired in collections");
-      return res.status(405).json({ message: "Resume not found" });
+      return res.status(405).json({ message: "Resume not found" }); 
     }
 
     var extension;

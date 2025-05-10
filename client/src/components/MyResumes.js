@@ -148,6 +148,7 @@ const MyResumes = () => {
 
   const handleViewResume = (resume) => {
     console.log(resume);
+    setSelectedIndex(-1);
     setSelectedResume(resume);
     setOpenDialog(true);
   };
