@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
-import ReactMarkdown from 'react-markdown';
 import {
   Box,
   Typography,
@@ -9,6 +8,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemButton,
   Divider,
   CircularProgress,
   Alert,
@@ -111,7 +111,14 @@ const MyResumes = () => {
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
 
+  const [selectedIndex, setSelectedIndex] = React.useState(-1);
+  const open = Boolean(anchorEl);
 
+  const format_options = [
+    'html',
+    'markup',
+    'plaintext'
+  ];
 
   useEffect(() => {
     fetchResumes();
@@ -141,6 +148,7 @@ const MyResumes = () => {
 
   const handleViewResume = (resume) => {
     console.log(resume);
+    setSelectedIndex(-1);
     setSelectedResume(resume);
     setOpenDialog(true);
   };
@@ -194,13 +202,13 @@ const MyResumes = () => {
     setAdvice(null);
   }
 
-  const handleMenuClick = async(resume, format) => {
+  const handleMenuClick = async(resume, format_ind) => {
     try {
           const token = await getAccessTokenSilently();
           const response = await axios.post(
             "http://localhost:8000/api/format",
             { resumeId: resume,
-              formatType: format
+              formatType: format_options[format_ind]
              },
             {
               headers: {
@@ -217,12 +225,43 @@ const MyResumes = () => {
         }
   };
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleMenuItemClick = (event, index, resume) => {
+    setSelectedIndex(index);
+    handleMenuClick(resume, index);
+    setAnchorEl(null);
   }; 
+
+  const handleClickListItem = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleDownload = async(resume) => {
+    try {
+      const token = await getAccessTokenSilently();
+      const format = format_options[selectedIndex];
+      const response = await axios.get(`http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/default`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/octet-stream" })
+      );
+      const link = document.createElement("a");
+  
+      link.href = url;
+      link.download = response.headers["content-disposition"]
+        ? response.headers["content-disposition"].match(/filename="?([^"]+)"?/)[1]
+        : "downloaded_resume"; 
+      link.click();
+ 
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error("Error getting formatted resume:", error);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -333,7 +372,46 @@ const MyResumes = () => {
           {formattedResume ? ( <pre>{formattedResume}</pre> ) : ( selectedResume && <ResumeContent content={selectedResume.content} />)}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleMenu}>Download as...</Button>
+          <List
+            component="nav"
+            aria-label="Format Selection"
+            sx={{ bgcolor: 'background.paper' }}
+          >
+          <ListItemButton
+            id="format-button"
+            aria-haspopup="listbox"
+            aria-controls="format-menu"
+            aria-label="format"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleClickListItem}
+          >
+          <ListItemText
+            primary="Format as:"
+            secondary={selectedIndex === -1 ? "Select a format" : format_options[selectedIndex]}
+          />
+          </ListItemButton>
+        </List>
+        <Menu
+          id="format-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          MenuListProps={{
+            'aria-labelledby': 'format-button',
+            role: 'listbox',
+          }}
+        >
+          {format_options.map((option, index) => (
+            <MenuItem
+              key={option}
+              selected={index === selectedIndex}
+              onClick={(event) => handleMenuItemClick(event, index, selectedResume)}
+            >
+              {option}
+            </MenuItem>
+          ))}
+        </Menu>
+          <Button onClick={() => handleDownload(selectedResume)} disabled={selectedIndex === -1}>Download</Button>
           <Button onClick={handleCloseDialog}>Close</Button>
         </DialogActions>
         <Menu
@@ -351,15 +429,6 @@ const MyResumes = () => {
           open={Boolean(anchorEl)}
           onClose={handleClose}
           >
-            <MenuItem onClick={() => handleMenuClick(selectedResume, "plaintext")}>
-              Plaintext
-            </MenuItem>
-            <MenuItem onClick={() => handleMenuClick(selectedResume, "html")}>
-              HTML
-            </MenuItem>
-            <MenuItem onClick={() => handleMenuClick(selectedResume, "markup")}>
-              Markup
-            </MenuItem>
           </Menu>
       </Dialog>
       
