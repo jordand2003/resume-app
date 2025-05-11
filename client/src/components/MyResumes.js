@@ -121,22 +121,26 @@ const MyResumes = () => {
   {
     id: 1,
     title: 'Basic',
-    image: PlaceholderImg
+    image: PlaceholderImg,
+    formattedTitle: 'basic'
   },
   {
     id: 2,
     title: 'Basic Interative',
-    image: PlaceholderImg
+    image: PlaceholderImg,
+    formattedTitle: 'basic_interactive'
   },
   {
     id: 3,
     title: 'Modern',
-    image: PlaceholderImg
+    image: PlaceholderImg,
+    formattedTitle: 'modern'
   },
   {
     id: 4,
     title: 'Split',
-    image: PlaceholderImg
+    image: PlaceholderImg,
+    formattedTitle: 'split'
   }
 ];
 
@@ -232,13 +236,19 @@ const MyResumes = () => {
     setAdvice(null);
   }
 
-  const handleMenuClick = async(resume, format_ind) => {
+  const handleMenuClick = async(resume, format_ind, template_ind) => {
     try {
           const token = await getAccessTokenSilently();
+          const template = "basic"
+          if(template_ind != -1){
+            const template = templates[template_ind].formattedTitle
+            console.log(template);
+          }
           const response = await axios.post(
             "http://localhost:8000/api/format",
             { resumeId: resume,
-              formatType: format_options[format_ind]
+              formatType: format_options[format_ind],
+              templateId: template
              },
             {
               headers: {
@@ -257,7 +267,7 @@ const MyResumes = () => {
 
   const handleMenuItemClick = (event, index, resume) => {
     setSelectedIndex(index);
-    handleMenuClick(resume, index);
+    handleMenuClick(resume, index, -1);
     setAnchorEl(null);
   }; 
 
@@ -406,14 +416,14 @@ const MyResumes = () => {
           sx={{
             width: '100%',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(175px, 100%), 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(150px, 100%), 1fr))',
             gap: 2
           }}
         >
           {templates.map((card, index) => (
             <Card>
               <CardActionArea
-                onClick={() => setSelectedCard(index)}
+                onClick={() => {setSelectedCard(index); handleMenuClick(selectedResume, 0, index);}}
                 data-active={selectedCard === index ? '' : undefined}
                 sx={{
                   height: '100%',
