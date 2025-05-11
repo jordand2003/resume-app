@@ -398,7 +398,7 @@ const MyResumes = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="md"
+        maxWidth={false}    // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -408,38 +408,54 @@ const MyResumes = () => {
             `Resume for ${selectedResume.jobTitle} at ${selectedResume.company}`}
         </DialogTitle>
         <DialogContent dividers>
-          {formattedResume ? ( <pre>{formattedResume}</pre> ) : ( selectedResume && <ResumeContent content={selectedResume.content} />)}
+          <Box sx={{ maxWidth: '100%',}}>
+          {formattedResume ? ( <pre  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{formattedResume}</pre> ) : ( selectedResume && <ResumeContent content={selectedResume.content} />)}
+          </Box>
         </DialogContent>
         <DialogActions>
           {selectedIndex === 0 && (
           <Box
-          sx={{
-            width: '100%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(150px, 100%), 1fr))',
-            gap: 2
-          }}
-        >
+            sx={{
+              width: '100%',
+              overflowX: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              padding: 1,
+            }}
+          >
+          <Box sx={{ display: 'flex', gap: 1,}}>
           {templates.map((card, index) => (
-            <Card>
+            <Card sx={{ width: 160, flexShrink: 0 }}>
               <CardActionArea
                 onClick={() => {setSelectedCard(index); handleMenuClick(selectedResume, 0, index);}}
                 data-active={selectedCard === index ? '' : undefined}
                 sx={{
-                  height: '100%',
-                  '&[data-active]': {
-                    backgroundColor: 'action.selected',
-                    '&:hover': {
-                      backgroundColor: 'action.selectedHover',
+                    flex: 1,                    // new
+                    display: 'flex',           // new
+                    flexDirection: 'column',  // new
+                    // height: '100%',
+                    '&[data-active]': {
+                      backgroundColor: 'action.selected',
+                      '&:hover': {
+                        backgroundColor: 'action.selectedHover',
+                      },
                     },
-                  },
-                }}
+                  }}
               >
                 <CardMedia
                   component="img"
                   image={card.image}
+                  sx={{
+                      height: 90, // fixed image height (new)
+                      objectFit: 'contain', // new
+                    }}
                 />
-                <CardContent sx={{ height: '100%' }}>
+                <CardContent sx={{ 
+                    flexGrow: 1,           // new
+                    overflow: 'hidden',   // new
+                    padding: '4px',       // new
+                    //height: '100%' 
+                  }}>
                   <Typography variant="body2" component="div">
                     {card.title}
                   </Typography>
@@ -450,6 +466,7 @@ const MyResumes = () => {
               </CardActionArea>
             </Card>
           ))}
+          </Box>
         </Box>
           )}
         </DialogActions>
