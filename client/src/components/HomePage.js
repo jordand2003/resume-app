@@ -13,6 +13,7 @@ import {
 import NavBar from "./NavBar";
 import ResumeUpload from "./ResumeUpload";
 import Dashboard from "./Dashboard";
+import ParticlesBackground from "./ParticlesBackground";
 
 const HomePage = () => {
   const navigate = useNavigate();

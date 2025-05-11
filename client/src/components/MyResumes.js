@@ -10,6 +10,10 @@ import {
   ListItemText,
   ListItemButton,
   Divider,
+  Card,
+  CardContent,
+  CardMedia,
+  CardActionArea,
   CircularProgress,
   Alert,
   Button,
@@ -21,6 +25,7 @@ import {
   MenuItem
 } from "@mui/material";
 import NavBar from "./NavBar";
+import PlaceholderImg from "../Blank-Resume-Template.jpg"
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -110,7 +115,32 @@ const MyResumes = () => {
   const [formattedResume, setFormattedResume] = useState(null);
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
+  //for template previews
+  const [selectedCard, setSelectedCard] = React.useState(0);
+  const templates = [
+  {
+    id: 1,
+    title: 'Basic',
+    image: PlaceholderImg
+  },
+  {
+    id: 2,
+    title: 'Basic Interative',
+    image: PlaceholderImg
+  },
+  {
+    id: 3,
+    title: 'Modern',
+    image: PlaceholderImg
+  },
+  {
+    id: 4,
+    title: 'Split',
+    image: PlaceholderImg
+  }
+];
 
+  //format selector dropdown
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const open = Boolean(anchorEl);
 
@@ -359,8 +389,7 @@ const MyResumes = () => {
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="md"
-        fullWidth
-        PaperProps={{
+        slotProps={{
           sx: { minHeight: "80vh" },
         }}
       >
@@ -371,6 +400,49 @@ const MyResumes = () => {
         <DialogContent dividers>
           {formattedResume ? ( <pre>{formattedResume}</pre> ) : ( selectedResume && <ResumeContent content={selectedResume.content} />)}
         </DialogContent>
+        <DialogActions>
+          {selectedIndex === 0 && (
+          <Box
+          sx={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(175px, 100%), 1fr))',
+            gap: 2
+          }}
+        >
+          {templates.map((card, index) => (
+            <Card>
+              <CardActionArea
+                onClick={() => setSelectedCard(index)}
+                data-active={selectedCard === index ? '' : undefined}
+                sx={{
+                  height: '100%',
+                  '&[data-active]': {
+                    backgroundColor: 'action.selected',
+                    '&:hover': {
+                      backgroundColor: 'action.selectedHover',
+                    },
+                  },
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  image={card.image}
+                />
+                <CardContent sx={{ height: '100%' }}>
+                  <Typography variant="body2" component="div">
+                    {card.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {card.description}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          ))}
+        </Box>
+          )}
+        </DialogActions>
         <DialogActions>
           <List
             component="nav"
