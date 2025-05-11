@@ -239,9 +239,9 @@ const MyResumes = () => {
   const handleMenuClick = async(resume, format_ind, template_ind) => {
     try {
           const token = await getAccessTokenSilently();
-          const template = "basic"
+          let template = "split"
           if(template_ind != -1){
-            const template = templates[template_ind].formattedTitle
+            template = templates[template_ind].formattedTitle
             console.log(template);
           }
           const response = await axios.post(

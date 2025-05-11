@@ -141,7 +141,7 @@ class FormattingService {
       console.warn('HTML templates not yet loaded.');
       return '';
     }
-    // Get markup template
+    // Get html template
     const selectedTemplate = html_options.template[template] || html_options.template["basic"];
     let html = selectedTemplate;
 
