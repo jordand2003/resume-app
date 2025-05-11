@@ -79,7 +79,7 @@ class FormattingService {
     if (resumeContent.summary) {
       response = response.replace("{{summary}}", resumeContent.summary);
     } else {
-      response = response.replace(/SUMMARY\n{{summary}}\n?/, "");
+      response = response.replace(/SUMMARY\s*\r?\n\s*\{\{summary\}\}\s*/g, "");
     }
 
     // Populate Skills
@@ -87,7 +87,7 @@ class FormattingService {
       const skillList = resumeContent.skills.join(", ");
       response = response.replace("{{skills}}", skillList);
     } else {
-      response = response.replace(/SKILLS\n{{skills}}\n?/, "");
+      response = response.replace(/SKILLS\s*\r?\n\s*\{\{skills\}\}\s*/g, "");
     }
 
     // Populate Experience
@@ -99,7 +99,7 @@ class FormattingService {
 
       response = response.replace("{{experience}}", expList);
     } else {
-      response = response.replace(/EXPERIENCE\n{{experience}}\n?/, "");
+      response = response.replace(/EXPERIENCE\s*\r?\n\s*\{\{experience\}\}\s*/g, "");
     }
 
     // Populate Education
@@ -110,14 +110,14 @@ class FormattingService {
 
       response = response.replace("{{education}}", eduList);
     } else {
-      response = response.replace(/EDUCATION\n{{education}}\n?/, "");
+      response = response.replace(/EDUCATION\s*\r?\n\s*\{\{education\}\}\s*/g, "");
     }
 
     // INCOMPLETE CERTIFICATIONS & AWARDS
-    response = response.replace(/CERTIFICATIONS & AWARDS\n{{certifications\+awards}}\n?/, "");
+    response = response.replace(/CERTIFICATIONS & AWARDS\s*\r?\n\s*\{\{certifications\+awards\}\}\s*/g, "");
 
     // INCOMPLETE PROJECTS
-    response = response.replace(/PROJECTS\n{{projects}}\n?/, "");
+    response = response.replace(/PROJECTS\s*\r?\n\s*\{\{projects\}\}\s*/g, "");
 
     return response;
   }
@@ -198,7 +198,9 @@ class FormattingService {
       html = html.replace('<h2>Education</h2>\n{{education}}', ''); // Remove section if no education
     }
 
-    // Replace
+    // INCOMPLETE CERTIFICATIONS & AWARDS
+
+    // INCOMPLETE PROJECTS
 
     return html;
   }
