@@ -30,6 +30,8 @@ const UserProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
+  const [phoneError, setPhoneError] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [tempPhoneNumber, setTempPhoneNumber] = useState("");
@@ -39,7 +41,6 @@ const UserProfile = () => {
   const [lastName, setLastName] = useState("");
   const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,7 +92,7 @@ const UserProfile = () => {
       }
     } catch (error) {
       console.error("Error saving phone number:", error);
-      setError("Failed to save phone number.");
+      setPhoneError("Failed to save phone number.");
     }
   };
 
@@ -110,41 +111,49 @@ const UserProfile = () => {
   };
 
   const handleSavePhone = async () => {
-    setPhoneNumber(tempPhoneNumber);
     setIsPhoneNumberDialogOpen(false);
-    if (tempPhoneNumber === "") {
-      console.log("Phone number field is empty.");
-      setError("Phone number field is empty.");
-      return;
+    
+    // Jank regex pattern matching will occur here
+    const regex1 = /^[\+][0-9]{0,3}[-\s]?[(][0-9]{3}[)][-\s]?[0-9]{3}[-\s]?[0-9]{4}$/;      // Ex: +1 (973) 132 4592
+    const regex2 = /^[\+][0-9]{0,3}[-\s]?[0-9]{3}[-\s]?[0-9]{3}[-\s]?[0-9]{4}$/;            // Ex: +420 111 777 1020
+    const regex3 = /^[(][0-9]{3}[)][-\s]?[0-9]{3}[-\s]?[0-9]{4}$/;                          // Ex: (000) 000 9999
+    const regex4 = /^[0-9]{3}[-\s]?[0-9]{3}[-\s]?[0-9]{4}$/;                                // Ex: 1234567890
+
+    // Thankfully computers are fast enough to handle my poor code
+    if (!regex1.exec(tempPhoneNumber) && !regex2.exec(tempPhoneNumber) && !regex3.exec(tempPhoneNumber) && !regex4.exec(tempPhoneNumber)) {
+        console.log("Invalid input given");
+        setPhoneError("Invalid input given");
+        return;
     }
+
+    setPhoneNumber(tempPhoneNumber);
 
     try {
-      const token = await getAccessTokenSilently();
-      const response = await axios.post(
-        "http://localhost:8000/api/user-profile/phone",
-        { phone: tempPhoneNumber },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const token = await getAccessTokenSilently();
+        const response = await axios.post("http://localhost:8000/api/user-profile/phone", 
+            {phone: tempPhoneNumber},
+            {headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-      if (response.data && response.data.data && response.data.user.phone) {
-        setPhoneNumber(response.data.user.phone);
-        setSuccessMessage("Successfully saved phone number.");
-      } else if (response.data && response.data.data) {
-        setSuccessMessage(response.data.message);
-        setError(null);
-      }
-      setTempPhoneNumber("");
-    } catch (error) {
-      console.error("Error saving phone number:", error);
-      setError("Failed to save phone number.");
-      setSuccessMessage("");
-      setTempPhoneNumber("");
+        if (response.data && response.data.data && response.data.user.phone) {
+            setPhoneNumber(response.data.user.phone);
+            setSuccessMessage("Successfully saved phone number.");
+        }
+        else if (response.data && response.data.data)
+            setSuccessMessage(response.data.message);
+        
+        setPhoneError(null);
+        setTempPhoneNumber("");
     }
-  };
+    catch (error) {
+        console.error("Error saving phone number:", error);
+        setPhoneError("Failed to save phone number."); 
+        setSuccessMessage("");
+        setTempPhoneNumber("");
+    }
+  }
 
   //Get Second Email
   const fetchSecondaryEmail = async () => {
@@ -168,7 +177,7 @@ const UserProfile = () => {
       }
     } catch (error) {
       console.error("Error saving secondary email:", error);
-      setError("Failed to save secondary email.");
+      setEmailError("Failed to save secondary email.");
     }
   };
 
@@ -191,48 +200,47 @@ const UserProfile = () => {
     setIsEmailDialogOpen(false);
 
     // Check for valid Email syntax
-    if (emailRegex.test(tempSecondaryEmail)) {
-      //if email input is right
-      setSecondaryEmail(tempSecondaryEmail);
-      console.log("in regex here");
-    } else {
-      setError("Incorrect format, try username@domain.tld");
-      console.log("out regex here");
-      return;
+    if(emailRegex.test(tempSecondaryEmail)){ //if email input is right
+        setSecondaryEmail(tempSecondaryEmail);
+        console.log("in regex here")
+    }
+    else {
+        setEmailError("Incorrect format, try username@domain.tld");
+        console.log("out regex here")
+        return;
     }
 
     if (tempSecondaryEmail === "") {
-      console.log("Email2 field is empty.");
-      setError("Secondary Email field is empty.");
-      return;
+        console.log("Email2 field is empty.");
+        setEmailError("Secondary Email field is empty.");
+        return;
     }
 
     try {
-      const token = await getAccessTokenSilently();
-      const response = await axios.post(
-        "http://localhost:8000/api/user-profile/email2",
-        { email_2: tempSecondaryEmail },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const token = await getAccessTokenSilently();
+        const response = await axios.post("http://localhost:8000/api/user-profile/email2", 
+            {email_2: tempSecondaryEmail},
+            {headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-      if (response.data && response.data.data && response.data.user.email_2) {
-        setSecondaryEmail(response.data.user.email_2);
-        console.log("Secondary email post response2:", response.data.data);
-        setSuccessMessage("Successfully saved secondary email.");
-      } else if (response.data && response.data.data) {
-        setSuccessMessage(response.data.message);
-        setError(null);
-      }
-      setTempSecondaryEmail("");
-    } catch (error) {
-      console.error("Error saving email 2:", error);
-      setError("Failed to save secondary email.");
-      setSuccessMessage("");
-      setTempPhoneNumber("");
+        if (response.data && response.data.data && response.data.user.email_2) {
+            setSecondaryEmail(response.data.user.email_2);
+            console.log("Secondary email post response2:", response.data.data);
+            setSuccessMessage("Successfully saved secondary email.");
+        }
+        else if (response.data && response.data.data)
+            setSuccessMessage(response.data.message);
+
+        setEmailError(null);
+        setTempSecondaryEmail("");
+    }
+    catch (error) {
+        console.error("Error saving email 2:", error);
+        setEmailError("Failed to save secondary email."); 
+        setSuccessMessage("");
+        setTempPhoneNumber("");
     }
   };
 
@@ -307,12 +315,17 @@ const UserProfile = () => {
                   {user.name}
                   <Typography variant="body2" gutterBottom>
                     User ID: {user.sub}
-                    {user.email_verified && (
-                      <Typography variant="body2" color="success" gutterBottom>
-                        Email Verified
-                      </Typography>
-                    )}
                   </Typography>
+                  {user.email_verified && (
+                    <Typography variant="body2" color="success" gutterBottom>
+                      Email Verified
+                    </Typography>
+                  )}
+                  {!user.email_verified && (
+                    <Typography variant="body2" color="error" gutterBottom>
+                      Email Not Verified
+                    </Typography>
+                  )}
                 </Typography>
               </Box>
             </Box>
@@ -347,105 +360,92 @@ const UserProfile = () => {
           </Box>
 
           <hr />
-          <Box sx={{ position: "relative", mb: 2 }}>
-            <Typography variant="h6" color="textPrimary" gutterBottom>
-              Email(s)
-              <Typography
-                variant="subtitle1"
-                color="textSecondary"
-                gutterBottom
-              >
-                Primary: {user.email} <br></br>
-                Secondary: {secondaryEmail || "None"}
-              </Typography>
-              <IconButton
-                onClick={handleSetSecondEmail}
-                sx={{
-                  mb: 1,
-                  position: "relative",
-                  marginTop: -11.5,
-                  float: "right",
-                  marginLeft: 80,
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-            </Typography>
-          </Box>
+          <Box sx={{ position: 'relative', mb: 2 }}>     
+                    <Typography variant="h6" color="textPrimary" gutterBottom>
+                        Email(s)
+                    </Typography>
+                    <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+                        Primary: {user.email} <br></br>
+                        Secondary: {secondaryEmail || 'None'}  
+                    </Typography>
+                    <IconButton 
+                        onClick={handleSetSecondEmail}
+                        sx={{ mb: 1,
+                            position: 'relative',
+                            marginTop: -11.5,
+                            float: 'right',
+                            marginLeft: 80,
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            '&:hover': { backgroundColor: 'primary.dark' },
+                        }}>
+                        <EditIcon />
+                    </IconButton>
+                    {emailError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {emailError}
+                        </Alert>
+                    )}
+                </Box>
+
+          <hr />
+          <Box >
+                    <Typography variant="h6" color="textPrimary" gutterBottom>
+                        Phone Number
+                    </Typography>
+                    <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+                        Primary: {phoneNumber || 'None'} <br></br>
+                    </Typography>
+                    <IconButton 
+                        onClick={handleSetPhoneNumber}
+                        sx={{ mb: 1,
+                            position: 'relative',
+                            float: 'right',
+                            marginLeft: 80,
+                            marginTop: -8,
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            '&:hover': { backgroundColor: 'primary.dark' },
+                        }}>
+                        <EditIcon />
+                    </IconButton>
+                    {phoneError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {phoneError}
+                        </Alert>
+                    )}
+                </Box>
 
           <hr />
           <Box>
             <Typography variant="h6" color="textPrimary" gutterBottom>
-              Phone Number
-              <Typography
-                variant="subtitle1"
-                color="textSecondary"
-                gutterBottom
-              >
-                Primary: {phoneNumber || "None"} <br></br>
-              </Typography>
-              <IconButton
-                onClick={handleSetPhoneNumber}
-                sx={{
-                  mb: 1,
-                  position: "relative",
-                  float: "right",
-                  marginLeft: 80,
-                  marginTop: -8,
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                }}
-              >
-                <EditIcon />
-              </IconButton>
+                Theme 
             </Typography>
-          </Box>
-
-          <hr />
-          <Box>
-            <Typography variant="h6" color="textPrimary" gutterBottom>
-              Theme
-              <Typography
-                variant="subtitle1"
-                color="textSecondary"
-                gutterBottom
-              >
-                Light
-              </Typography>
-              <IconButton
-                onClick={handleChangeTheme}
-                sx={{
-                  mb: 1,
-                  position: "relative",
-                  float: "right",
-                  marginLeft: 80,
-                  marginTop: -8,
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-            </Typography>
-          </Box>
-          <hr />
-          <Typography variant="h6" color="textPrimary" gutterBottom>
-            Language
             <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-              English
+                Light
             </Typography>
-          </Typography>
-        </Paper>
+            <IconButton 
+                onClick={handleChangeTheme}
+                sx={{ mb: 1,
+                    position: 'relative',
+                    float: 'right',
+                    marginLeft: 80,
+                    marginTop: -8,
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    '&:hover': { backgroundColor: 'primary.dark' },
+                    }}>
+                <EditIcon />
+                </IconButton>
+            </Box>
+                <hr />    
+                <Typography variant="h6" color="textPrimary" gutterBottom>
+                    Language
+                </Typography>
+                <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+                    English
+                </Typography>
+                </Paper>
       </Box>
 
       <Dialog open={isEmailDialogOpen} onClose={handleCloseEmailDialog}>
@@ -498,3 +498,4 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
+        
