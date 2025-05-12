@@ -15,59 +15,34 @@ import {
     IconButton,
     Typography,
     TextField,
-    CircularProgress,
-    Menu,
-    MenuItem,
   } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import axios from "axios";
 
 const UserProfile  = () => {
     const navigate = useNavigate();
     const { getAccessTokenSilently } = useAuth0();
     const { user, isAuthenticated } = useAuth0();
-    const [avatarUrl, setAvatarUrl] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadError, setUploadError] = useState(null);
-    const [anchorEl, setAnchorEl] = useState(null);   
     const [phoneNumber, setPhoneNumber] = useState("");
     const [tempPhoneNumber, setTempPhoneNumber] = useState("");
-    const [secondaryEmail, setSecondaryEmail] = useState("");
-    const [tempSecondaryEmail, setTempSecondaryEmail] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [tempEmail, setTempEmail] = useState("");
     const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d+$/;
     
     useEffect(() => {
         if (!isAuthenticated || !user) {
             navigate('/');
             return;
         }
-        const fullName = user?.name?.split(' ')||[];
-        setFirstName(fullName[0]);
-        setLastName(fullName.slice(1).join(' ')|| '');
+        fetchEmail();
         fetchPhoneNumber();
-        fetchSecondaryEmail();
     }, [isAuthenticated, navigate])
-
-    const handleMenuOpen = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleUseAccountIcon = () => {
-        setAvatarUrl(null); //Reset to default/Auth0 picture
-        handleMenuClose();
-    };
 
     //Get Phone Number
     const fetchPhoneNumber = async () => {
@@ -84,7 +59,7 @@ const UserProfile  = () => {
                 setPhoneNumber("");
             }
             else  if (response.status === 200 || response.status === 304){
-                console.log("User has existing phone number. 200");
+                console.log("User has existing phone number. 200/304");
                 setPhoneNumber(response.data.phoneNumber);
             }
         }
@@ -106,14 +81,21 @@ const UserProfile  = () => {
     
     const handlePhoneInputChange = (event) => {
         setTempPhoneNumber(event.target.value); //update temp and still display old number until save
+
     };
 
     const handleSavePhone = async () => {
-        setPhoneNumber(tempPhoneNumber);
         setIsPhoneNumberDialogOpen(false);
-        if (tempPhoneNumber === "") {
-            console.log("Phone number field is empty.");
-            setError("Phone number field is empty.");
+
+        if (tempPhoneNumber.length !== 10 ){
+            setError("Phone number must  be 10 digits.");
+            return;
+        }
+        else if (phoneRegex.test(tempPhoneNumber)){
+            setPhoneNumber(tempPhoneNumber);
+        } 
+        else {
+            setError("Phone number must be 10 digits.");
             return;
         }
 
@@ -144,138 +126,93 @@ const UserProfile  = () => {
         }
     }
 
-     //Get Second Email
-     const fetchSecondaryEmail = async () => {
+     //Get Email
+     const fetchEmail = async () => {
         try {
             const token = await getAccessTokenSilently();
-            const response = await axios.get("http://localhost:8000/api/user-profile/email2", {
+            const response = await axios.get("http://localhost:8000/api/user-profile/email", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             
-            if (response.status === 204){
-                console.log("User has no existing secondary email. 204");
-                setSecondaryEmail("");
-            }
-            else  if (response.status === 200 || response.status === 304){
-                console.log("User has existing secondary email. 200");
-                setSecondaryEmail(response.data.secondaryEmail);
+            if (response.status === 200 || response.status === 304){
+                console.log("Grabbing email. 200/304");
+                setEmail(response.data.primaryEmail);
             }
         }
         catch (error){
-            console.error("Error saving secondary email:", error);
-            setError("Failed to save secondary email."); 
+            console.error("Error saving email:", error);
+            setError("Failed to get email."); 
         }
     };
 
     //handle Email Update
-    const handleSetSecondEmail = () => {
-        setTempSecondaryEmail(secondaryEmail);
+    const handleSetEmail = () => {
         setIsEmailDialogOpen(true);
     } 
 
     const handleCloseEmailDialog = () => {
         setIsEmailDialogOpen(false);
-        setTempSecondaryEmail("");
     };
 
     const handleEmailInputChange = (event) => {
-        setTempSecondaryEmail(event.target.value);
+        setTempEmail(event.target.value);
     };
 
     const handleSaveEmail = async () => {
         setIsEmailDialogOpen(false);
-
-        // Check for valid Email syntax
-        if(emailRegex.test(tempSecondaryEmail)){ //if email input is right
-            setSecondaryEmail(tempSecondaryEmail);
-            console.log("in regex here")
+        console.log("temp: ", tempEmail);
+        if (tempEmail === email){
+            setSuccessMessage("Email is the same.");
+            return;
+        }
+        if (tempEmail === ''){
+            setError("Email cannot be empty!");
+            return;
+        }
+        if (!emailRegex.test(tempEmail)) { // Check for valid Email syntax
+            setError("Incorrect format, please try username@domain.tld");
+            return;    
         }
         else {
-            setError("Incorrect format, try username@domain.tld");
-            console.log("out regex here")
-            return;
-        }
-
-        if (tempSecondaryEmail === "") {
-            console.log("Email2 field is empty.");
-            setError("Secondary Email field is empty.");
-            return;
+            setEmail(tempEmail);
         }
 
         try {
             const token = await getAccessTokenSilently();
-            const response = await axios.post("http://localhost:8000/api/user-profile/email2", 
-                {email_2: tempSecondaryEmail},
+            const response = await axios.post("http://localhost:8000/api/user-profile/email", 
+                {email: tempEmail},
                 {headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            if (response.data && response.data.data && response.data.user.email_2) {
-                setSecondaryEmail(response.data.user.email_2);
-                console.log("Secondary email post response2:", response.data.data);
-                setSuccessMessage("Successfully saved secondary email.");
-            }
-            else if (response.data && response.data.data){
-                setSuccessMessage(response.data.message);
+            if (response.data && response.data.data && response.data.user.email) {
+                setEmail(response.data.user.email);
+                setSuccessMessage("Successfully saved email.");
                 setError(null);
             }
-            setTempSecondaryEmail("");
+            else if (response.data && response.data.data){
+                setSuccessMessage("Successfully saved email.");
+                //setSuccessMessage(response.data.message);
+                setError(null);
+            }
+            setTempEmail("");
         }
         catch (error) {
-            console.error("Error saving email 2:", error);
-            setError("Failed to save secondary email."); 
+            console.error("Error saving email:", error);
+            //setError("Failed to save email."); //when saving empty email address
             setSuccessMessage("");
-            setTempPhoneNumber("");
+            setTempEmail("");
         }
     }
    
-    const handleChangeTheme = () => { 
+    const handleCloseAlert = () => {
+        setError(null);
+        setSuccessMessage(null);
     };
-
-    // Upload profile photo
-    async function handleAvatarUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-          const imageUrl = URL.createObjectURL(file);
-          setAvatarUrl(imageUrl);
-          handleMenuClose();
-        }
-    }
-
-    async function handleSaveAvatar() { //save to db
-        if (!avatarUrl) {
-            setUploadError('Photo was not updated.');
-            return;
-        }
-
-        setIsUploading(true);
-        setUploadError(null);
-
-        try {
-            const token = await getAccessTokenSilently();
-            const response = await axios.post("http://localhost:8000/api/user-profile/upload_photo", 
-                {photo: avatarUrl},
-                {headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.data && response.data.data) {
-                setAvatarUrl(response.data.data);
-                console.log("Photo saved to db: ", response.data.data);
-                setSuccessMessage("Successfully updated photo.");
-                setIsUploading(false);
-            }
-        } 
-        catch (error) {
-          setUploadError("Failed to save photo.");
-          setIsUploading(false);
-        }
-    }
-
+    
     return (
         <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
             <NavBar />
@@ -288,22 +225,10 @@ const UserProfile  = () => {
                     <Box sx={{ position: 'relative', mb: 2, display: "flex" }}> 
                         <Box sx={{ position: 'relative', mb: 2 }}>     
                             <Avatar
-                                alt={user.name || user.email}
-                                src={ avatarUrl || user?.picture}
-                                sx={{ width: 80, height: 80 }}
-                            />
-                            <IconButton 
-                                onClick={handleMenuOpen}
-                                sx={{ mb: 1,
-                                    position: 'absolute',
-                                    bottom: -10,
-                                    left: 50,
-                                    backgroundColor: 'primary.main',
-                                    color: 'white',
-                                    '&:hover': { backgroundColor: 'primary.dark' },
-                                }}>
-                                <EditIcon />
-                            </IconButton>
+                                alt={user.email}
+                                src={user?.photo}
+                                sx={{ fontSize: "50px", bgcolor: "#000000", width: 80, height: 80 }}
+                            >{user.name[0].toUpperCase()}</Avatar> 
                         </Box> 
                         
                         <Box sx={{ mb: 2, display: "flex", paddingLeft: 3}}>
@@ -319,59 +244,32 @@ const UserProfile  = () => {
                             </Typography>
                         </Box>
                         
-                        </Box>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleMenuClose}
-                        >
-                            <MenuItem onClick={handleUseAccountIcon}>
-                                Use Account Icon
-                            </MenuItem>
-                            <MenuItem>
-                                <label htmlFor="avatar-upload-input">
-                                    Upload Photo
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        id="avatar-upload-input"
-                                        onChange={handleAvatarUpload}
-                                        style={{ display: 'none' }}
-                                    />
-                                </label>
-                            </MenuItem>
-                            </Menu>
-                            {avatarUrl && (
-                                <Button onClick={handleSaveAvatar} disabled={isUploading}
-                                sx={{ mb: 1,
-                                    position: 'relative',
-                                    backgroundColor: 'primary.main',
-                                    color: 'white',
-                                    '&:hover': { backgroundColor: 'primary.dark' },
-                                }}>
-                                    {isUploading ? <CircularProgress size={16} /> : 'Save Photo'}
-                                </Button> 
-                            )}
-                            {uploadError && (
-                                <Typography color="error">{uploadError}</Typography>
-                            )}
-                        {/*if successful upload, button disappear*/}
+                        </Box> 
                     </Box>   
+                    {successMessage && (
+                        <Alert variant="outlined" severity="success" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+                            {successMessage}
+                        </Alert>
+                    )}
 
-                
+                    {error && (
+                        <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                 <hr />
                 <Box sx={{ position: 'relative', mb: 2 }}>     
                     <Typography variant="h6" color="textPrimary" gutterBottom>
-                        Email(s)
+                        Email
                         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                            Primary: {user.email} <br></br>
-                            Secondary: {secondaryEmail || 'None'}  
+                            Primary: {email} <br></br>
+            
                         </Typography>
                         <IconButton 
-                                onClick={handleSetSecondEmail}
+                                onClick={handleSetEmail}
                                 sx={{ mb: 1,
                                     position: 'relative',
-                                    marginTop: -11.5,
+                                    marginTop: -8,
                                     float: 'right',
                                     marginLeft: 80,
                                     backgroundColor: 'primary.main',
@@ -380,11 +278,6 @@ const UserProfile  = () => {
                                 }}>
                                 <EditIcon />
                         </IconButton>
-                        {error && (
-                            <Alert severity="error" sx={{ mb: 2 }}>
-                                {error}
-                            </Alert>
-                        )}
                     </Typography>
                 </Box>
                 
@@ -418,19 +311,6 @@ const UserProfile  = () => {
                         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
                             Light
                         </Typography>
-                        <IconButton 
-                            onClick={handleChangeTheme}
-                            sx={{ mb: 1,
-                                position: 'relative',
-                                float: 'right',
-                                marginLeft: 80,
-                                marginTop: -8,
-                                backgroundColor: 'primary.main',
-                                color: 'white',
-                                '&:hover': { backgroundColor: 'primary.dark' },
-                            }}>
-                            <EditIcon />
-                        </IconButton>
                     </Typography>
                 </Box>
                 <hr />    
@@ -445,17 +325,16 @@ const UserProfile  = () => {
         
         <Dialog open={isEmailDialogOpen} 
             onClose={handleCloseEmailDialog}>
-        <DialogTitle>Add or Update Secondary Email</DialogTitle>
+        <DialogTitle>Update Email</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            id="secondEmail"
-            label="Secondary Email"
+            id="email"
+            label="Email"
             type="email"
             fullWidth
             variant="outlined"
-            defaultValue={secondaryEmail}
             onChange={handleEmailInputChange}
           />
         </DialogContent>
@@ -479,7 +358,6 @@ const UserProfile  = () => {
             type="tel"
             fullWidth
             variant="outlined"
-            defaultValue={tempPhoneNumber}
             onChange={handlePhoneInputChange}
           />
         </DialogContent>
