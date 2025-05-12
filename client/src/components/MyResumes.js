@@ -120,7 +120,7 @@ const MyResumes = () => {
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
   //for template previews
-  const [selectedCard, setSelectedCard] = React.useState(0);
+  const [selectedTemplate, setSelectedTemplate] = React.useState(0);
   const templates = [
     {
       id: 1,
@@ -280,6 +280,8 @@ const MyResumes = () => {
   };
 
   const handleClose = () => {
+    setSelectedIndex(-1);
+    setSelectedTemplate(0);
     setAnchorEl(null);
   };
 
@@ -287,8 +289,11 @@ const MyResumes = () => {
     try {
       const token = await getAccessTokenSilently();
       const format = format_options[selectedIndex];
+      console.log("Selected format: " + format);
+      const template = templates[selectedTemplate].formattedTitle;
+      console.log("Selected template: " + template);
       const response = await axios.get(
-        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/default`,
+        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/${template}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -455,10 +460,10 @@ const MyResumes = () => {
                   <Card sx={{ width: 160, flexShrink: 0 }}>
                     <CardActionArea
                       onClick={() => {
-                        setSelectedCard(index);
+                        setSelectedTemplate(index);
                         handleMenuClick(selectedResume, 0, index);
                       }}
-                      data-active={selectedCard === index ? "" : undefined}
+                      data-active={selectedTemplate === index ? "" : undefined}
                       sx={{
                         flex: 1, // new
                         display: "flex", // new
@@ -490,9 +495,6 @@ const MyResumes = () => {
                       >
                         <Typography variant="body2" component="div">
                           {card.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {card.description}
                         </Typography>
                       </CardContent>
                     </CardActionArea>
@@ -549,7 +551,7 @@ const MyResumes = () => {
             ))}
           </Menu>
           <Button
-            onClick={() => handleDownload(selectedResume)}
+            onClick={() => handleDownload(selectedResume, selectedIndex, selectedTemplate)}
             disabled={selectedIndex === -1}
           >
             Download
