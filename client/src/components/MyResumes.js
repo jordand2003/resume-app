@@ -426,7 +426,7 @@ const MyResumes = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth={false} // changed to false
+        maxWidth='md' // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -439,7 +439,7 @@ const MyResumes = () => {
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
               selectedIndex === 0 ? (
-              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word"}}>
+              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 0}}>
                 <div style={{
                   margin: 0, 
                   padding: 0, 
