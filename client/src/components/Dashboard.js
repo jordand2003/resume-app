@@ -180,7 +180,7 @@ const Dashboard = () => {
   const deleteSkill_2_Db = async (newSkill) => {
     try {
       const token = await getAccessTokenSilently(); // Get token
-      const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { // Correct URL
+      const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { 
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",

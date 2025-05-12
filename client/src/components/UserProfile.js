@@ -22,6 +22,8 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -42,6 +44,8 @@ const UserProfile = () => {
   const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -279,7 +283,12 @@ const UserProfile = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>

@@ -22,10 +22,12 @@ import {
   DialogContent,
   DialogActions,
   Menu,
-  MenuItem
+  MenuItem,
 } from "@mui/material";
 import NavBar from "./NavBar";
-import PlaceholderImg from "../Blank-Resume-Template.jpg"
+import PlaceholderImg from "../Blank-Resume-Template.jpg";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -53,7 +55,9 @@ const ResumeContent = ({ content }) => {
           <List dense>
             {exp.achievements.map((achievement, i) => (
               <ListItem key={i}>
-                <Typography variant="body2" component="span">• {achievement}</Typography>
+                <Typography variant="body2" component="span">
+                  • {achievement}
+                </Typography>
               </ListItem>
             ))}
           </List>
@@ -108,7 +112,7 @@ const MyResumes = () => {
   const [selectedResume, setSelectedResume] = useState(null);
   const [advice, setAdvice] = useState(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
-  const [adviceError, setAdviceError] = useState('');
+  const [adviceError, setAdviceError] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [openAdviceDialog, setOpenAdviceDialog] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -116,49 +120,47 @@ const MyResumes = () => {
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
   //for template previews
-  const [selectedCard, setSelectedCard] = React.useState(0);
+  const [selectedTemplate, setSelectedTemplate] = React.useState(0);
   const templates = [
-  {
-    id: 1,
-    title: 'Basic',
-    image: PlaceholderImg,
-    formattedTitle: 'basic'
-  },
-  {
-    id: 2,
-    title: 'Basic Interative',
-    image: PlaceholderImg,
-    formattedTitle: 'basic_interactive'
-  },
-  {
-    id: 3,
-    title: 'Modern',
-    image: PlaceholderImg,
-    formattedTitle: 'modern'
-  },
-  {
-    id: 4,
-    title: 'Split',
-    image: PlaceholderImg,
-    formattedTitle: 'split'
-  }
-];
+    {
+      id: 1,
+      title: "Basic",
+      image: PlaceholderImg,
+      formattedTitle: "basic",
+    },
+    {
+      id: 2,
+      title: "Basic Interative",
+      image: PlaceholderImg,
+      formattedTitle: "basic_interactive",
+    },
+    {
+      id: 3,
+      title: "Modern",
+      image: PlaceholderImg,
+      formattedTitle: "modern",
+    },
+    {
+      id: 4,
+      title: "Split",
+      image: PlaceholderImg,
+      formattedTitle: "split",
+    },
+  ];
 
   //format selector dropdown
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const open = Boolean(anchorEl);
 
-  const format_options = [
-    'html',
-    'markup',
-    'plaintext'
-  ];
+  const format_options = ["html", "markup", "plaintext"];
+
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     fetchResumes();
     //fetchAdvice();
   }, [getAccessTokenSilently]);
-
 
   const fetchResumes = async () => {
     try {
@@ -190,29 +192,31 @@ const MyResumes = () => {
   const fetchAdvice = async (resumeId) => {
     try {
       setAdviceLoading(true);
-      setAdviceError('');
+      setAdviceError("");
       const token = await getAccessTokenSilently();
       console.log("Token: ", token);
-      const response = await axios.post("http://localhost:8000/api/jobs/advice", 
+      const response = await axios.post(
+        "http://localhost:8000/api/jobs/advice",
         {
-          resumeId: resumeId
+          resumeId: resumeId,
           //jobId:
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (response.data && response.data.data) {
         console.log(response.data.data);
         setAdvice(response.data.data);
       }
-    } 
-    catch (error) {
+    } catch (error) {
       console.error("Error fetching advice:", error);
-      setAdviceError(error.response?.data?.message || "Failed to fetch advice.");
-    } 
-    finally {
+      setAdviceError(
+        error.response?.data?.message || "Failed to fetch advice."
+      );
+    } finally {
       setAdviceLoading(false);
     }
   };
@@ -223,7 +227,7 @@ const MyResumes = () => {
     //setAdvice(resumeAdvice);
     fetchAdvice(resumeAdvice);
     setOpenAdviceDialog(true);
-  }
+  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -231,74 +235,83 @@ const MyResumes = () => {
     setFormattedResume(null);
   };
 
-  const handleCloseAdviceDialog =() => {
+  const handleCloseAdviceDialog = () => {
     setOpenAdviceDialog(false);
     setAdvice(null);
-  }
+  };
 
-  const handleMenuClick = async(resume, format_ind, template_ind) => {
+  const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
-          const token = await getAccessTokenSilently();
-          let template = "split"
-          if(template_ind != -1){
-            template = templates[template_ind].formattedTitle
-            console.log(template);
-          }
-          const response = await axios.post(
-            "http://localhost:8000/api/format",
-            { resumeId: resume,
-              formatType: format_options[format_ind],
-              templateId: template
-             },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          console.log("Formatted resume:", response.data);
-          setFormattedResume(response.data);
-          
-        } catch (error) {
-          console.error("Error getting formatted resume:", error);
+      const token = await getAccessTokenSilently();
+      let template = "split";
+      if (template_ind != -1) {
+        template = templates[template_ind].formattedTitle;
+        console.log(template);
+      }
+      const response = await axios.post(
+        "http://localhost:8000/api/format",
+        {
+          resumeId: resume,
+          formatType: format_options[format_ind],
+          templateId: template,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
+      console.log("Formatted resume:", response.data);
+      setFormattedResume(response.data);
+    } catch (error) {
+      console.error("Error getting formatted resume:", error);
+    }
   };
 
   const handleMenuItemClick = (event, index, resume) => {
     setSelectedIndex(index);
     handleMenuClick(resume, index, -1);
     setAnchorEl(null);
-  }; 
+  };
 
   const handleClickListItem = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
+    setSelectedIndex(-1);
+    setSelectedTemplate(0);
     setAnchorEl(null);
   };
 
-  const handleDownload = async(resume) => {
+  const handleDownload = async (resume) => {
     try {
       const token = await getAccessTokenSilently();
       const format = format_options[selectedIndex];
-      const response = await axios.get(`http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/default`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      console.log("Selected format: " + format);
+      const template = templates[selectedTemplate].formattedTitle;
+      console.log("Selected template: " + template);
+      const response = await axios.get(
+        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/${template}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const url = window.URL.createObjectURL(
         new Blob([response.data], { type: "application/octet-stream" })
       );
       const link = document.createElement("a");
-  
+
       link.href = url;
       link.download = response.headers["content-disposition"]
-        ? response.headers["content-disposition"].match(/filename="?([^"]+)"?/)[1]
-        : "downloaded_resume"; 
+        ? response.headers["content-disposition"].match(
+            /filename="?([^"]+)"?/
+          )[1]
+        : "downloaded_resume";
       link.click();
- 
+
       window.URL.revokeObjectURL(url);
-      
     } catch (error) {
       console.error("Error getting formatted resume:", error);
     }
@@ -315,7 +328,12 @@ const MyResumes = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
@@ -372,15 +390,21 @@ const MyResumes = () => {
                           variant="outlined"
                           size="small"
                           onClick={() => handleViewResume(resume)}
-                          sx={{ mt: 1, margin: '2px' }}
+                          sx={{ mt: 1, margin: "2px" }}
                         >
                           View Resume
                         </Button>
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleViewAdvice(resume, resume.jobTitle, resume.company)}
-                          sx={{ mt: 1, margin: '2px' }}
+                          onClick={() =>
+                            handleViewAdvice(
+                              resume,
+                              resume.jobTitle,
+                              resume.company
+                            )
+                          }
+                          sx={{ mt: 1, margin: "2px" }}
                         >
                           View Advice
                         </Button>
@@ -393,12 +417,12 @@ const MyResumes = () => {
           </List>
         </Paper>
       </Box>
-      
+
       {/*View Resume*/}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth={false}    // changed to false
+        maxWidth={false} // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -408,109 +432,130 @@ const MyResumes = () => {
             `Resume for ${selectedResume.jobTitle} at ${selectedResume.company}`}
         </DialogTitle>
         <DialogContent dividers>
-          <Box sx={{ maxWidth: '100%',}}>
-          {formattedResume ? ( <pre  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{formattedResume}</pre> ) : ( selectedResume && <ResumeContent content={selectedResume.content} />)}
+          <Box sx={{ maxWidth: "100%" }}>
+            {formattedResume ? (
+              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {formattedResume}
+              </pre>
+            ) : (
+              selectedResume && (
+                <ResumeContent content={selectedResume.content} />
+              )
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           {selectedIndex === 0 && (
-          <Box
-            sx={{
-              width: '100%',
-              overflowX: 'auto',
-              display: 'flex',
-              justifyContent: 'center',
-              padding: 1,
-            }}
-          >
-          <Box sx={{ display: 'flex', gap: 1,}}>
-          {templates.map((card, index) => (
-            <Card sx={{ width: 160, flexShrink: 0 }}>
-              <CardActionArea
-                onClick={() => {setSelectedCard(index); handleMenuClick(selectedResume, 0, index);}}
-                data-active={selectedCard === index ? '' : undefined}
-                sx={{
-                    flex: 1,                    // new
-                    display: 'flex',           // new
-                    flexDirection: 'column',  // new
-                    // height: '100%',
-                    '&[data-active]': {
-                      backgroundColor: 'action.selected',
-                      '&:hover': {
-                        backgroundColor: 'action.selectedHover',
-                      },
-                    },
-                  }}
-              >
-                <CardMedia
-                  component="img"
-                  image={card.image}
-                  sx={{
-                      height: 90, // fixed image height (new)
-                      objectFit: 'contain', // new
-                    }}
-                />
-                <CardContent sx={{ 
-                    flexGrow: 1,           // new
-                    overflow: 'hidden',   // new
-                    padding: '4px',       // new
-                    //height: '100%' 
-                  }}>
-                  <Typography variant="body2" component="div">
-                    {card.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {card.description}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          ))}
-          </Box>
-        </Box>
+            <Box
+              sx={{
+                width: "100%",
+                overflowX: "auto",
+                display: "flex",
+                justifyContent: "center",
+                padding: 1,
+              }}
+            >
+              <Box sx={{ display: "flex", gap: 1 }}>
+                {templates.map((card, index) => (
+                  <Card sx={{ width: 160, flexShrink: 0 }}>
+                    <CardActionArea
+                      onClick={() => {
+                        setSelectedTemplate(index);
+                        handleMenuClick(selectedResume, 0, index);
+                      }}
+                      data-active={selectedTemplate === index ? "" : undefined}
+                      sx={{
+                        flex: 1, // new
+                        display: "flex", // new
+                        flexDirection: "column", // new
+                        // height: '100%',
+                        "&[data-active]": {
+                          backgroundColor: "action.selected",
+                          "&:hover": {
+                            backgroundColor: "action.selectedHover",
+                          },
+                        },
+                      }}
+                    >
+                      <CardMedia
+                        component="img"
+                        image={card.image}
+                        sx={{
+                          height: 90, // fixed image height (new)
+                          objectFit: "contain", // new
+                        }}
+                      />
+                      <CardContent
+                        sx={{
+                          flexGrow: 1, // new
+                          overflow: "hidden", // new
+                          padding: "4px", // new
+                          //height: '100%'
+                        }}
+                      >
+                        <Typography variant="body2" component="div">
+                          {card.title}
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                ))}
+              </Box>
+            </Box>
           )}
         </DialogActions>
         <DialogActions>
           <List
             component="nav"
             aria-label="Format Selection"
-            sx={{ bgcolor: 'background.paper' }}
+            sx={{ bgcolor: "background.paper" }}
           >
-          <ListItemButton
-            id="format-button"
-            aria-haspopup="listbox"
-            aria-controls="format-menu"
-            aria-label="format"
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleClickListItem}
-          >
-          <ListItemText
-            primary="Format as:"
-            secondary={selectedIndex === -1 ? "Select a format" : format_options[selectedIndex]}
-          />
-          </ListItemButton>
-        </List>
-        <Menu
-          id="format-menu"
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          MenuListProps={{
-            'aria-labelledby': 'format-button',
-            role: 'listbox',
-          }}
-        >
-          {format_options.map((option, index) => (
-            <MenuItem
-              key={option}
-              selected={index === selectedIndex}
-              onClick={(event) => handleMenuItemClick(event, index, selectedResume)}
+            <ListItemButton
+              id="format-button"
+              aria-haspopup="listbox"
+              aria-controls="format-menu"
+              aria-label="format"
+              aria-expanded={open ? "true" : undefined}
+              onClick={handleClickListItem}
             >
-              {option}
-            </MenuItem>
-          ))}
-        </Menu>
-          <Button onClick={() => handleDownload(selectedResume)} disabled={selectedIndex === -1}>Download</Button>
+              <ListItemText
+                primary="Format as:"
+                secondary={
+                  selectedIndex === -1
+                    ? "Select a format"
+                    : format_options[selectedIndex]
+                }
+              />
+            </ListItemButton>
+          </List>
+          <Menu
+            id="format-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              "aria-labelledby": "format-button",
+              role: "listbox",
+            }}
+          >
+            {format_options.map((option, index) => (
+              <MenuItem
+                key={option}
+                selected={index === selectedIndex}
+                onClick={(event) =>
+                  handleMenuItemClick(event, index, selectedResume)
+                }
+              >
+                {option}
+              </MenuItem>
+            ))}
+          </Menu>
+          <Button
+            onClick={() => handleDownload(selectedResume, selectedIndex, selectedTemplate)}
+            disabled={selectedIndex === -1}
+          >
+            Download
+          </Button>
           <Button onClick={handleCloseDialog}>Close</Button>
         </DialogActions>
         <Menu
@@ -527,10 +572,9 @@ const MyResumes = () => {
           }}
           open={Boolean(anchorEl)}
           onClose={handleClose}
-          >
-          </Menu>
+        ></Menu>
       </Dialog>
-      
+
       {/*View Advice************************************************/}
       <Dialog
         open={openAdviceDialog}
@@ -545,15 +589,17 @@ const MyResumes = () => {
           Advice for {job} at {company}
         </DialogTitle>
         {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
         <DialogContent>
           {adviceLoading ? (
             <Typography>Loading advice...</Typography>
           ) : advice ? (
-            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{advice}</pre>
+            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+              {advice}
+            </pre>
           ) : (
             <Typography>No advice available.</Typography>
           )}

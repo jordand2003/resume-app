@@ -66,8 +66,11 @@ router.put("/:newSkill", verifyJWT, extractUserId, async (req, res) => {
         }
 
         // Check if skill is already present
-        if (skillList.skills.includes(newSkill)) {
-            return res.status(400).json({ message: 'You already have "'+ newSkill + '" listed.' });
+        const lowerSkills = skillList.skills.map(skill => skill.toLowerCase());
+        const lowerNewSkill = newSkill.toLowerCase();
+
+        if (lowerSkills.includes(lowerNewSkill)) {
+            return res.status(400).json({ message: `You already have "${newSkill}" listed.` });
         }
 
         // If not present, add it

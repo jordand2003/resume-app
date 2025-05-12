@@ -11,6 +11,9 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+import Grid from '@mui/system/Grid'
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const CareerHistory = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -19,6 +22,8 @@ const CareerHistory = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [careerErrors, setCareerErrors] = useState([]);
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   React.useEffect(() => {
     fetchCareerHistory();
@@ -214,7 +219,12 @@ const CareerHistory = () => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
         <NavBar />
         <Box
           display="flex"
@@ -229,9 +239,14 @@ const CareerHistory = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
-      <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+      <Box sx={{ maxWidth: "75%", mx: "auto", p: 3 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -267,6 +282,8 @@ const CareerHistory = () => {
             </Alert>
           </Box>
         )}
+        <Grid container spacing={2}>
+        <Grid size={6}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
             Career History
@@ -384,6 +401,28 @@ const CareerHistory = () => {
                         </Button> */}
           </Box>
         </Paper>
+        </Grid>
+        <Grid size={6}>
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Free-form Career History
+          </Typography>
+          <Box
+              sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
+            >
+              <TextField
+                fullWidth
+                label="Paste career history here"
+                value={""}
+                onChange={""}
+                margin="normal"
+                multiline="true"
+                rows={5}
+              />
+          </Box>
+        </Paper>
+        </Grid>
+        </Grid>
       </Box>
     </Box>
   );

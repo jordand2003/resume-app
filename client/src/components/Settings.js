@@ -15,18 +15,15 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import NavBar from "./NavBar";
+import { useTheme } from "../context/ThemeContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState("en");
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
 
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
-  };
-
-  const handleThemeChange = (event) => {
-    setDarkMode(event.target.checked);
   };
 
   return (
@@ -75,7 +72,7 @@ const Settings = () => {
               control={
                 <Switch
                   checked={darkMode}
-                  onChange={handleThemeChange}
+                  onChange={toggleDarkMode}
                   name="darkMode"
                 />
               }

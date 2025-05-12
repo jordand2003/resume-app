@@ -11,13 +11,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
-const JobDescription= () => {
+const JobDescription = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [jobDescHistory, setJobDescHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     fetchJobDescHistory();
@@ -32,14 +36,14 @@ const JobDescription= () => {
         },
       });
       console.log("Job description response:", response.data);
-      
+
       if (response.data && response.data.data) {
         // Map the data to match the form fields
         const formattedHistory = response.data.data.map((jobdesc) => ({
           _id: jobdesc._id, // Preserve the _id if it exists
           company: jobdesc.Company || jobdesc.company,
           job_title: jobdesc.Job_Title || jobdesc.job_title,
-          description: jobdesc.description
+          description: jobdesc.description,
         }));
         setJobDescHistory(formattedHistory);
       } else {
@@ -68,7 +72,7 @@ const JobDescription= () => {
         _id: jobdesc._id, // Preserve _id for existing entries
         Job_Title: jobdesc.job_title,
         Company: jobdesc.company,
-        Description: jobdesc.description
+        Description: jobdesc.description,
       }));
 
       console.log("Submitting job description history:", formattedData);
@@ -111,22 +115,32 @@ const JobDescription= () => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
-      <NavBar />
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="200px"
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: theme.palette.background.default,
+        }}
       >
-        <CircularProgress />
+        <NavBar />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
       </Box>
-    </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         {error && (
@@ -167,7 +181,7 @@ const JobDescription= () => {
                 <TextField
                   fullWidth
                   label="Job Title"
-                  value={jobdesc.job_title|| ""}
+                  value={jobdesc.job_title || ""}
                   onChange={(e) => {
                     const newJobDescHistory = [...jobDescHistory];
                     newJobDescHistory[index] = {
