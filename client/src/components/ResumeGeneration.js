@@ -17,8 +17,7 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  Tabs,
-  Tab,
+  Chip,
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -241,6 +240,7 @@ const ResumeGeneration = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
   const [skills, setSkills] = useState(null)
+  const [selectedSkills, setSelectedSkills] = useState(new Set());
   const [markedCareerEntries, setMarkedCareerEntries] = useState(new Set());
   const [markedEduEntries, setMarkedEduEntries] = useState(new Set());
   const [careers, setCareers] = useState(null)
@@ -251,6 +251,17 @@ const ResumeGeneration = () => {
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   const theme = useMuiTheme();
+
+  const handleSkillClick = (skill) => {
+    setSelectedSkills((prevSelectedSkills) => {
+      const newSelectedSkills = new Set(prevSelectedSkills);
+      if (newSelectedSkills.has(skill)) {
+        newSelectedSkills.delete(skill);
+      } else {
+        newSelectedSkills.add(skill);
+      }
+      return newSelectedSkills;
+    })}
 
   useEffect(() => {
     // Clear any existing status when component mounts
@@ -462,7 +473,7 @@ const ResumeGeneration = () => {
       const token = await getAccessTokenSilently();
       const response = await axios.post(
         "http://localhost:8000/api/resumes/generate_v2",
-        { jobId: selectedJobId, selectedCareers : careers, careers: edus, selectedSkills: skills || [] },
+        { jobId: selectedJobId, selectedCareers : careers, careers: edus, selectedSkills: Array.from(selectedSkills)},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -674,8 +685,8 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
         </RadioGroup>
       </FormControl>
 
-      {/** Main Selection Menu */}
-        {currentTab === "manual" && 
+      {/** Manual Selection Menu */}
+        {currentTab === "manual" && (
           <>
             <ChecklistSelect
               checklist_name="Career"
@@ -701,8 +712,54 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               markedEntries={markedEduEntries}
               setMarkedEntries={setMarkedEduEntries}
             />
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
+                  {/**<AutoStoriesIcon sx={{ mr: 1 }} />*/}
+                  Skills
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 1.5,
+                    backgroundColor: "#f0f0f0",
+                    p: "30px",
+                  }}
+                >
+                  {skills && skills.length > 0 ? (
+                    skills.map((s, index) => (
+                      <Chip
+                        key={index}
+                        label={s}
+                        variant="outlined"
+                        sx={{
+                          color: selectedSkills.has(s) ? "white" : "inherit",
+                          background: selectedSkills.has(s) ? "#6495ED" : "default",
+                          borderColor: "#6495ED",
+                        }}
+                        onClick={() => handleSkillClick(s)}
+                      />
+                    ))
+                  ) : (
+                    <Typography
+                      sx={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        color: "#636363",
+                        padding: "16px",
+                      }}
+                    >
+                      No skills added yet!
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Paper>
           </>
-        }
+        )}
         {currentTab === "resume" && (
           <ChecklistSelect
             checklist_name="Resume"
