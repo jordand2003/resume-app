@@ -23,6 +23,8 @@ import {
 import NavBar from "./NavBar";
 import StatusChecker from "./StatusChecker";
 import ChecklistSelect from "./ChecklistSelect";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 //----------------- Functions ------------------------------
 const formatDate = (dateString) => {
@@ -59,13 +61,21 @@ const ResumeContent = ({ content }) => {
                 GPA: {edu.gpa || edu.GPA}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {edu.startDate || edu.Start_Date} - {edu.endDate || edu.End_Date}
+                {edu.startDate || edu.Start_Date} -{" "}
+                {edu.endDate || edu.End_Date}
               </Typography>
-              <Typography color="text.primary" sx={{ fontSize: '12px', fontWeight: "bold" }}>
+              <Typography
+                color="text.primary"
+                sx={{ fontSize: "12px", fontWeight: "bold" }}
+              >
                 Relevant Coursework:
               </Typography>
               {(edu.relevantCoursework || edu.RelevantCoursework) && (
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', ml: 4 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: "12px", ml: 4 }}
+                >
                   {edu.relevantCoursework || edu.RelevantCoursework}
                 </Typography>
               )}
@@ -143,6 +153,8 @@ const ResumeGeneration = () => {
   const [loading, setLoading] = useState(true);
   const [selectedResume, setSelectedResume] = useState(null); // State for selected resume
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     // Clear any existing status when component mounts
@@ -173,8 +185,8 @@ const ResumeGeneration = () => {
       console.error("Error fetching jobs:", error);
       setErrorMessage(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch your data. Please try again."
+          error.message ||
+          "Failed to fetch your data. Please try again."
       );
       setGenerationStatus("error");
     } finally {
@@ -199,7 +211,9 @@ const ResumeGeneration = () => {
       }
     } catch (error) {
       console.error("Error fetching resumes:", error);
-      setErrorMessage(error.response?.data?.message || "Failed to fetch resumes");
+      setErrorMessage(
+        error.response?.data?.message || "Failed to fetch resumes"
+      );
     } finally {
       setLoading(false);
     }
@@ -249,8 +263,8 @@ const ResumeGeneration = () => {
       console.error("Error starting resume generation:", error);
       setErrorMessage(
         error.response?.data?.error ||
-        error.message ||
-        "Failed to start resume generation."
+          error.message ||
+          "Failed to start resume generation."
       );
       setGenerationStatus("error");
     }
@@ -271,7 +285,7 @@ const ResumeGeneration = () => {
             "&:hover": {
               backgroundColor: "rgba(0, 0, 0, 0.04)",
             },
-            cursor: 'pointer',
+            cursor: "pointer",
           }}
           onClick={() => handleViewContent(resume)} // Use the passed handleViewContent
         >
@@ -281,11 +295,13 @@ const ResumeGeneration = () => {
                 {resume.nickName || "New Resume Entry"}
               </Typography>
             }
-            secondary={<>
-              <Typography variant="body2" color="text.secondary">
-                Uploaded: {formatDate(resume.createdAt)}
-              </Typography>
-            </>}
+            secondary={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Uploaded: {formatDate(resume.createdAt)}
+                </Typography>
+              </>
+            }
           />
         </ListItem>
       </React.Fragment>
@@ -298,7 +314,12 @@ const ResumeGeneration = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
@@ -382,7 +403,9 @@ const ResumeGeneration = () => {
         <ChecklistSelect
           checklist_name="Resume"
           full_content={resumes}
-          indexDisplayFunction={(full_content) => resumeIndexList(full_content, handleViewContent)}
+          indexDisplayFunction={(full_content) =>
+            resumeIndexList(full_content, handleViewContent)
+          }
           rightSideDisplayFunction={ResumeContent}
         />
       )}

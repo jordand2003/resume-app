@@ -32,6 +32,7 @@ import ResumesListIcon from "@mui/icons-material/Assignment";
 import LogoLight from "../../src/light-mode-logo.png";
 import LogoDark from "../../src/dark-mode-logo.png";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const NavBar = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const { darkMode, theme } = useTheme();
 
   useEffect(() => {
     const fetchProfilePhoto = async () => {
@@ -163,19 +165,29 @@ const NavBar = () => {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        sx={{ backgroundColor: "#000000", minHeight: 65 }}
+        color={darkMode ? "transparent" : "default"}
+        sx={{
+          backgroundColor: darkMode ? "#1e1e1e" : "#ffffff",
+          minHeight: 65,
+          boxShadow: darkMode ? "none" : 1,
+        }}
       >
         <Toolbar sx={{ justifyContent: "flex-start" }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <img
-              src={LogoDark}
-              alt="Dark Logo"
+              src={darkMode ? LogoDark : LogoLight}
+              alt="Logo"
               style={{ height: 65, marginRight: -15 }}
-            ></img>
+            />
             <Typography
               variant="h6"
               component="div"
-              sx={{ cursor: "pointer", fontSize: 22, marginBottom: -0.25 }}
+              sx={{
+                cursor: "pointer",
+                fontSize: 22,
+                marginBottom: -0.25,
+                color: (theme) => theme.palette.text.primary,
+              }}
               onClick={() => navigate("/home")}
             >
               Lighthouse
@@ -190,15 +202,24 @@ const NavBar = () => {
             }}
           >
             <Button
-              color="inherit"
               onClick={handleLogout}
               startIcon={<LogoutIcon />}
-              sx={{ mr: 2, fontSize: 15 }}
+              sx={{
+                mr: 2,
+                fontSize: 15,
+                color: (theme) => theme.palette.text.primary,
+              }}
             >
               Logout
             </Button>
-            <Typography variant="body1" sx={{ mr: 2 }}>
-              {user?.name || user?.email} {/*handleClick("/user-profile")*/}
+            <Typography
+              variant="body1"
+              sx={{
+                mr: 2,
+                color: (theme) => theme.palette.text.primary,
+              }}
+            >
+              {user?.name || user?.email}
             </Typography>
             <IconButton
               size="large"
@@ -206,7 +227,7 @@ const NavBar = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleMenu}
-              color="inherit"
+              sx={{ color: (theme) => theme.palette.text.primary }}
             >
               {profilePhoto ? (
                 <Avatar
@@ -218,7 +239,10 @@ const NavBar = () => {
                 <AccountCircle sx={{ width: 32, height: 32 }} />
               )}
             </IconButton>
-            <IconButton onClick={toggleDrawer(true)} color="inherit">
+            <IconButton
+              onClick={toggleDrawer(true)}
+              sx={{ color: (theme) => theme.palette.text.primary }}
+            >
               <MenuIcon />
             </IconButton>
             <Drawer
