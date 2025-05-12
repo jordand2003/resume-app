@@ -387,7 +387,7 @@ const ResumeGeneration = () => {
     }
   };
 
-  // Function to generate AI resume
+  // Function to generate AI resume (for resume selection)
   const handleGenerate = async () => {
     if (!selectedJobId) {
       setErrorMessage("Please select a job you are applying for.");
@@ -429,6 +429,59 @@ const ResumeGeneration = () => {
         // Set new status
         localStorage.setItem("resumeId", response.data.resumeId);
         localStorage.setItem("status", "Processing");
+      } else {
+        throw new Error(
+          response.data?.message || "Failed to start resume generation."
+        );
+      }
+    } catch (error) {
+      console.error("Error starting resume generation:", error);
+      setErrorMessage(
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to start resume generation."
+      );
+      setGenerationStatus("error");
+    }
+  };
+
+  // Function to generate AI resume (for manual selection)
+  const handleManualGenerate = async () => {
+    if (!selectedJobId) {
+      setErrorMessage("Please select a job you are applying for.");
+      return;
+    }
+
+    setGenerationStatus("loading");
+    setErrorMessage("");
+    setResumeId(null);
+    setGeneratedMessage("");
+
+
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.post(
+        "http://localhost:8000/api/resumes/generate_v2",
+        { jobId: selectedJobId, selectedCareers : careers, careers: edus, selectedSkills: skills || [] },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data && response.data.resumeId) {
+        setResumeId(response.data.resumeId);
+        setGenerationStatus("success");
+        setGeneratedMessage(
+          response.data.message || "Resume generation started."
+        );
+
+        // Set new status
+        localStorage.setItem("resumeId", response.data.resumeId);
+        localStorage.setItem("status", "Processing");
+
       } else {
         throw new Error(
           response.data?.message || "Failed to start resume generation."
@@ -717,7 +770,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleGenerate}
+                onClick={currentTab === "resumes" ? handleGenerate : handleManualGenerate}
                 fullWidth
                 disabled={generationStatus === "loading" || !selectedJobId}
                 sx={{ mt: 3 }}

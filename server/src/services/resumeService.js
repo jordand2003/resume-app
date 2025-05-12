@@ -18,6 +18,8 @@ class ResumeService {
       });
       await resume.save();
 
+      //console.log("llll-", selectedCareers, "llll-", selectedEdus, "llll-", selectedSkills)
+
       // Get job description from JobDesc model using MongoDB _id
       const jobDesc = await JobDesc.findById(_id);
       if (!jobDesc) {
@@ -26,30 +28,30 @@ class ResumeService {
 
       if (!selectedCareers){
         // Get career history from ResumeData
-        const careerHistory = await this.getCareerHistory(userId);
-        if (!careerHistory || careerHistory.length === 0) {
+        selectedCareers = await this.getCareerHistory(userId);
+        if (!selectedCareers || selectedCareers.length === 0) {
           throw new Error("Career history not found");
         }
       }
  
       if (!selectedEdus){
         // Get Education history
-        const eduHistory = await this.getEduHistory(userId);
-        if (!eduHistory || eduHistory.length === 0) {
+        selectedEdus = await this.getEduHistory(userId);
+        if (!selectedEdus || selectedEdus.length === 0) {
           throw new Error("Education history not found");
         }
       } 
 
-      // Get Skills (NOT DONE)
+      // Get Skills 
       if (!selectedSkills){
-        const skillList = await this.getSkills(userId);
-        if (!skillList || skillList.length === 0) {
+        selectedSkills = await this.getSkills(userId);
+        if (!selectedSkills || selectedSkills.length === 0) {
           throw new Error("Education history not found");
         }
       } 
 
       // Construct AI prompt
-      const prompt = this.constructAIPrompt(jobDesc, selectedCareers || careerHistory,   selectedEdus || eduHistory,   selectedSkills || skillList);
+      const prompt = this.constructAIPrompt(jobDesc, selectedCareers,   selectedEdus,   selectedSkills);
 
       // Call Gemini API
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
