@@ -517,14 +517,14 @@ const careerIndexList = (careers, handleViewContent, markedCareerEntries, setMar
         onClick={() => handleViewContent(career)}
       >
         <Checkbox
-          checked={markedCareerEntries.has(career.parsedData)}
+          checked={markedCareerEntries.has(career)}
           onChange={(event) => {
             if (event.target.checked) {
-              setMarkedCareerEntries((prevMarked) => new Set(prevMarked).add(career.parsedData));
+              setMarkedCareerEntries((prevMarked) => new Set(prevMarked).add(career));
             } else {
               setMarkedCareerEntries((prevMarked) => {
                 const nextMarked = new Set(prevMarked);
-                nextMarked.delete(career.parsedData);
+                nextMarked.delete(career);
                 return nextMarked;
               });
             }
@@ -625,18 +625,6 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
         {currentTab === "manual" && 
           <>
             <ChecklistSelect
-              checklist_name="Skills"
-              full_content={resumes}
-              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
-                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
-              }
-              rightSideDisplayFunction={(selectedEntry) => (
-                <ResumeContent content={selectedEntry} />
-              )}
-              markedEntries={markedEntries} // Pass markedEntries as a prop
-              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
-            />
-            <ChecklistSelect
               checklist_name="Career"
               full_content={careers}
               indexDisplayFunction={(full_content, handleViewContentFromChild, markedCareerEntries, setMarkedCareerEntries) =>
@@ -678,6 +666,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
         )} 
 
       {/** Submit Area */}
+      {currentTab && (
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
@@ -756,6 +745,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
           )}
         </Paper>
       </Box>
+      )}
       
 
     </Box>
