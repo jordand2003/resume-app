@@ -1,23 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
 import {
-    Avatar,
-    Alert,
-    Box,
-    Paper,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    Typography,
-    TextField,
-  } from "@mui/material";
+  Avatar,
+  Alert,
+  Box,
+  Paper,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Typography,
+  TextField,
+  CircularProgress,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import AccountCircle from "@mui/icons-material/AccountCircle";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const UserProfile  = () => {
     const navigate = useNavigate();
@@ -31,6 +37,8 @@ const UserProfile  = () => {
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
+    const { darkMode } = useTheme();
+    const theme = useMuiTheme();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d+$/;
@@ -43,6 +51,19 @@ const UserProfile  = () => {
         fetchEmail();
         fetchPhoneNumber();
     }, [isAuthenticated, navigate])
+
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleUseAccountIcon = () => {
+        setAvatarUrl(null); //Reset to default/Auth0 picture
+        handleMenuClose();
+    };
 
     //Get Phone Number
     const fetchPhoneNumber = async () => {
@@ -69,10 +90,10 @@ const UserProfile  = () => {
         }
     };
 
-    const handleSetPhoneNumber = async () => {
-        setTempPhoneNumber(phoneNumber);
-        setIsPhoneNumberDialogOpen(true);
-    };
+  const handleSetPhoneNumber = async () => {
+    setTempPhoneNumber(phoneNumber);
+    setIsPhoneNumberDialogOpen(true);
+  };
 
     const handleClosePhoneDialog = () => { 
         setIsPhoneNumberDialogOpen(false); 
@@ -99,32 +120,33 @@ const UserProfile  = () => {
             return;
         }
 
-        try {
-            const token = await getAccessTokenSilently();
-            const response = await axios.post("http://localhost:8000/api/user-profile/phone", 
-                {phone: tempPhoneNumber},
-                {headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.post(
+        "http://localhost:8000/api/user-profile/phone",
+        { phone: tempPhoneNumber },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-            if (response.data && response.data.data && response.data.user.phone) {
-                setPhoneNumber(response.data.user.phone);
-                setSuccessMessage("Successfully saved phone number.");
-            }
-            else if (response.data && response.data.data){
-                setSuccessMessage(response.data.message);
-                setError(null);
-            }
-            setTempPhoneNumber("");
-        }
-        catch (error) {
-            console.error("Error saving phone number:", error);
-            setError("Failed to save phone number."); 
-            setSuccessMessage("");
-            setTempPhoneNumber("");
-        }
+      if (response.data && response.data.data && response.data.user.phone) {
+        setPhoneNumber(response.data.user.phone);
+        setSuccessMessage("Successfully saved phone number.");
+      } else if (response.data && response.data.data) {
+        setSuccessMessage(response.data.message);
+        setError(null);
+      }
+      setTempPhoneNumber("");
+    } catch (error) {
+      console.error("Error saving phone number:", error);
+      setError("Failed to save phone number.");
+      setSuccessMessage("");
+      setTempPhoneNumber("");
     }
+  };
 
      //Get Email
      const fetchEmail = async () => {
@@ -212,6 +234,8 @@ const UserProfile  = () => {
         setError(null);
         setSuccessMessage(null);
     };
+
+    const handleChangeTheme = () => {};
     
     return (
         <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
@@ -304,28 +328,46 @@ const UserProfile  = () => {
                     </Typography>
                 </Box>
 
-                <hr />
-                <Box>
-                    <Typography variant="h6" color="textPrimary" gutterBottom>
-                        Theme 
-                        <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                            Light
-                        </Typography>
-                    </Typography>
-                </Box>
-                <hr />    
-                <Typography variant="h6" color="textPrimary" gutterBottom>
-                    Language
-                    <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                        English
-                    </Typography>
-                </Typography>
-                </Paper>
-            </Box>
-        
-        <Dialog open={isEmailDialogOpen} 
-            onClose={handleCloseEmailDialog}>
-        <DialogTitle>Update Email</DialogTitle>
+          <hr />
+          <Box>
+            <Typography variant="h6" color="textPrimary" gutterBottom>
+              Theme
+              <Typography
+                variant="subtitle1"
+                color="textSecondary"
+                gutterBottom
+              >
+                Light
+              </Typography>
+              <IconButton
+                onClick={handleChangeTheme}
+                sx={{
+                  mb: 1,
+                  position: "relative",
+                  float: "right",
+                  marginLeft: 80,
+                  marginTop: -8,
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  "&:hover": { backgroundColor: "primary.dark" },
+                }}
+              >
+                <EditIcon />
+              </IconButton>
+            </Typography>
+          </Box>
+          <hr />
+          <Typography variant="h6" color="textPrimary" gutterBottom>
+            Language
+            <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+              English
+            </Typography>
+          </Typography>
+        </Paper>
+      </Box>
+
+      <Dialog open={isEmailDialogOpen} onClose={handleCloseEmailDialog}>
+        <DialogTitle>Add or Update Secondary Email</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -346,9 +388,8 @@ const UserProfile  = () => {
         </DialogActions>
       </Dialog>
 
-        <Dialog open={isPhoneNumberDialogOpen} 
-            onClose={handleClosePhoneDialog}>
-        <DialogTitle>Add or Update Phone Number</DialogTitle>
+      <Dialog open={isPhoneNumberDialogOpen} onClose={handleClosePhoneDialog}>
+        <DialogTitle>Update Phone Number</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -363,12 +404,13 @@ const UserProfile  = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePhoneDialog}>Cancel</Button>
-          <Button onClick={handleSavePhone} color="primary">Save</Button>
+          <Button onClick={handleSavePhone} color="primary">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
-        
-    );
+  );
 };
 
 export default UserProfile;

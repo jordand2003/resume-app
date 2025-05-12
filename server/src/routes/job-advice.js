@@ -3,21 +3,35 @@ const router = express.Router();
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const JobAdviceService = require("../services/jobAdviceService");
 const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Types;
+const Resume = require("../models/Resume");
 
 // POST /api/jobs/advice
 router.post("/advice", verifyJWT, extractUserId, async (req, res) => {
   try {
-    const { jobId, resumeId } = req.body;
+    // const { jobId, resumeId } = req.body;
+    const { resumeId } = req.body;
 
     // Validate required parameters
-    if (!jobId || !resumeId) {
+    if (!resumeId) {
       return res.status(400).json({
         status: "Failed",
-        message: "Both jobId and resumeId are required",
+        message: "resumeId is required",
       });
     }
+    const query = await Resume.findById(resumeId);
+    if (!query) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Cannot find associated jobId",
+      });
+    }
+    console.log("Resume id: " + resumeId);
+    console.log("Job id: " + query.jobId);
+    jobId = new ObjectId(query.jobId)
 
     // Validate MongoDB ObjectIds
+    /*
     if (
       !mongoose.Types.ObjectId.isValid(jobId) ||
       !mongoose.Types.ObjectId.isValid(resumeId)
@@ -27,7 +41,8 @@ router.post("/advice", verifyJWT, extractUserId, async (req, res) => {
         message: "Invalid jobId or resumeId format",
       });
     }
-
+    */
+   
     // Generate advice
     const advice = await JobAdviceService.generateAdvice(jobId, resumeId);
 

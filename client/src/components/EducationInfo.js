@@ -11,6 +11,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const EducationInfo = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -19,6 +21,8 @@ const EducationInfo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   // Regex patterns
   const gpa_regex = /^\d+(\.\d+)?(\/\d+(\.\d+)?)?$/;
@@ -42,9 +46,12 @@ const EducationInfo = () => {
     try {
       const token = await getAccessTokenSilently();
       //const response = await axios.get("http://localhost:8000/api/education/v2", {
-      const response = await axios.get("http://localhost:8000/api/education/v2", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "http://localhost:8000/api/education/v2",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       console.log("Education history response:", response.data);
 
       if (response.data && response.data.data) {
@@ -53,7 +60,7 @@ const EducationInfo = () => {
           _id: edu._id,
           institution: edu.Institute || edu.institution,
           degree: edu.Degree || edu.degree,
-          
+
           field: edu.Major || edu.field,
           gpa: edu.GPA || edu.gpa,
           startDate: edu.Start_Date || edu.startDate,
@@ -147,27 +154,30 @@ const EducationInfo = () => {
   const handleDeleteEducationEntry = async (index) => {
     setError(null);
     setSuccessMessage("");
-  
+
     const isNew = !education[index]._id; // Check if this is a new, unsaved entry
     console.log("Is new entry:", isNew);
-  
+
     const updated = education.filter((_, i) => i !== index);
     setEducation(updated);
     syncValidation(updated);
-  
+
     // Only try to delete from backend if it's not a new entry
     if (!isNew) {
       try {
         const token = await getAccessTokenSilently();
         const edu_id = education[index]._id;
-        const response = await axios.delete("http://localhost:8000/api/education/v2", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          data: { id: edu_id },
-        });
-  
+        const response = await axios.delete(
+          "http://localhost:8000/api/education/v2",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            data: { id: edu_id },
+          }
+        );
+
         if (response.data.status === "Success") {
           setSuccessMessage("Education entry deleted successfully!");
         }
@@ -175,52 +185,50 @@ const EducationInfo = () => {
         console.error("Delete failed:", err);
         setError(
           "Failed to delete education entry: " +
-          (err.response?.data?.message || err.message)
+            (err.response?.data?.message || err.message)
         );
       }
     }
   };
-  
-
 
   // New Save Function
   const handleSaveEducationEntry = async (index) => {
     setError(null);
     setSuccessMessage("");
-    console.log("Attempting save")
+    console.log("Attempting save");
 
-   // Check for empty fields
-   if (
-    !education[index].institution ||
-    !education[index].degree ||
-    !education[index].field ||
-    !education[index].gpa ||
-    !education[index].startDate ||
-    !education[index].endDate
-  ) {
-    setError("Please fill in all required fields.");
-    return;
-  }
+    // Check for empty fields
+    if (
+      !education[index].institution ||
+      !education[index].degree ||
+      !education[index].field ||
+      !education[index].gpa ||
+      !education[index].startDate ||
+      !education[index].endDate
+    ) {
+      setError("Please fill in all required fields.");
+      return;
+    }
 
-  // Check Input and Regex (Combined)
-  const newValidation = [...validation];
-  newValidation[index] = {
-    validGPA: gpa_regex.test(education[index].gpa),
-    validStartDate: date_regex.test(education[index].startDate),
-    validEndDate: date_regex.test(education[index].endDate),
-  };
-  setValidation(newValidation);
+    // Check Input and Regex (Combined)
+    const newValidation = [...validation];
+    newValidation[index] = {
+      validGPA: gpa_regex.test(education[index].gpa),
+      validStartDate: date_regex.test(education[index].startDate),
+      validEndDate: date_regex.test(education[index].endDate),
+    };
+    setValidation(newValidation);
 
-  const hasErrors =
-    !newValidation[index].validGPA ||
-    !newValidation[index].validStartDate ||
-    !newValidation[index].validEndDate;
+    const hasErrors =
+      !newValidation[index].validGPA ||
+      !newValidation[index].validStartDate ||
+      !newValidation[index].validEndDate;
 
-  if (hasErrors) {
-    console.log("Bad Input");
-    setError("Please correct the invalid fields."); // Set a general error message
-    return;
-  }
+    if (hasErrors) {
+      console.log("Bad Input");
+      setError("Please correct the invalid fields."); // Set a general error message
+      return;
+    }
 
     // Prepare data for save
     try {
@@ -251,10 +259,10 @@ const EducationInfo = () => {
       );
       if (response.data.status === "Success") {
         setSuccessMessage("Education entry saved successfully!");
-        console.log(response.data.data)
+        console.log(response.data.data);
         const updated = [...education];
 
-        if(response.data.newEntry){
+        if (response.data.newEntry) {
           updated[index] = {
             _id: response.data.data._id,
             institution: response.data.data.Institute,
@@ -273,7 +281,8 @@ const EducationInfo = () => {
             gpa: response.data.data[0].GPA,
             startDate: response.data.data[0].Start_Date,
             endDate: response.data.data[0].End_Date,
-          }}
+          };
+        }
         setEducation(updated);
         syncValidation(education);
       } else {
@@ -290,9 +299,19 @@ const EducationInfo = () => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
         <NavBar />
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
           <CircularProgress />
         </Box>
       </Box>
@@ -300,67 +319,74 @@ const EducationInfo = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
-      {error && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 20, // adjust if needed to not overlap with success
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
-            width: 'auto',
-            maxWidth: 600,
-          }}
-        >
-          <Alert
-            severity="error"
-            variant="filled"
-            onClose={() => setError("")}
+        {error && (
+          <Box
             sx={{
-              padding: '20px',
-              minHeight: '20px',
-              animation: 'fadeIn 0.8s ease-in-out',
-              '@keyframes fadeIn': {
-                from: { opacity: 0 },
-                to: { opacity: 1 },
-              },
+              position: "fixed",
+              top: 20, // adjust if needed to not overlap with success
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              width: "auto",
+              maxWidth: 600,
             }}
           >
-            {error}
-          </Alert>
-        </Box>
-      )}
+            <Alert
+              severity="error"
+              variant="filled"
+              onClose={() => setError("")}
+              sx={{
+                padding: "20px",
+                minHeight: "20px",
+                animation: "fadeIn 0.8s ease-in-out",
+                "@keyframes fadeIn": {
+                  from: { opacity: 0 },
+                  to: { opacity: 1 },
+                },
+              }}
+            >
+              {error}
+            </Alert>
+          </Box>
+        )}
         {successMessage && (
-                  <Box
-                    sx={{
-                      position: 'fixed',
-                      top: 20,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      zIndex: 9999,
-                      width: 'auto',
-                      maxWidth: 600,
-                    }}
-                  >
-                    <Alert
-                      severity="success"
-                      variant="filled"
-                      onClose={() => setSuccessMessage("")}
-                      sx={{ padding: '20px', 
-                        minHeight: '20px', 
-                        animation: 'fadeIn 0.5s ease-in-out',
-                          '@keyframes fadeIn': {
-                            from: { opacity: 0 },
-                            to: { opacity: 1 },}
-                      }}
-                    >
-                      {successMessage}
-                    </Alert>
-                  </Box>
-                )}
+          <Box
+            sx={{
+              position: "fixed",
+              top: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              width: "auto",
+              maxWidth: 600,
+            }}
+          >
+            <Alert
+              severity="success"
+              variant="filled"
+              onClose={() => setSuccessMessage("")}
+              sx={{
+                padding: "20px",
+                minHeight: "20px",
+                animation: "fadeIn 0.5s ease-in-out",
+                "@keyframes fadeIn": {
+                  from: { opacity: 0 },
+                  to: { opacity: 1 },
+                },
+              }}
+            >
+              {successMessage}
+            </Alert>
+          </Box>
+        )}
 
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
@@ -368,11 +394,16 @@ const EducationInfo = () => {
           </Typography>
           <form onSubmit={handleSubmit}>
             {education.map((edu, index) => (
-              <Box key={index} 
-                    data-education-id={edu._id} // Embedding the unique ID
-                    sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}>
+              <Box
+                key={index}
+                data-education-id={edu._id} // Embedding the unique ID
+                sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
+              >
                 <TextField
-                  fullWidth label="Institution" required margin="normal"
+                  fullWidth
+                  label="Institution"
+                  required
+                  margin="normal"
                   value={edu.institution || ""}
                   onChange={(e) => {
                     const updated = [...education];
@@ -381,7 +412,10 @@ const EducationInfo = () => {
                   }}
                 />
                 <TextField
-                  fullWidth label="Degree" required margin="normal"
+                  fullWidth
+                  label="Degree"
+                  required
+                  margin="normal"
                   value={edu.degree || ""}
                   onChange={(e) => {
                     const updated = [...education];
@@ -390,7 +424,10 @@ const EducationInfo = () => {
                   }}
                 />
                 <TextField
-                  fullWidth label="Field of Study" required margin="normal"
+                  fullWidth
+                  label="Field of Study"
+                  required
+                  margin="normal"
                   value={edu.field || ""}
                   onChange={(e) => {
                     const updated = [...education];
@@ -399,7 +436,10 @@ const EducationInfo = () => {
                   }}
                 />
                 <TextField
-                  fullWidth label="GPA" required margin="normal"
+                  fullWidth
+                  label="GPA"
+                  required
+                  margin="normal"
                   placeholder="e.g., 3.7 or 3.70/4.0"
                   value={edu.gpa || ""}
                   onChange={(e) => {
@@ -414,7 +454,10 @@ const EducationInfo = () => {
                   </Typography>
                 )}
                 <TextField
-                  fullWidth label="Start Date" required margin="normal"
+                  fullWidth
+                  label="Start Date"
+                  required
+                  margin="normal"
                   placeholder="e.g., 2018"
                   value={edu.startDate || ""}
                   onChange={(e) => {
@@ -425,11 +468,15 @@ const EducationInfo = () => {
                 />
                 {!validation[index]?.validStartDate && (
                   <Typography color="error" sx={{ ml: 2 }}>
-                    Start date must have a 4-digit year (e.g., 2018), 'Present', or 'present'
+                    Start date must have a 4-digit year (e.g., 2018), 'Present',
+                    or 'present'
                   </Typography>
                 )}
                 <TextField
-                  fullWidth label="End Date" required margin="normal"
+                  fullWidth
+                  label="End Date"
+                  required
+                  margin="normal"
                   placeholder="e.g., 2022"
                   value={edu.endDate || ""}
                   onChange={(e) => {
@@ -444,7 +491,12 @@ const EducationInfo = () => {
                   </Typography>
                 )}
                 <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                  <Button variant="contained" color="primary" sx={{ mt: 0.25 }} onClick={()=>handleSaveEducationEntry(index)}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 0.25 }}
+                    onClick={() => handleSaveEducationEntry(index)}
+                  >
                     Save Education Entry
                   </Button>
                   <Button
@@ -455,7 +507,7 @@ const EducationInfo = () => {
                       const updated = education.filter((_, i) => i !== index);
                       setEducation(updated);
                       syncValidation(updated);
-                      handleDeleteEducationEntry(index);// Delete function
+                      handleDeleteEducationEntry(index); // Delete function
                     }}
                     sx={{ mt: 1 }}
                   >

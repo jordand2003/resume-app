@@ -9,7 +9,10 @@ import {
   FormLabel,
   FormControlLabel,
   Checkbox,
+  Divider,
   MenuItem,
+  ListItem,
+  ListItemText,
   Select,
   InputLabel,
   Typography,
@@ -19,7 +22,125 @@ import {
 } from "@mui/material";
 import NavBar from "./NavBar";
 import StatusChecker from "./StatusChecker";
+import ChecklistSelect from "./ChecklistSelect";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
+//----------------- Functions ------------------------------
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// can be passed into the 'rightSideDisplayFunction' prop
+const ResumeContent = ({ content }) => {
+  if (!content) return null;
+
+  return (
+    <Box sx={{ p: 2 }}>
+      {/* Education Section */}
+      {content.education && content.education.length > 0 && (
+        <>
+          <Typography variant="h6" gutterBottom sx={{ mt: 0 }}>
+            Education
+          </Typography>
+          {content.education.map((edu, index) => (
+            <Box key={index} sx={{ mb: 2, ml: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                {edu.institute || edu.Institute}, {edu.location || edu.Location}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {edu.degree || edu.Degree} in {edu.major || edu.Major}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                GPA: {edu.gpa || edu.GPA}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {edu.startDate || edu.Start_Date} -{" "}
+                {edu.endDate || edu.End_Date}
+              </Typography>
+              <Typography
+                color="text.primary"
+                sx={{ fontSize: "12px", fontWeight: "bold" }}
+              >
+                Relevant Coursework:
+              </Typography>
+              {(edu.relevantCoursework || edu.RelevantCoursework) && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: "12px", ml: 4 }}
+                >
+                  {edu.relevantCoursework || edu.RelevantCoursework}
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </>
+      )}
+
+      {/* Career Section */}
+      {content.work_experience && content.work_experience.length > 0 && (
+        <>
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Career
+          </Typography>
+          {content.work_experience.map((exp, index) => (
+            <Box key={index} sx={{ mb: 2, ml: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                {exp.Job_Title} at {exp.Company}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {exp.Location} | {exp.Start_Date} – {exp.End_Date}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                {exp.Responsibilities &&
+                  exp.Responsibilities.map((r, i) => (
+                    <ListItem key={i} sx={{ ml: 2 }}>
+                      <Typography variant="body2">• {r}</Typography>
+                    </ListItem>
+                  ))}
+              </Typography>
+            </Box>
+          ))}
+        </>
+      )}
+
+      {/* Skills Section */}
+      {content.skills && (
+        <>
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Skills
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+            {content.skills.map((skill, index) => (
+              <Typography
+                key={index}
+                variant="body2"
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "white",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                }}
+              >
+                {skill}
+              </Typography>
+            ))}
+          </Box>
+        </>
+      )}
+    </Box>
+  );
+};
+
+// Actual component
 const ResumeGeneration = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [selectedJobId, setSelectedJobId] = useState("");
@@ -28,8 +149,12 @@ const ResumeGeneration = () => {
   const [resumeId, setResumeId] = useState(null);
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [resumes, setResumes] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedResume, setSelectedResume] = useState(null); // State for selected resume
   const navigate = useNavigate();
-  //const [loading, setLoading] = useState(true);
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     // Clear any existing status when component mounts
@@ -37,7 +162,8 @@ const ResumeGeneration = () => {
     localStorage.removeItem("resumeId");
     localStorage.removeItem("error");
     fetchJobList();
-  }, [getAccessTokenSilently]); //getAccessTokenSilently, user
+    fetchResumes();
+  }, [getAccessTokenSilently]);
 
   // Fetch Job Descriptions
   const fetchJobList = async () => {
@@ -67,6 +193,29 @@ const ResumeGeneration = () => {
       if (generationStatus === "loading") {
         setGenerationStatus("idle");
       }
+    }
+  };
+
+  // Fetch all Resumes
+  const fetchResumes = async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.get("http://localhost:8000/api/resume", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setResumes(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Failed to fetch resumes"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,8 +274,52 @@ const ResumeGeneration = () => {
     setSelectedJobId(event.target.value);
   };
 
+  // Can use this for the `indexDisplsyFunction` prop to create List items
+  const resumeIndexList = (allResumes, handleViewContent) => {
+    return allResumes.map((resume, index) => (
+      <React.Fragment key={resume._id}>
+        {index > 0 && <Divider />}
+        <ListItem
+          alignItems="flex-start"
+          sx={{
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
+            cursor: "pointer",
+          }}
+          onClick={() => handleViewContent(resume)} // Use the passed handleViewContent
+        >
+          <ListItemText
+            primary={
+              <Typography variant="subtitle1" component="div">
+                {resume.nickName || "New Resume Entry"}
+              </Typography>
+            }
+            secondary={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Uploaded: {formatDate(resume.createdAt)}
+                </Typography>
+              </>
+            }
+          />
+        </ListItem>
+      </React.Fragment>
+    ));
+  };
+
+  // Define handleViewContent here
+  const handleViewContent = (resume) => {
+    setSelectedResume(resume);
+  };
+
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
@@ -206,6 +399,16 @@ const ResumeGeneration = () => {
           )}
         </Paper>
       </Box>
+      {!loading && resumes && (
+        <ChecklistSelect
+          checklist_name="Resume"
+          full_content={resumes}
+          indexDisplayFunction={(full_content) =>
+            resumeIndexList(full_content, handleViewContent)
+          }
+          rightSideDisplayFunction={ResumeContent}
+        />
+      )}
     </Box>
   );
 };

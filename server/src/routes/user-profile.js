@@ -9,8 +9,8 @@ const User = require('../models/Users');
 
 //GET API to retrieve phone number
 router.get("/phone", verifyJWT, extractUserId, async (req, res) => {
-    try {
-        const userId = req.userId; //Oauth id
+  try {
+    const userId = req.userId; //Oauth id
 
         // Check MongoDB connection
         //const connectionState = mongoose.connection.readyState;
@@ -47,36 +47,42 @@ router.get("/phone", verifyJWT, extractUserId, async (req, res) => {
 
 //POST API to retrieve phone number
 router.post("/phone", verifyJWT, extractUserId, async (req, res) => {
-    try {
-        const userId = req.userId; //Oauth ID
-        const { phone } = req.body;
-        const updatedUser = await User.findOneAndUpdate(
-          { user_id: userId },
-          { $set: { phone: phone } },
-          { new: true, upsert: false }
-        );
+  try {
+    const userId = req.userId; //Oauth ID
+    const { phone } = req.body;
+    const updatedUser = await User.findOneAndUpdate(
+      { user_id: userId },
+      { $set: { phone: phone } },
+      { new: true, upsert: false }
+    );
 
-        if (!updatedUser) {
-            return res.status(404).json({ status: "Failed", message: "User not found." });
-        }
-
-        if (!phone){
-            return res.status(400).json({ status: "Failed", message: "No phone number entered."});
-        }
-        
-        return res.status(200).json({ status: "Success", message: "Phone number updated successfully.", user: updatedUser });
-       }
-       catch (error) {
-        console.error("Cannot update phone number:", error);
-        return res.status(500).json({ status: "Failed"});
-       }
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ status: "Failed", message: "User not found." });
     }
-);
+
+    if (!phone) {
+      return res
+        .status(400)
+        .json({ status: "Failed", message: "No phone number entered." });
+    }
+
+    return res.status(200).json({
+      status: "Success",
+      message: "Phone number updated successfully.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Cannot update phone number:", error);
+    return res.status(500).json({ status: "Failed" });
+  }
+});
 
 //GET API to retrieve primary email
 router.get("/email", verifyJWT, extractUserId, async (req, res) => {
   try {
-      const userId = req.userId; //Oauth id
+    const userId = req.userId; //Oauth id
 
       // Check MongoDB connection
       const connectionState = mongoose.connection.readyState;
@@ -113,9 +119,11 @@ router.post("/email", verifyJWT, extractUserId, async (req, res) => {
         { new: true, upsert: false }
       );
 
-      if (!updatedUser) {
-          return res.status(404).json({ status: "Failed", message: "Could not update." });
-      }
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ status: "Failed", message: "Could not update." });
+    }
 
       return !primaryEmail
           ? res.status(400).json({ status: "Failed", message: "No email entered."})
@@ -126,6 +134,6 @@ router.post("/email", verifyJWT, extractUserId, async (req, res) => {
       return res.status(500).json({ status: "Failed"});
      }
   }
-);
+});
 
 module.exports = router;

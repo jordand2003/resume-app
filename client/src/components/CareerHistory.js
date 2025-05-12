@@ -11,6 +11,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const CareerHistory = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -19,6 +21,8 @@ const CareerHistory = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [careerErrors, setCareerErrors] = useState([]);
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   React.useEffect(() => {
     fetchCareerHistory();
@@ -214,7 +218,12 @@ const CareerHistory = () => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
         <NavBar />
         <Box
           display="flex"
@@ -229,7 +238,12 @@ const CareerHistory = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         {error && (

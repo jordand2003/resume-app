@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const JobDesc = require("../models/JobDesc");
 const { ResumeData } = require("./structuredDataService");
+const Resume = require("../models/Resume");
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -15,7 +16,9 @@ class JobAdviceService {
       }
 
       // Get resume data
-      const resumeData = await ResumeData.findById(resumeId);
+      // const resumeData = await ResumeData.findById(resumeId);
+      const resumeData = await Resume.findById(resumeId);
+      console.log(resumeData);
       if (!resumeData) {
         throw new Error("Resume data not found");
       }
@@ -48,7 +51,7 @@ Position: ${jobDesc.job_title}
 Description: ${jobDesc.description}
 
 Resume Content:
-${JSON.stringify(resumeData.parsedData, null, 2)}
+${JSON.stringify(resumeData.content, null, 2)}
 
 Please provide detailed advice in the following format:
 
@@ -67,7 +70,7 @@ Please provide detailed advice in the following format:
    - Potential questions to prepare for
    - Areas to research about the company
 
-Provide actionable, specific advice that will help the candidate improve their chances of getting this job.`;
+Provide actionable, specific advice that will help the candidate improve their chances of getting this job. Please only include the advice itself without introductory phrases.`;
   }
 }
 
