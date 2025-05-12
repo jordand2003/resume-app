@@ -6,8 +6,6 @@ import {
   Box,
   Button,
   FormControl,
-  FormLabel,
-  FormControlLabel,
   Checkbox,
   Divider,
   MenuItem,
@@ -19,6 +17,12 @@ import {
   Paper,
   Alert,
   CircularProgress,
+  Tabs,
+  Tab,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel
 } from "@mui/material";
 import NavBar from "./NavBar";
 import StatusChecker from "./StatusChecker";
@@ -35,19 +39,24 @@ const formatDate = (dateString) => {
   });
 };
 
-// can be passed into the 'rightSideDisplayFunction' prop
+// can be passed into the 'rightSideDisplayFunction' prop to show data on the right side of the checklist component
 const ResumeContent = ({ content }) => {
+  /*console.log("ResumeContent received content:", content);
+  console.log("content.parsedData.education:", content?.parsedData?.education);
+  console.log("content.parsedData.work_experience:", content?.parsedData?.work_experience);
+  console.log("content.parsedData.skills:", content?.parsedData?.skills);*/
   if (!content) return null;
+
+  const parsedData = content.parsedData || {}; // Add a fallback in case parsedData is missing
 
   return (
     <Box sx={{ p: 2 }}>
-      {/* Education Section */}
-      {content.education && content.education.length > 0 && (
+      {parsedData.education && parsedData.education.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 0 }}>
             Education
           </Typography>
-          {content.education.map((edu, index) => (
+          {parsedData.education.map((edu, index) => (
             <Box key={index} sx={{ mb: 2, ml: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                 {edu.institute || edu.Institute}, {edu.location || edu.Location}
@@ -75,12 +84,12 @@ const ResumeContent = ({ content }) => {
       )}
 
       {/* Career Section */}
-      {content.work_experience && content.work_experience.length > 0 && (
+      {parsedData.work_experience && parsedData.work_experience.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Career
           </Typography>
-          {content.work_experience.map((exp, index) => (
+          {parsedData.work_experience.map((exp, index) => (
             <Box key={index} sx={{ mb: 2, ml: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                 {exp.Job_Title} at {exp.Company}
@@ -102,13 +111,13 @@ const ResumeContent = ({ content }) => {
       )}
 
       {/* Skills Section */}
-      {content.skills && (
+      {parsedData.skills && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Skills
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-            {content.skills.map((skill, index) => (
+            {parsedData.skills.map((skill, index) => (
               <Typography
                 key={index}
                 variant="body2"
@@ -130,7 +139,7 @@ const ResumeContent = ({ content }) => {
   );
 };
 
-// Actual component
+/*-----------------------------------Actual component is here------------------------------------------*/
 const ResumeGeneration = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [selectedJobId, setSelectedJobId] = useState("");
@@ -141,7 +150,8 @@ const ResumeGeneration = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedResume, setSelectedResume] = useState(null); // State for selected resume
+  const [currentTab, setCurrentTab] = useState(null);
+  const [markedEntries, setMarkedEntries] = useState(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -260,8 +270,12 @@ const ResumeGeneration = () => {
     setSelectedJobId(event.target.value);
   };
 
+  const handleTabChange = (event) => {
+    setCurrentTab(event.target.value);
+  };
+
   // Can use this for the `indexDisplsyFunction` prop to create List items
-  const resumeIndexList = (allResumes, handleViewContent) => {
+  const resumeIndexList = (allResumes, handleViewContent, markedEntries, setMarkedEntries) => {
     return allResumes.map((resume, index) => (
       <React.Fragment key={resume._id}>
         {index > 0 && <Divider />}
@@ -273,8 +287,23 @@ const ResumeGeneration = () => {
             },
             cursor: 'pointer',
           }}
-          onClick={() => handleViewContent(resume)} // Use the passed handleViewContent
+          onClick={() => handleViewContent(resume)}
         >
+          <Checkbox /** Add or remove entries from the markedEntry's set (in the child component) */
+            checked={markedEntries.has(resume.parsedData)}
+            onChange={(event) => {  
+              if (event.target.checked) {
+                //console.log(resume.parsedData)
+                setMarkedEntries((prevMarked) => new Set(prevMarked).add(resume.parsedData));
+              } else {
+                setMarkedEntries((prevMarked) => {
+                  const nextMarked = new Set(prevMarked);
+                  nextMarked.delete(resume.parsedData);
+                  return nextMarked;
+                });
+              }
+            }}
+          />
           <ListItemText
             primary={
               <Typography variant="subtitle1" component="div">
@@ -292,14 +321,42 @@ const ResumeGeneration = () => {
     ));
   };
 
-  // Define handleViewContent here
-  const handleViewContent = (resume) => {
-    setSelectedResume(resume);
-  };
-
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
       <NavBar />
+      {/** Initial Toggle Menu */}
+      <FormControl sx={{p: "50px"}}>
+        <FormLabel id="demo-radio-buttons-group-label">How would you like to generate your resume?</FormLabel>
+        <RadioGroup
+          row
+          //aria-labelledby="demo-radio-buttons-group-label"
+          defaultValue="manual"
+          name="radio-buttons-group"
+          onChange={handleTabChange}
+        >
+          <FormControlLabel value="manual" control={<Radio />} label="Manually Select Data" />
+          <FormControlLabel value="resume" control={<Radio />} label="Use Resume Data" />
+        </RadioGroup>
+      </FormControl>
+
+      {/** Main Selection Menu */}
+        {/*currentTab === 0 && <Dashboard />*/}
+        {currentTab === "resume" && (
+          <ChecklistSelect
+            checklist_name="Resume"
+            full_content={resumes}
+            indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
+              resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
+            }
+            rightSideDisplayFunction={(selectedEntry) => (
+              <ResumeContent content={selectedEntry} />
+            )}
+            markedEntries={markedEntries} // Pass markedEntries as a prop
+            setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+          />
+        )} 
+
+      {/** Submit Area */}
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
@@ -378,14 +435,8 @@ const ResumeGeneration = () => {
           )}
         </Paper>
       </Box>
-      {!loading && resumes && (
-        <ChecklistSelect
-          checklist_name="Resume"
-          full_content={resumes}
-          indexDisplayFunction={(full_content) => resumeIndexList(full_content, handleViewContent)}
-          rightSideDisplayFunction={ResumeContent}
-        />
-      )}
+      
+
     </Box>
   );
 };
