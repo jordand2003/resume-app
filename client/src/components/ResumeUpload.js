@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import Grid from '@mui/system/Grid'
 import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
 import UploadedHistory from "./UploadedHistory";
@@ -132,17 +133,21 @@ const ResumeUpload = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: "100%", minWidth: "50%", mx: "auto", mt: 4, p: 10 }}>
+
+    <Box sx={{ maxWidth: "100%", mx: "auto", mt: 4, p: 2 }}>
+      <Grid container spacing={2}>
+        <Grid size={4}>
       <Paper
         elevation={3}
         sx={{
           p: 3,
-          maxWidth: "60%",
+          maxWidth: "80%",
           mx: "auto",
           backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,
         }}
       >
+        <Grid container spacing={2}></Grid>
         <Typography variant="h5" gutterBottom>
           Upload Your Resume
         </Typography>
@@ -264,17 +269,20 @@ const ResumeUpload = () => {
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}
         </Button>
       </Paper>
+      </Grid>
 
       {/* Resume History */}
+      <Grid size={8}>
       <Paper
         sx={{
-          mt: 4,
           backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,
         }}
       >
         <UploadedHistory triggerUploadRefresh={refreshHistory} />
       </Paper>
+      </Grid>
+      </Grid>
     </Box>
   );
 };

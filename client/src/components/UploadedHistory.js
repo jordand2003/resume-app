@@ -260,7 +260,7 @@ const UploadedHistory = ({ triggerUploadRefresh }) => {
     >
       <Box sx={{ maxWidth: 1800, mx: "auto", p: 3, display: "flex" }}>
         <Paper
-          elevation={12}
+          elevation={1}
           sx={{
             p: 3,
             width: 400,
