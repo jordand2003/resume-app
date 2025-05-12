@@ -246,6 +246,9 @@ const NavBar = () => {
               <MenuItem onClick={() => handleMenuClick("/user-profile")}>
                 My Profile
               </MenuItem>
+              <MenuItem onClick={() => handleMenuClick("/settings")}>
+                Settings
+              </MenuItem>
               <MenuItem onClick={() => handleMenuClick("/resume-generation")}>
                 Resume Generation
               </MenuItem>

@@ -21,6 +21,7 @@ import ResumeUploadPage from "./components/ResumeUploadPage";
 import { useAuth0 } from "@auth0/auth0-react";
 import UserProfile from "./components/UserProfile";
 import { createTheme, CircularProgress, ThemeProvider } from "@mui/material";
+import Settings from "./components/Settings";
 
 const theme = createTheme({
   palette: {
@@ -146,22 +147,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      {/*<Route
+      <Route
         path="/career-history"
         element={
           <ProtectedRoute>
-            <CareerHistory_v2 />
+            <CareerHistory />
           </ProtectedRoute>
         }
-      />*/}
-      <Route
-      path="/career-history"
-      element={
-        <ProtectedRoute>
-          <CareerHistory />
-        </ProtectedRoute>
-      }
-    />
+      />
       <Route
         path="/education"
         element={
@@ -195,26 +188,37 @@ const AppRoutes = () => {
         }
       />
       <Route path="/register" element={<Register />} />
-      <Route path="/job-descriptions" 
+      <Route
+        path="/job-descriptions"
         element={
           <ProtectedRoute>
             <JobDescriptions />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route path="/my-resumes" 
+      <Route
+        path="/my-resumes"
         element={
           <ProtectedRoute>
             <MyResumes />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route path="/user-profile" 
+      <Route
+        path="/user-profile"
         element={
           <ProtectedRoute>
             <UserProfile />
           </ProtectedRoute>
-        } 
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
       />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
