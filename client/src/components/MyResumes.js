@@ -31,6 +31,7 @@ import ModernImg from "../modern.png";
 import SplitImg from "../split.png";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import Markdown from 'markdown-to-jsx';
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -246,7 +247,7 @@ const MyResumes = () => {
   const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
       const token = await getAccessTokenSilently();
-      let template = "split";
+      let template = "basic";
       if (template_ind != -1) {
         template = templates[template_ind].formattedTitle;
         console.log(template);
@@ -437,9 +438,23 @@ const MyResumes = () => {
         <DialogContent dividers>
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
-              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              selectedIndex === 0 ? (
+              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word"}}>
+                <div style={{
+                  margin: 0, 
+                  padding: 0, 
+                  lineHeight: '1.5', 
+                }} 
+                dangerouslySetInnerHTML={{ __html: formattedResume }} />
+              </pre>
+              ) : selectedIndex === 1 ? (
+                <Markdown>{formattedResume}</Markdown>
+                
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {formattedResume}
               </pre>
+              )
             ) : (
               selectedResume && (
                 <ResumeContent content={selectedResume.content} />
@@ -601,7 +616,7 @@ const MyResumes = () => {
             <Typography>Loading advice...</Typography>
           ) : advice ? (
             <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-              {advice}
+              <Markdown>{advice}</Markdown>
             </pre>
           ) : (
             <Typography>No advice available.</Typography>
