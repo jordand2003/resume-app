@@ -25,7 +25,10 @@ import {
   MenuItem,
 } from "@mui/material";
 import NavBar from "./NavBar";
-import PlaceholderImg from "../Blank-Resume-Template.jpg";
+import BasicImg from "../basic.png";
+import BasicIntrImg from "../basic_interactive.png";
+import ModernImg from "../modern.png";
+import SplitImg from "../split.png";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 
@@ -125,25 +128,25 @@ const MyResumes = () => {
     {
       id: 1,
       title: "Basic",
-      image: PlaceholderImg,
+      image: BasicImg,
       formattedTitle: "basic",
     },
     {
       id: 2,
       title: "Basic Interative",
-      image: PlaceholderImg,
+      image: BasicIntrImg,
       formattedTitle: "basic_interactive",
     },
     {
       id: 3,
       title: "Modern",
-      image: PlaceholderImg,
+      image: ModernImg,
       formattedTitle: "modern",
     },
     {
       id: 4,
       title: "Split",
-      image: PlaceholderImg,
+      image: SplitImg,
       formattedTitle: "split",
     },
   ];

@@ -670,8 +670,8 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
     >
       <NavBar />
       {/** Initial Toggle Menu */}
-      <Typography variant="h4" gutterBottom>Generate Your Resume</Typography>
-      <FormControl sx={{p: "50px"}}>
+      <Typography variant="h4" sx={{ mt: 4, ml: 4 }}>Generate Your Resume</Typography>
+      <FormControl sx={{p: "2%"}}>
         <FormLabel id="demo-radio-buttons-group-label">How would you like to generate your resume?</FormLabel>
         <RadioGroup
           row
