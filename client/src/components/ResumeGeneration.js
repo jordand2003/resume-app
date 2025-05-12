@@ -152,25 +152,24 @@ const EduContent = ({ content }) => {
 
   return (
     <Box sx={{ p: 2 }}>
-      {content && content.length > 0 && (
+      {content  && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 0 }}>
             Education
           </Typography>
-          {content.map((edu, index) => (
-            <Box key={index} sx={{ mb: 2, ml: 2 }}>
+            <Box sx={{ mb: 2, ml: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                {edu.institute || edu.Institute}, {edu.location || edu.Location}
+                {content.institute || content.Institute}, {content?.location || content?.Location}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {edu.degree || edu.Degree} in {edu.major || edu.Major}
+                {content?.degree || content?.Degree} in {content?.major || content?.Major}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                GPA: {edu.gpa || edu.GPA}
+                GPA: {content?.gpa || content?.GPA}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {edu.startDate || edu.Start_Date} -{" "}
-                {edu.endDate || edu.End_Date}
+                {content?.startDate || content?.Start_Date} -{" "}
+                {content?.endDate || content?.End_Date}
               </Typography>
               <Typography
                 color="text.primary"
@@ -178,17 +177,16 @@ const EduContent = ({ content }) => {
               >
                 Relevant Coursework:
               </Typography>
-              {(edu.relevantCoursework || edu.RelevantCoursework) && (
+              {(content.relevantCoursework || content.RelevantCoursework) && (
                 <Typography
                   variant="body2"
                   color="text.secondary"
                   sx={{ fontSize: "12px", ml: 4 }}
                 >
-                  {edu.relevantCoursework || edu.RelevantCoursework}
+                  {content.relevantCoursework || content.RelevantCoursework}
                 </Typography>
               )}
             </Box>
-          ))}
         </>
       )}
 
@@ -200,33 +198,37 @@ const EduContent = ({ content }) => {
 const CareerContent = ({ content }) => {
   if (!content) return null;
 
-  {/* Career Section */}
-      {content.work_experience && content.length > 0 && (
+  return (
+    <>
+      {/* Career Section */}
+      {content &&  (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Career
           </Typography>
-          {content.map((exp, index) => (
-            <Box key={index} sx={{ mb: 2, ml: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                {exp.Job_Title} at {exp.Company}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {exp.Location} | {exp.Start_Date} – {exp.End_Date}
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {exp.Responsibilities &&
-                  exp.Responsibilities.map((r, i) => (
-                    <ListItem key={i} sx={{ ml: 2 }}>
-                      <Typography variant="body2">• {r}</Typography>
-                    </ListItem>
-                  ))}
-              </Typography>
+          <Box sx={{ mb: 2, ml: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+              {content?.Job_Title} at {content?.Company}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {content?.Location} | {content?.Start_Date} – {content?.End_Date}
+            </Typography>
+            <Box sx={{ mt: 1 }}>
+              {content.Responsibilities &&
+                content.Responsibilities.map((r, i) => (
+                  <ListItem key={i} sx={{ ml: 2 }}>
+                    <Typography variant="body2">• {r}</Typography>
+                  </ListItem>
+                ))}
             </Box>
-          ))}
+          </Box>
         </>
       )}
-    }
+    </>
+  );
+};
+
+  
 
 /*-----------------------------------Actual component is here------------------------------------------*/
 const ResumeGeneration = () => {
@@ -239,6 +241,8 @@ const ResumeGeneration = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
   const [skills, setSkills] = useState(null)
+  const [markedCareerEntries, setMarkedCareerEntries] = useState(new Set());
+  const [markedEduEntries, setMarkedEduEntries] = useState(new Set());
   const [careers, setCareers] = useState(null)
   const [edus, setEdus] = useState(null)
   const [loading, setLoading] = useState(true);
@@ -497,53 +501,101 @@ const ResumeGeneration = () => {
     ));
   };
 
-  // Can use this for the `indexDisplsyFunction` prop to create List items
-  const otherIndexList = (entries, handleViewContent, markedEntries, setMarkedEntries) => {
-    return entries.map((e, index) => (
-      <React.Fragment key={exports._id}>
-        {index > 0 && <Divider />}
-        <ListItem
-          alignItems="flex-start"
-          sx={{
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.04)",
-            },
-            cursor: "pointer",
+// Can use this for the `indexDisplsyFunction` prop to create List items
+const careerIndexList = (careers, handleViewContent, markedCareerEntries, setMarkedCareerEntries) => {
+  return careers.map((career, index) => (
+    <React.Fragment key={career._id}>
+      {index > 0 && <Divider />}
+      <ListItem
+        alignItems="flex-start"
+        sx={{
+          "&:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.04)",
+          },
+          cursor: "pointer",
+        }}
+        onClick={() => handleViewContent(career)}
+      >
+        <Checkbox
+          checked={markedCareerEntries.has(career.parsedData)}
+          onChange={(event) => {
+            if (event.target.checked) {
+              setMarkedCareerEntries((prevMarked) => new Set(prevMarked).add(career.parsedData));
+            } else {
+              setMarkedCareerEntries((prevMarked) => {
+                const nextMarked = new Set(prevMarked);
+                nextMarked.delete(career.parsedData);
+                return nextMarked;
+              });
+            }
           }}
-          onClick={() => handleViewContent(e)}
-        >
-          <Checkbox /** Add or remove entries from the markedEntry's set (in the child component) */
-            checked={markedEntries.has(e.parsedData)}
-            onChange={(event) => {  
-              if (event.target.checked) {
-                setMarkedEntries((prevMarked) => new Set(prevMarked).add(e.parsedData));
-              } else {
-                setMarkedEntries((prevMarked) => {
-                  const nextMarked = new Set(prevMarked);
-                  nextMarked.delete(e.parsedData);
-                  return nextMarked;
-                });
-              }
-            }}
-          />
-          <ListItemText
-            primary={
-              <Typography variant="subtitle1" component="div">
-                {resume.nickName || "New Resume Entry"}
+        />
+        <ListItemText
+          primary={
+            <Typography variant="subtitle1" component="div">
+              {career.Job_Title || "New Career Entry"}
+            </Typography>
+          }
+          secondary={
+            <>
+              <Typography variant="body2" color="text.secondary">
+                {career.Company}
               </Typography>
+            </>
+          }
+        />
+      </ListItem>
+    </React.Fragment>
+  ));
+};
+
+// Can use this for the `indexDisplsyFunction` prop to create List items
+const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEntries) => {
+  return edus.map((edu, index) => (
+    <React.Fragment key={edu._id}>
+      {index > 0 && <Divider />}
+      <ListItem
+        alignItems="flex-start"
+        sx={{
+          "&:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.04)",
+          },
+          cursor: "pointer",
+        }}
+        onClick={() => handleViewContent(edu)}
+      >
+        <Checkbox
+          checked={markedEduEntries.has(edu)}
+          onChange={(event) => {
+            if (event.target.checked) {
+              setMarkedEduEntries((prevMarked) => new Set(prevMarked).add(edu));
+            } else {
+              setMarkedEduEntries((prevMarked) => {
+                const nextMarked = new Set(prevMarked);
+                nextMarked.delete(edu);
+                return nextMarked;
+              });
             }
-            secondary={
-              <>
-                <Typography variant="body2" color="text.secondary">
-                  Uploaded: {formatDate(resume.createdAt)}
-                </Typography>
-              </>
-            }
-          />
-        </ListItem>
-      </React.Fragment>
-    ));
-  };
+          }}
+        />
+        <ListItemText
+          primary={
+            <Typography variant="subtitle1" component="div">
+              {edu.Institute || "New Education Entry"}
+            </Typography>
+          }
+          secondary={
+            <>
+              <Typography variant="body2" color="text.secondary">
+                {edu.Degree} in {edu.Major}
+              </Typography>
+            </>
+          }
+        />
+      </ListItem>
+    </React.Fragment>
+  ));
+};
 
   return (
     <Box
@@ -560,7 +612,7 @@ const ResumeGeneration = () => {
         <RadioGroup
           row
           //aria-labelledby="demo-radio-buttons-group-label"
-          defaultValue="manual"
+          //defaultValue="manual"
           name="radio-buttons-group"
           onChange={handleTabChange}
         >
@@ -585,28 +637,28 @@ const ResumeGeneration = () => {
               setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
             />
             <ChecklistSelect
-              checklist_name="Education"
-              full_content={edus}
-              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
-                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
-              }
-              rightSideDisplayFunction={(selectedEntry) => (
-                <EduContent content={selectedEntry} />
-              )}
-              markedEntries={markedEntries} // Pass markedEntries as a prop
-              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
-            />
-            <ChecklistSelect
               checklist_name="Career"
               full_content={careers}
-              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
-                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
+              indexDisplayFunction={(full_content, handleViewContentFromChild, markedCareerEntries, setMarkedCareerEntries) =>
+                careerIndexList(full_content, handleViewContentFromChild, markedCareerEntries, setMarkedCareerEntries)
               }
               rightSideDisplayFunction={(selectedEntry) => (
                 <CareerContent content={selectedEntry} />
               )}
-              markedEntries={markedEntries} // Pass markedEntries as a prop
-              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+              markedEntries={markedCareerEntries}
+              setMarkedEntries={setMarkedCareerEntries}
+            />
+            <ChecklistSelect
+              checklist_name="Education"
+              full_content={edus}
+              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEduEntries, setMarkedEduEntries) =>
+                eduIndexList(full_content, handleViewContentFromChild, markedEduEntries, setMarkedEduEntries)
+              }
+              rightSideDisplayFunction={(selectedEntry) => (
+                <EduContent content={selectedEntry} />
+              )}
+              markedEntries={markedEduEntries}
+              setMarkedEntries={setMarkedEduEntries}
             />
           </>
         }
