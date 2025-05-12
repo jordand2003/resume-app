@@ -6,7 +6,11 @@ import {
   Typography,
   Paper,
   FormGroup,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary
 } from "@mui/material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, rightSideDisplayFunction, markedEntries, setMarkedEntries }) => { // Add markedEntries and setMarkedEntries to props
   const [allContent, setAllContent] = useState(full_content || []);
@@ -38,12 +42,17 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
 
   return (
     <Box sx={{ minHeight: "1000", backgroundColor: "#e1e1e3" }}>
+      <Accordion defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ArrowDropDownIcon />}
+              aria-controls="panel2-content"
+            >
+              <Typography variant="h5" gutterBottom>
+                {checklist_name}
+              </Typography>
+            </AccordionSummary>
       <Box sx={{ maxWidth: 1800, mx: "auto", p: 3, display: 'flex' }}>
         <Paper elevation={12} sx={{ p: 3, width: 400, overflow: 'auto' }}>
-          <Typography variant="h5" gutterBottom>
-            {checklist_name}
-          </Typography>
-
           {/* Toast Message */}
           {successMessage && (
             <Box
@@ -115,6 +124,7 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
           )}
         </Paper>
       </Box>
+      </Accordion>
     </Box>
   );
 };

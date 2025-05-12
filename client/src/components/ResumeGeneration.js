@@ -29,6 +29,7 @@ import StatusChecker from "./StatusChecker";
 import ChecklistSelect from "./ChecklistSelect";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { marked } from "marked";
 
 //----------------- Functions ------------------------------
 const formatDate = (dateString) => {
@@ -43,10 +44,6 @@ const formatDate = (dateString) => {
 
 // can be passed into the 'rightSideDisplayFunction' prop to show data on the right side of the checklist component
 const ResumeContent = ({ content }) => {
-  /*console.log("ResumeContent received content:", content);
-  console.log("content.parsedData.education:", content?.parsedData?.education);
-  console.log("content.parsedData.work_experience:", content?.parsedData?.work_experience);
-  console.log("content.parsedData.skills:", content?.parsedData?.skills);*/
   if (!content) return null;
 
   const parsedData = content.parsedData || {}; // Add a fallback in case parsedData is missing
@@ -149,6 +146,88 @@ const ResumeContent = ({ content }) => {
   );
 };
 
+// Displays for Individual Tables
+const EduContent = ({ content }) => {
+  if (!content) return null;
+
+  return (
+    <Box sx={{ p: 2 }}>
+      {content && content.length > 0 && (
+        <>
+          <Typography variant="h6" gutterBottom sx={{ mt: 0 }}>
+            Education
+          </Typography>
+          {content.map((edu, index) => (
+            <Box key={index} sx={{ mb: 2, ml: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                {edu.institute || edu.Institute}, {edu.location || edu.Location}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {edu.degree || edu.Degree} in {edu.major || edu.Major}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                GPA: {edu.gpa || edu.GPA}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {edu.startDate || edu.Start_Date} -{" "}
+                {edu.endDate || edu.End_Date}
+              </Typography>
+              <Typography
+                color="text.primary"
+                sx={{ fontSize: "12px", fontWeight: "bold" }}
+              >
+                Relevant Coursework:
+              </Typography>
+              {(edu.relevantCoursework || edu.RelevantCoursework) && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: "12px", ml: 4 }}
+                >
+                  {edu.relevantCoursework || edu.RelevantCoursework}
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </>
+      )}
+
+    </Box>
+  );
+};
+
+
+const CareerContent = ({ content }) => {
+  if (!content) return null;
+
+  {/* Career Section */}
+      {content.work_experience && content.length > 0 && (
+        <>
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Career
+          </Typography>
+          {content.map((exp, index) => (
+            <Box key={index} sx={{ mb: 2, ml: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                {exp.Job_Title} at {exp.Company}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {exp.Location} | {exp.Start_Date} – {exp.End_Date}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                {exp.Responsibilities &&
+                  exp.Responsibilities.map((r, i) => (
+                    <ListItem key={i} sx={{ ml: 2 }}>
+                      <Typography variant="body2">• {r}</Typography>
+                    </ListItem>
+                  ))}
+              </Typography>
+            </Box>
+          ))}
+        </>
+      )}
+    }
+
 /*-----------------------------------Actual component is here------------------------------------------*/
 const ResumeGeneration = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -159,6 +238,9 @@ const ResumeGeneration = () => {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
+  const [skills, setSkills] = useState(null)
+  const [careers, setCareers] = useState(null)
+  const [edus, setEdus] = useState(null)
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState(null);
   const [markedEntries, setMarkedEntries] = useState(new Set());
@@ -173,6 +255,9 @@ const ResumeGeneration = () => {
     localStorage.removeItem("error");
     fetchJobList();
     fetchResumes();
+    fetchEdus();
+    fetchCareers();
+    fetchSkills();
   }, [getAccessTokenSilently]);
 
   // Fetch Job Descriptions
@@ -229,6 +314,75 @@ const ResumeGeneration = () => {
     }
   };
 
+  // Fetch all Career History
+  const fetchCareers = async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.get("http://localhost:8000/api/career-history/history_v2", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setCareers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Failed to fetch resumes"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch all Education History
+  const fetchEdus = async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.get("http://localhost:8000/api/education/v2", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setEdus(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Failed to fetch resumes"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch all Skills History
+  const fetchSkills = async () => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await axios.get("http://localhost:8000/api/skills", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setSkills(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Failed to fetch resumes"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Function to generate AI resume
   const handleGenerate = async () => {
     if (!selectedJobId) {
@@ -242,10 +396,17 @@ const ResumeGeneration = () => {
     setGeneratedMessage("");
 
     try {
+      /** Pull selected data from each entry */
+        let selectedCareers = []; let selectedEdus = []; let selectedSkills = [];
+        for (const entry of markedEntries) {
+          selectedCareers.push(...entry.work_experience);
+          selectedEdus.push(...entry.education);
+          selectedSkills.push(...entry.skills);
+        }
       const token = await getAccessTokenSilently();
       const response = await axios.post(
-        "http://localhost:8000/api/resumes/generate",
-        { jobId: selectedJobId },
+        "http://localhost:8000/api/resumes/generate_v2",
+        { jobId: selectedJobId, selectedCareers : selectedCareers, selectedEdus: selectedEdus, selectedSkills: selectedSkills },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -307,12 +468,59 @@ const ResumeGeneration = () => {
             checked={markedEntries.has(resume.parsedData)}
             onChange={(event) => {  
               if (event.target.checked) {
-                //console.log(resume.parsedData)
                 setMarkedEntries((prevMarked) => new Set(prevMarked).add(resume.parsedData));
               } else {
                 setMarkedEntries((prevMarked) => {
                   const nextMarked = new Set(prevMarked);
                   nextMarked.delete(resume.parsedData);
+                  return nextMarked;
+                });
+              }
+            }}
+          />
+          <ListItemText
+            primary={
+              <Typography variant="subtitle1" component="div">
+                {resume.nickName || "New Resume Entry"}
+              </Typography>
+            }
+            secondary={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  Uploaded: {formatDate(resume.createdAt)}
+                </Typography>
+              </>
+            }
+          />
+        </ListItem>
+      </React.Fragment>
+    ));
+  };
+
+  // Can use this for the `indexDisplsyFunction` prop to create List items
+  const otherIndexList = (entries, handleViewContent, markedEntries, setMarkedEntries) => {
+    return entries.map((e, index) => (
+      <React.Fragment key={exports._id}>
+        {index > 0 && <Divider />}
+        <ListItem
+          alignItems="flex-start"
+          sx={{
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
+            cursor: "pointer",
+          }}
+          onClick={() => handleViewContent(e)}
+        >
+          <Checkbox /** Add or remove entries from the markedEntry's set (in the child component) */
+            checked={markedEntries.has(e.parsedData)}
+            onChange={(event) => {  
+              if (event.target.checked) {
+                setMarkedEntries((prevMarked) => new Set(prevMarked).add(e.parsedData));
+              } else {
+                setMarkedEntries((prevMarked) => {
+                  const nextMarked = new Set(prevMarked);
+                  nextMarked.delete(e.parsedData);
                   return nextMarked;
                 });
               }
@@ -346,6 +554,7 @@ const ResumeGeneration = () => {
     >
       <NavBar />
       {/** Initial Toggle Menu */}
+      <Typography variant="h4" gutterBottom>Generate Your Resume</Typography>
       <FormControl sx={{p: "50px"}}>
         <FormLabel id="demo-radio-buttons-group-label">How would you like to generate your resume?</FormLabel>
         <RadioGroup
@@ -361,7 +570,46 @@ const ResumeGeneration = () => {
       </FormControl>
 
       {/** Main Selection Menu */}
-        {/*currentTab === 0 && <Dashboard />*/}
+        {currentTab === "manual" && 
+          <>
+            <ChecklistSelect
+              checklist_name="Skills"
+              full_content={resumes}
+              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
+                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
+              }
+              rightSideDisplayFunction={(selectedEntry) => (
+                <ResumeContent content={selectedEntry} />
+              )}
+              markedEntries={markedEntries} // Pass markedEntries as a prop
+              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+            />
+            <ChecklistSelect
+              checklist_name="Education"
+              full_content={edus}
+              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
+                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
+              }
+              rightSideDisplayFunction={(selectedEntry) => (
+                <EduContent content={selectedEntry} />
+              )}
+              markedEntries={markedEntries} // Pass markedEntries as a prop
+              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+            />
+            <ChecklistSelect
+              checklist_name="Career"
+              full_content={careers}
+              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
+                resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
+              }
+              rightSideDisplayFunction={(selectedEntry) => (
+                <CareerContent content={selectedEntry} />
+              )}
+              markedEntries={markedEntries} // Pass markedEntries as a prop
+              setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+            />
+          </>
+        }
         {currentTab === "resume" && (
           <ChecklistSelect
             checklist_name="Resume"
@@ -381,7 +629,7 @@ const ResumeGeneration = () => {
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
-            Generate Your Resume
+            Generate Your Resume!
           </Typography>
 
           {generationStatus === "loading" && (
