@@ -50,8 +50,11 @@ const Register = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [approveBox, showApproveBox] = useState(false)
   const [phoneNum, setPhoneNum] = useState('')
+  const [phoneError, setPhoneError] = useState(false);
   const navigate = useNavigate();
   const {loginWithRedirect} = useAuth0();
+  
+  const phoneRegex = /^\d+$/;
 
   // Function for Profile Pic
   const handleImageChange = (e) => {
@@ -128,11 +131,14 @@ const Register = () => {
     if(!emailRegex.test(email)){
       setValidEmailInput(false)
     }
+    else if (!validEmailInput)
+      setValidEmailInput(true);
 
     // Check Name field isn't empty
-    if(!fname){
-      setValidName(false)
-    }
+    if (!fname)
+      setValidName(false);
+    else if (!validName) 
+      setValidName(true);
 
     // Validate Password check
     const passwordValidationResult = validatePassword(password);
@@ -141,11 +147,16 @@ const Register = () => {
     // Prevent submission if there are violations
     if (password !== confirmPassword || passwordValidationResult) {
       setConfirmPasswordError('Passwords do not match');
-      return
     } else {
       setConfirmPasswordError('');
     }
-
+    if (phoneNum.length != 10 || !phoneRegex.test(phoneNum)) {
+      setPhoneError(true);
+    }
+    else 
+      setPhoneError(false);
+    if (!validName || passwordError === '' || confirmPasswordError === '' || phoneError)
+      return;
     try {
       // API to Add User to Auth0
       const response = await fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/dbconnections/signup`, {
@@ -161,7 +172,7 @@ const Register = () => {
       });
 
       const data = await response.json();
-
+  
       // Respond Messages
       if (response.ok) {
         console.log('Registration successful!');
@@ -309,21 +320,30 @@ const Register = () => {
               }
             }}
           />
+          {confirmPasswordError && (
+            <Typography color="error" style={{ marginLeft: '14px' }}>
+              {confirmPasswordError}
+            </Typography>
+          )}
           <TextField
             margin="normal"
             fullWidth
             name="phoneNumber"
-            label="phoneNumber"
+            label="Phone Number"
             id="phoneNumber"
             autoComplete="(###) ###-####"
             value={phoneNum}
             onChange={(e) => {
-              setPhoneNum(e.target.value)
+              setPhoneNum(e.target.value);
+              if (e.target.value.length === 10 && phoneRegex.test(e.target.value)) {
+                setPhoneError(false);
+              } else
+                setPhoneError(true);
             }}
           />
-          {confirmPasswordError && (
+          {phoneError && (
             <Typography color="error" style={{ marginLeft: '14px' }}>
-              {confirmPasswordError}
+              Invalid Phone Number
             </Typography>
           )}
           <Button
