@@ -4,7 +4,7 @@
   "license": "ISC",
   "scripts": {
     "start": "cd server && node src/server.js",
-    "build": "cd client && yarn install && yarn build && cd ../server && yarn install && cd .."
+    "build": "cd client && yarn install && yarn build && cd .. && mkdir -p server/client && cp -r client/build server/client/ && cd server && yarn install && cd .."
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
