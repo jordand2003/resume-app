@@ -1,5 +1,5 @@
-# {{name}}
-{{phoneNumber}}|{{emailAddress}}|{{websites}}
+# {{fullName}}
+|{{phoneNumber}}|{{emailAddress}}|{{websites}}|
 {{location}}
 ### {{position}}
 

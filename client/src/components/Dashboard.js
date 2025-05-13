@@ -17,11 +17,13 @@ import {
 } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
+import WillemDafoe from "../../src/w_da_foe2.png";
 import EditIcon from "@mui/icons-material/Edit";
 import Chip from '@mui/material/Chip';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+const  wd = "https://youtu.be/IokAMCZlz0w?t=142"
 
 const Dashboard = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -380,6 +382,9 @@ const Dashboard = () => {
           )}
         </List>
       </Paper>
+      <div>
+        <a href={wd}><img src={WillemDafoe} alt="'The man! The myth! The legend!" style={{opacity: 0.005, width:"150px"}}/></a>
+      </div>
     </Box>
   );
 };
