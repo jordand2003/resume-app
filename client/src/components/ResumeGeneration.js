@@ -725,7 +725,6 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                     justifyContent: "center",
                     alignItems: "center",
                     gap: 1.5,
-                    backgroundColor: "#f0f0f0",
                     p: "30px",
                   }}
                 >
@@ -736,8 +735,8 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                         label={s}
                         variant="outlined"
                         sx={{
-                          color: selectedSkills.has(s) ? "white" : "inherit",
-                          background: selectedSkills.has(s) ? "#6495ED" : "default",
+                          color:'white', 
+                          background:'#6495ED',
                           borderColor: "#6495ED",
                         }}
                         onClick={() => handleSkillClick(s)}

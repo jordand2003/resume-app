@@ -439,7 +439,7 @@ const MyResumes = () => {
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
               selectedIndex === 0 ? (
-              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 0}}>
+              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 3, background: "white", color: "black", borderRadius: 2}}>
                 <div style={{
                   margin: 0, 
                   padding: 0, 
