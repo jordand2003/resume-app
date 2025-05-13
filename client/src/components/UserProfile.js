@@ -347,7 +347,7 @@ const UserProfile  = () => {
     }
     
     return (
-        <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+        <Box sx={{ minHeight: "100vh", backgroundColor: theme.palette.background.default}}>
             <NavBar />
             <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
             <Paper elevation={3} sx={{ p: 3 }}> 
