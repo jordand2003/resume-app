@@ -46,7 +46,7 @@ const ResumeContent = ({ content }) => {
   if (!content) return null;
 
   const parsedData = content.parsedData || {}; // Add a fallback in case parsedData is missing
-
+  
   return (
     <Box sx={{ p: 2 }}>
       {parsedData.education && parsedData.education.length > 0 && (
@@ -240,7 +240,7 @@ const ResumeGeneration = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
   const [skills, setSkills] = useState(null)
-  const [selectedSkills, setSelectedSkills] = useState(new Set());
+  const [selectedSkills, setSelectedSkills] = useState([]);
   const [markedCareerEntries, setMarkedCareerEntries] = useState(new Set());
   const [markedEduEntries, setMarkedEduEntries] = useState(new Set());
   const [careers, setCareers] = useState(null)
@@ -253,15 +253,12 @@ const ResumeGeneration = () => {
   const theme = useMuiTheme();
 
   const handleSkillClick = (skill) => {
-    setSelectedSkills((prevSelectedSkills) => {
-      const newSelectedSkills = new Set(prevSelectedSkills);
-      if (newSelectedSkills.has(skill)) {
-        newSelectedSkills.delete(skill);
-      } else {
-        newSelectedSkills.add(skill);
-      }
-      return newSelectedSkills;
-    })}
+    setSelectedSkills((prevSelected) =>
+      prevSelected.includes(skill)
+        ? prevSelected.filter((s) => s !== skill) // Unselect
+        : [...prevSelected, skill]                // Select
+    );
+  };
 
   useEffect(() => {
     // Clear any existing status when component mounts
@@ -736,15 +733,15 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                   {skills && skills.length > 0 ? (
                     skills.map((s, index) => (
                       <Chip
-                        key={index}
-                        label={s}
-                        variant="outlined"
-                        sx={{
-                          color:'white', 
-                          background:'#6495ED',
-                          borderColor: "#6495ED",
-                        }}
-                        onClick={() => handleSkillClick(s)}
+                      key={index}
+                      label={s}
+                      variant={selectedSkills.includes(s) ? "filled" : "outlined"}
+                      sx={{
+                        color: selectedSkills.includes(s) ? 'white' : '#6495ED',
+                        background: selectedSkills.includes(s) ? '#6495ED' : 'transparent',
+                        borderColor: "#6495ED",
+                      }}
+                      onClick={() => handleSkillClick(s)}
                       />
                     ))
                   ) : (
@@ -811,6 +808,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                 <Select
                   labelId="job-listing-label"
                   id="job-listing"
+                  label="Select Job You Are Applying For"
                   value={selectedJobId}
                   onChange={handleJobChange}
                 >
