@@ -15,14 +15,11 @@ import {
   IconButton,
   Typography,
   TextField,
-  CircularProgress,
   Menu,
   MenuItem,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import axios from "axios";
-import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const UserProfile = () => {
@@ -30,7 +27,6 @@ const UserProfile = () => {
   const { getAccessTokenSilently } = useAuth0();
   const { user, isAuthenticated } = useAuth0();
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [emailError, setEmailError] = useState(null);
   const [phoneError, setPhoneError] = useState(null);
@@ -44,7 +40,6 @@ const UserProfile = () => {
   const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const { darkMode } = useTheme();
   const theme = useMuiTheme();
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,9 +52,13 @@ const UserProfile = () => {
     const fullName = user?.name?.split(" ") || [];
     setFirstName(fullName[0]);
     setLastName(fullName.slice(1).join(" ") || "");
+    fetchUserIcon();
     fetchPhoneNumber();
     fetchSecondaryEmail();
   }, [isAuthenticated, navigate]);
+
+  // Used to capitalize theme color
+  const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -69,9 +68,63 @@ const UserProfile = () => {
     setAnchorEl(null);
   };
 
-  const handleUseAccountIcon = () => {
+  const handleUseAccountIcon = async () => {
     setAvatarUrl(null); //Reset to default/Auth0 picture
+    if (user.picture) {
+      try {
+        const formData = new FormData();
+        const token = await getAccessTokenSilently();
+
+        formData.append("photo", new File([user.picture], "default.jpeg"));
+        const response = await axios.post(
+          "http://localhost:8000/api/user-profile/upload_photo",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.data.status === "Success") {
+          setSuccessMessage("Profile photo updated successfully!");
+          setUploadError(null);
+        }
+      } catch (error) {
+        console.error("Error uploading photo:", error);
+        setUploadError("Failed to upload photo. Please try again.");
+      }
+    }
     handleMenuClose();
+  };
+
+  // Jordan's? function from NavBar.
+  const fetchUserIcon = async () => {
+    try {
+      console.log("Fetching profile photo for user:", user?.sub);
+      const token = await getAccessTokenSilently();
+      const response = await axios.get(
+        "http://localhost:8000/api/user-profile/photo",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Profile photo response:", response.data);
+      if (response.data.status === "Success" && response.data.data) {
+        console.log(
+          "Setting profile photo:",
+          response.data.data.substring(0, 50) + "..."
+        );
+        setAvatarUrl(response.data.data);
+      } else {
+        console.log("No profile photo found in response");
+      }
+    } catch (error) {
+      console.error("Error fetching profile photo:", error);
+    }
   };
 
   //Get Phone Number
@@ -399,24 +452,24 @@ const UserProfile = () => {
 
           <hr />
           <Box >
-                    <Typography variant="h6" color="textPrimary" gutterBottom>
-                        Phone Number
-                    </Typography>
-                    <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                        Primary: {phoneNumber || 'None'} <br></br>
-                    </Typography>
-                    <IconButton 
-                        onClick={handleSetPhoneNumber}
-                        sx={{ mb: 1,
-                            position: 'relative',
-                            float: 'right',
-                            marginLeft: 80,
-                            marginTop: -8,
-                            backgroundColor: 'primary.main',
-                            color: 'white',
-                            '&:hover': { backgroundColor: 'primary.dark' },
-                        }}>
-                        <EditIcon />
+            <Typography variant="h6" color="textPrimary" gutterBottom>
+              Phone Number
+            </Typography>
+            <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+              Primary: {phoneNumber || 'None'} <br></br>
+            </Typography>
+            <IconButton 
+              onClick={handleSetPhoneNumber}
+              sx={{ mb: 1,
+              position: 'relative',
+              float: 'right',
+              marginLeft: 80,
+              marginTop: -8,
+              backgroundColor: 'primary.main',
+              color: 'white',
+              '&:hover': { backgroundColor: 'primary.dark' },
+            }}>
+            <EditIcon />
                     </IconButton>
                     {phoneError && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -431,21 +484,8 @@ const UserProfile = () => {
                 Theme 
             </Typography>
             <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-                Light
+                {capitalize(theme.palette.mode)}
             </Typography>
-            <IconButton 
-                onClick={handleChangeTheme}
-                sx={{ mb: 1,
-                    position: 'relative',
-                    float: 'right',
-                    marginLeft: 80,
-                    marginTop: -8,
-                    backgroundColor: 'primary.main',
-                    color: 'white',
-                    '&:hover': { backgroundColor: 'primary.dark' },
-                    }}>
-                <EditIcon />
-                </IconButton>
             </Box>
                 <hr />    
                 <Typography variant="h6" color="textPrimary" gutterBottom>
