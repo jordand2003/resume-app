@@ -299,6 +299,7 @@ const UserProfile  = () => {
     const handleCloseAlert = () => {
         setError(null);
         setSuccessMessage(null);
+        setUploadError(null);
     };
     
     return (
@@ -367,13 +368,16 @@ const UserProfile  = () => {
                                 </label>
                             </MenuItem>
                             </Menu>
-                            {uploadError && (
-                            <Typography color="error">{uploadError}</Typography>
-                            )}
                     </Box>   
                     {successMessage && (
                         <Alert variant="outlined" severity="success" onClose={handleCloseAlert} sx={{ mb: 2 }}>
                             {successMessage}
+                        </Alert>
+                    )}
+
+                    {uploadError && (
+                        <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+                            {uploadError}
                         </Alert>
                     )}
 
@@ -431,7 +435,7 @@ const UserProfile  = () => {
       </Box>
 
       <Dialog open={isEmailDialogOpen} onClose={handleCloseEmailDialog}>
-        <DialogTitle>Add or Update Secondary Email</DialogTitle>
+        <DialogTitle>Update Email</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
