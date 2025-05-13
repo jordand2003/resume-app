@@ -79,16 +79,16 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         if (u.phone) {  // Phone #
             response = response.replace("{{phoneNumber}}", u.phone);
         } else {
-            response = response.replace(/{{phoneNumber}}\n?/, "");
+            response = response.replace(/{{phoneNumber}}\s*(\|\s*)?(\n)?/, "");
         }
         if (u.location){    // location
             response = response.replace("{{location}}", u.location);
         } else {
-            response = response.replace(/{{location}}\n?/, "");
+            response = response.replace(/{{location}}\s*(\|\s*)?(\n)?/, "");
         }
 
         // websites not implemented yet, so remove from template
-        response = response.replace(/{{websites}}\n?/, "");
+        response = response.replace(/{{websites}}\s*(\|\s*)?(\n)?/, "");
         //console.log("User's websites ", u.websites)
 
         // Try finding jobTitle

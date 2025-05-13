@@ -88,14 +88,21 @@ const resumeUpload = async (file) => {
 
 /** Convert resume details stored in a DOCX files into String*/
 function docx2Text(fbuffer) {
-  // Processing message + JSON
-
+  const delimiter = '\n|----|\n';
+  
   // Convert into pure text data
   return mammoth
     .extractRawText({ buffer: fbuffer })
     .then((result) => {
       let pure_text = result.value;
-      return pure_text;
+      
+      // Split on lines and large whitespace gaps
+      let chunks = pure_text
+        .split(/\n|\s{2,}/g)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      return chunks.join(delimiter);
     })
     .catch((err) => {
       console.error("Error processing the DOCX file:");

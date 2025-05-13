@@ -1,3 +1,4 @@
+// filepath: c:\Users\proga\Documents\Homework_n'_School\NJIT_Undergrad\S'25\CS 490\resume-app\client\src\components\ChecklistSelect.js
 import React, { useState, useEffect } from "react";
 import {
   Alert,
@@ -5,58 +6,54 @@ import {
   Typography,
   Paper,
   FormGroup,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Checkbox,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Menu,
-  MenuItem
+  Accordion,
+  AccordionDetails,
+  AccordionSummary
 } from "@mui/material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-/**
- * Generates a checklist of items based on the full_content passed in
- * @param {string} checklist_name The name that'll be displayed on the top of the component
- * @param {*} full_content All the content from a user you want to have entries for
- * @param {Function} indexDisplayFunction A function that specifies how want each entry's label to be displayed; should return components to display
- * @param {Function} rightSideDisplayFunction A function that specifies how you want each entry in full_content to be displayed on to the right side when clicked; should return components to display
- * @returns
- */
-const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, rightSideDisplayFunction }) => {
+const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, rightSideDisplayFunction, markedEntries, setMarkedEntries }) => { // Add markedEntries and setMarkedEntries to props
   const [allContent, setAllContent] = useState(full_content || []);
   const [error, setError] = useState("");
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  //const [markedEntries, setMarkedEntries] = useState(new Set()); // REMOVE this line
 
-  // Set the entry to be viewed on the left
+  // Set the entry to be viewed on the right
   const handleViewContent = (entry) => {
     setSelectedEntry(entry);
+    // console.log("handleViewContent in ChecklistSelect called with:", entry);
   };
+
+  useEffect(() => {
+    console.log("Marked Entries:", markedEntries);
+  }, [markedEntries]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
+  // Runs the actual prop function to populate left side & renders the result
+  const renderedIndexList = indexDisplayFunction && indexDisplayFunction(full_content, handleViewContent, markedEntries, setMarkedEntries);
+
   return (
     <Box sx={{ minHeight: "1000", backgroundColor: "#e1e1e3" }}>
+      <Accordion defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ArrowDropDownIcon />}
+              aria-controls="panel2-content"
+            >
+              <Typography variant="h5" gutterBottom>
+                {checklist_name}
+              </Typography>
+            </AccordionSummary>
       <Box sx={{ maxWidth: 1800, mx: "auto", p: 3, display: 'flex' }}>
         <Paper elevation={12} sx={{ p: 3, width: 400, overflow: 'auto' }}>
-          <Typography variant="h5" gutterBottom>
-            {checklist_name}
-          </Typography>
-
-          {/** Toast Message */}
+          {/* Toast Message */}
           {successMessage && (
             <Box
               sx={{
@@ -88,7 +85,7 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
             </Box>
           )}
 
-          {/**Error Display */}
+          {/*Error Display */}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -103,9 +100,9 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
             </Typography>
           )}
 
-          {/** Entry options for selection (created dynamically) */}
+          {/* List selection options to the left side (created dynamically) */}
           <FormGroup>
-            {indexDisplayFunction && indexDisplayFunction(full_content)}
+            {indexDisplayFunction && renderedIndexList} {/* Render the result here */}
           </FormGroup>
         </Paper>
         {/* View Details off to the right side */}
@@ -127,6 +124,7 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
           )}
         </Paper>
       </Box>
+      </Accordion>
     </Box>
   );
 };

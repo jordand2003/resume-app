@@ -25,9 +25,13 @@ import {
   MenuItem,
 } from "@mui/material";
 import NavBar from "./NavBar";
-import PlaceholderImg from "../Blank-Resume-Template.jpg";
+import BasicImg from "../basic.png";
+import BasicIntrImg from "../basic_interactive.png";
+import ModernImg from "../modern.png";
+import SplitImg from "../split.png";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import Markdown from 'markdown-to-jsx';
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -120,30 +124,30 @@ const MyResumes = () => {
   const [job, setJob] = useState(null);
   const [company, setCompany] = useState(null);
   //for template previews
-  const [selectedCard, setSelectedCard] = React.useState(0);
+  const [selectedTemplate, setSelectedTemplate] = React.useState(0);
   const templates = [
     {
       id: 1,
       title: "Basic",
-      image: PlaceholderImg,
+      image: BasicImg,
       formattedTitle: "basic",
     },
     {
       id: 2,
       title: "Basic Interative",
-      image: PlaceholderImg,
+      image: BasicIntrImg,
       formattedTitle: "basic_interactive",
     },
     {
       id: 3,
       title: "Modern",
-      image: PlaceholderImg,
+      image: ModernImg,
       formattedTitle: "modern",
     },
     {
       id: 4,
       title: "Split",
-      image: PlaceholderImg,
+      image: SplitImg,
       formattedTitle: "split",
     },
   ];
@@ -243,7 +247,7 @@ const MyResumes = () => {
   const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
       const token = await getAccessTokenSilently();
-      let template = "split";
+      let template = "basic";
       if (template_ind != -1) {
         template = templates[template_ind].formattedTitle;
         console.log(template);
@@ -280,6 +284,8 @@ const MyResumes = () => {
   };
 
   const handleClose = () => {
+    setSelectedIndex(-1);
+    setSelectedTemplate(0);
     setAnchorEl(null);
   };
 
@@ -287,8 +293,11 @@ const MyResumes = () => {
     try {
       const token = await getAccessTokenSilently();
       const format = format_options[selectedIndex];
+      console.log("Selected format: " + format);
+      const template = templates[selectedTemplate].formattedTitle;
+      console.log("Selected template: " + template);
       const response = await axios.get(
-        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/default`,
+        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/${template}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -417,7 +426,7 @@ const MyResumes = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth={false} // changed to false
+        maxWidth='md' // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -429,9 +438,23 @@ const MyResumes = () => {
         <DialogContent dividers>
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
-              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              selectedIndex === 0 ? (
+              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 0}}>
+                <div style={{
+                  margin: 0, 
+                  padding: 0, 
+                  lineHeight: '1.5', 
+                }} 
+                dangerouslySetInnerHTML={{ __html: formattedResume }} />
+              </pre>
+              ) : selectedIndex === 1 ? (
+                <Markdown>{formattedResume}</Markdown>
+                
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {formattedResume}
               </pre>
+              )
             ) : (
               selectedResume && (
                 <ResumeContent content={selectedResume.content} />
@@ -455,10 +478,10 @@ const MyResumes = () => {
                   <Card sx={{ width: 160, flexShrink: 0 }}>
                     <CardActionArea
                       onClick={() => {
-                        setSelectedCard(index);
+                        setSelectedTemplate(index);
                         handleMenuClick(selectedResume, 0, index);
                       }}
-                      data-active={selectedCard === index ? "" : undefined}
+                      data-active={selectedTemplate === index ? "" : undefined}
                       sx={{
                         flex: 1, // new
                         display: "flex", // new
@@ -490,9 +513,6 @@ const MyResumes = () => {
                       >
                         <Typography variant="body2" component="div">
                           {card.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {card.description}
                         </Typography>
                       </CardContent>
                     </CardActionArea>
@@ -549,7 +569,7 @@ const MyResumes = () => {
             ))}
           </Menu>
           <Button
-            onClick={() => handleDownload(selectedResume)}
+            onClick={() => handleDownload(selectedResume, selectedIndex, selectedTemplate)}
             disabled={selectedIndex === -1}
           >
             Download
@@ -596,7 +616,7 @@ const MyResumes = () => {
             <Typography>Loading advice...</Typography>
           ) : advice ? (
             <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-              {advice}
+              <Markdown>{advice}</Markdown>
             </pre>
           ) : (
             <Typography>No advice available.</Typography>

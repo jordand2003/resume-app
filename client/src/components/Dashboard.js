@@ -17,9 +17,13 @@ import {
 } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
+import WillemDafoe from "../../src/w_da_foe2.png";
 import EditIcon from "@mui/icons-material/Edit";
 import Chip from '@mui/material/Chip';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
+const  wd = "https://youtu.be/IokAMCZlz0w?t=142"
 
 const Dashboard = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -33,6 +37,8 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [skillError, setSkillError] = useState(false);
   const [skillErrorMsg, setSkillErrorMsg] = useState("");
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     fetchData();
@@ -105,7 +111,7 @@ const Dashboard = () => {
   const handleDelete = async (skill) => {
     try {
       const token = await getAccessTokenSilently(); // Get token
-      const skillResponse = await axios.delete(`http://localhost:8000/api/skills/${skill}`, {
+      const skillResponse = await axios.delete(`http://localhost:8000/api/skills/${encodeURIComponent(skill)}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
@@ -180,7 +186,7 @@ const Dashboard = () => {
   const deleteSkill_2_Db = async (newSkill) => {
     try {
       const token = await getAccessTokenSilently(); // Get token
-      const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { // Correct URL
+      const skillResponse = await axios.put(`http://localhost:8000/api/skills/${newSkill}`, {}, { 
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
@@ -214,7 +220,6 @@ const Dashboard = () => {
             justifyContent: 'center',
             alignItems: 'center',
             gap: 1.5,
-            backgroundColor: '#f0f0f0',
             p: '30px'
           }}>
             {skills.length > 0 && skills.map((s, index) => (
@@ -377,6 +382,9 @@ const Dashboard = () => {
           )}
         </List>
       </Paper>
+      <div>
+        <a href={wd}><img src={WillemDafoe} alt="'The man! The myth! The legend!" style={{opacity: 0.005, width:"150px"}}/></a>
+      </div>
     </Box>
   );
 };

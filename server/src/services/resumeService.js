@@ -7,7 +7,7 @@ const { ResumeData } = require("../services/structuredDataService");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 class ResumeService {
-  static async generateResume(_id, userId) {
+  static async generateResume(_id, userId, selectedCareers, selectedEdus, selectedSkills,) {
     let resume;
     try {
       // Create a new resume entry with PENDING status
@@ -18,26 +18,40 @@ class ResumeService {
       });
       await resume.save();
 
+      //console.log("llll-", selectedCareers, "llll-", selectedEdus, "llll-", selectedSkills)
+
       // Get job description from JobDesc model using MongoDB _id
       const jobDesc = await JobDesc.findById(_id);
       if (!jobDesc) {
         throw new Error("Job description not found");
       }
 
-      // Get career history from ResumeData
-      const careerHistory = await this.getCareerHistory(userId);
-      if (!careerHistory || careerHistory.length === 0) {
-        throw new Error("Career history not found");
+      if (!selectedCareers){
+        // Get career history from ResumeData
+        selectedCareers = await this.getCareerHistory(userId);
+        if (!selectedCareers || selectedCareers.length === 0) {
+          throw new Error("Career history not found");
+        }
       }
+ 
+      if (!selectedEdus){
+        // Get Education history
+        selectedEdus = await this.getEduHistory(userId);
+        if (!selectedEdus || selectedEdus.length === 0) {
+          throw new Error("Education history not found");
+        }
+      } 
 
-      // Get Education history
-      const eduHistory = await this.getEduHistory(userId);
-      if (!eduHistory || eduHistory.length === 0) {
-        throw new Error("Education history not found");
-      }
+      // Get Skills 
+      if (!selectedSkills){
+        selectedSkills = await this.getSkills(userId);
+        if (!selectedSkills || selectedSkills.length === 0) {
+          throw new Error("Education history not found");
+        }
+      } 
 
       // Construct AI prompt
-      const prompt = this.constructAIPrompt(jobDesc, careerHistory, eduHistory);
+      const prompt = this.constructAIPrompt(jobDesc, selectedCareers,   selectedEdus,   selectedSkills);
 
       // Call Gemini API
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -89,7 +103,7 @@ class ResumeService {
     };
   }
 
-  static constructAIPrompt(jobDesc, careerHistory, eduHistory) {
+  static constructAIPrompt(jobDesc, careerHistory, eduHistory, skills) {
     return `
 You are a professional resume writer. Generate a structured resume in JSON format based on the following information.
 
@@ -97,6 +111,9 @@ Job Description:
 Company: ${jobDesc.company}
 Title: ${jobDesc.job_title}
 Description: ${jobDesc.description}
+
+Skills:
+${JSON.stringify(skills, null, 2)}
 
 Career History:
 ${JSON.stringify(careerHistory, null, 2)}
@@ -149,6 +166,21 @@ Return ONLY a JSON object with exactly the following structure, with no addition
     console.log("Education found")
     // Return the education from the parsed data
     return resumeData.parsedData?.education || [];
+  }
+
+  static async getSkills(userId){
+    // Get the most recent resume data for the user
+    const resumeData = await ResumeData.findOne({ userId })
+      .sort({ createdAt: -1 })
+      .limit(1);
+
+    if (!resumeData) {
+      return null;
+    }
+
+    console.log("Education found")
+    // Return the education from the parsed data
+    return resumeData.parsedData?.skills || [];
   }
 
 
