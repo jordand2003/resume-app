@@ -98,6 +98,11 @@ const Dashboard = () => {
     );
   }
 
+  const handleCloseAlert = () => {
+        setError(null);
+        setSkillErrorMsg(null);
+  };
+  
   if (error) {
     return <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>{error}</Alert>;
   }
@@ -106,11 +111,6 @@ const Dashboard = () => {
   const addSkill = () => {
     setIsAddingSkill(true)
   }
-
-  const handleCloseAlert = () => {
-        setError(null);
-        setSkillErrorMsg(null);
-  };
 
   // Handles the removal of skill chips
   const handleDelete = async (skill) => {
