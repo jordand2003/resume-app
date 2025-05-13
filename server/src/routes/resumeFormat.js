@@ -6,6 +6,7 @@ const User = require("../models/Users")
 const JobDesc  = require("../models/JobDesc");
 const { plainTextResume, markupResume, htmlResume, latexResume, optionsList, allOptions, FormattedContent } = require("../services/formattingService");
 const { verifyJWT, extractUserId } = require("../middleware/auth");
+const { SkillList } = require("../services/structuredDataService");
 
 // Get an object of all available templates for a specific formatType
 router.get("/options/:formatType", async (req, res) => {
@@ -53,7 +54,10 @@ router.post("/", verifyJWT, extractUserId, async (req, res) => {
         if (!resume) {
           throw new Error("Resume not found");
         }
-
+        const skillList = await SkillList.findOne({ user_id: userId });
+        if (skillList) {
+          resume.content.skills = skillList.skills
+        }
         // Check formatType
         let response;
         switch(formatType.toLocaleLowerCase()){
