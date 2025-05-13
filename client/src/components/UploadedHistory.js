@@ -136,7 +136,7 @@ const ResumeContent = ({ content }) => {
                     : theme.palette.primary.light,
                   color: darkMode
                     ? theme.palette.primary.contrastText
-                    : theme.palette.primary.main,
+                    : theme.palette.primary.contrastText,
                   px: 1,
                   py: 0.5,
                   borderRadius: 1,
