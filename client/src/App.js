@@ -20,70 +20,83 @@ import ResumeGeneration from "./components/ResumeGeneration";
 import ResumeUploadPage from "./components/ResumeUploadPage";
 import { useAuth0 } from "@auth0/auth0-react";
 import UserProfile from "./components/UserProfile";
-import { createTheme, CircularProgress, ThemeProvider } from "@mui/material";
+import {
+  createTheme,
+  CircularProgress,
+  ThemeProvider as MuiThemeProvider,
+} from "@mui/material";
+import Settings from "./components/Settings";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#2c3e50",
-      light: "#34495e",
-      dark: "#2c3e50",
+const getTheme = (darkMode) =>
+  createTheme({
+    palette: {
+      mode: darkMode ? "dark" : "light",
+      primary: {
+        main: darkMode ? "#90caf9" : "#2c3e50",
+        light: darkMode ? "#e3f2fd" : "#34495e",
+        dark: darkMode ? "#42a5f5" : "#2c3e50",
+      },
+      secondary: {
+        main: "#e74c3c",
+        light: "#e74c3c",
+        dark: "#c0392b",
+      },
+      background: {
+        default: darkMode ? "#121212" : "#f5f5f5",
+        paper: darkMode ? "#1e1e1e" : "#ffffff",
+      },
+      text: {
+        primary: darkMode ? "#ffffff" : "#000000",
+        secondary: darkMode ? "#b0bec5" : "#666666",
+      },
     },
-    secondary: {
-      main: "#e74c3c",
-      light: "#e74c3c",
-      dark: "#c0392b",
+    typography: {
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      h1: {
+        fontWeight: 700,
+      },
+      h2: {
+        fontWeight: 600,
+      },
+      h3: {
+        fontWeight: 600,
+      },
+      h4: {
+        fontWeight: 600,
+      },
+      h5: {
+        fontWeight: 500,
+      },
+      h6: {
+        fontWeight: 500,
+      },
     },
-    background: {
-      default: "#f5f6fa",
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
-    },
-    h2: {
-      fontWeight: 600,
-    },
-    h3: {
-      fontWeight: 600,
-    },
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 500,
-    },
-    h6: {
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          borderRadius: 8,
-        },
-        contained: {
-          boxShadow: "none",
-          "&:hover": {
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: "none",
+            borderRadius: 8,
+          },
+          contained: {
             boxShadow: "none",
+            "&:hover": {
+              boxShadow: "none",
+            },
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         },
       },
     },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      },
-    },
-  },
-});
+  });
 
 // Callback component
 const AuthCallback = () => {
@@ -107,9 +120,11 @@ const AuthCallback = () => {
   return <Navigate to="/home" />;
 };
 
-// App Routes component (separated to avoid Auth0 context issues)
+// App Routes component with theme support
 const AppRoutes = () => {
   const { isLoading } = useAuth0();
+  const { darkMode } = useTheme();
+  const theme = getTheme(darkMode);
 
   if (isLoading) {
     return (
@@ -127,110 +142,115 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/callback" element={<AuthCallback />} />
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resume-upload"
-        element={
-          <ProtectedRoute>
-            <ResumeUploadPage />
-          </ProtectedRoute>
-        }
-      />
-      {/*<Route
-        path="/career-history"
-        element={
-          <ProtectedRoute>
-            <CareerHistory_v2 />
-          </ProtectedRoute>
-        }
-      />*/}
-      <Route
-      path="/career-history"
-      element={
-        <ProtectedRoute>
-          <CareerHistory />
-        </ProtectedRoute>
-      }
-    />
-      <Route
-        path="/education"
-        element={
-          <ProtectedRoute>
-            <EducationInfo />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resume-generation"
-        element={
-          <ProtectedRoute>
-            <ResumeGeneration />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resume/status/:resumeId"
-        element={
-          <ProtectedRoute>
-            <ResumeDisplay />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/userProfile"
-        element={
-          <ProtectedRoute>
-            <UserProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/register" element={<Register />} />
-      <Route path="/job-descriptions" 
-        element={
-          <ProtectedRoute>
-            <JobDescriptions />
-          </ProtectedRoute>
-        } 
-      />
-      <Route path="/my-resumes" 
-        element={
-          <ProtectedRoute>
-            <MyResumes />
-          </ProtectedRoute>
-        } 
-      />
-      <Route path="/user-profile" 
-        element={
-          <ProtectedRoute>
-            <UserProfile />
-          </ProtectedRoute>
-        } 
-      />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/callback" element={<AuthCallback />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-upload"
+          element={
+            <ProtectedRoute>
+              <ResumeUploadPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/career-history"
+          element={
+            <ProtectedRoute>
+              <CareerHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/education"
+          element={
+            <ProtectedRoute>
+              <EducationInfo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-generation"
+          element={
+            <ProtectedRoute>
+              <ResumeGeneration />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume/status/:resumeId"
+          element={
+            <ProtectedRoute>
+              <ResumeDisplay />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/userProfile"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/job-descriptions"
+          element={
+            <ProtectedRoute>
+              <JobDescriptions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-resumes"
+          element={
+            <ProtectedRoute>
+              <MyResumes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user-profile"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </MuiThemeProvider>
   );
 };
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
+    <Router>
+      <ThemeProvider>
         <Auth0ProviderWithHistory>
           <AppRoutes />
         </Auth0ProviderWithHistory>
-      </Router>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 

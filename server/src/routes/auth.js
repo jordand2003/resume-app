@@ -128,4 +128,48 @@ router.post("/resend-verification", async (req, res) => {
   }
 });
 
+
+// POST API to Update Name (Auth0)
+router.post("/updateName", async (req, res) => {
+  try {
+    const { userId, newName } = req.body;
+    if (!userId || !newName) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Update user directly with Auth0 Management API
+    const response = await fetch(`https://${process.env.AUTH0_DOMAIN}/api/v2/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.AUTH0_MANAGEMENT_API_TOKEN}`
+      },
+      body: JSON.stringify({ 
+        name: newName
+      })
+    });
+
+    const updatedUser = await response.json();
+
+    if (!response.ok) {
+      throw new Error(updatedUser.message || 'Failed to update user in Auth0');
+    }
+
+    // Update in MongoDB
+    await User.findOneAndUpdate(
+      { user_id: userId },
+      { name: newName },
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user name:', error);
+    res.status(500).json({ 
+      error: 'Failed to update user name',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;

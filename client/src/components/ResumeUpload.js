@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
@@ -9,8 +9,12 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import Grid from '@mui/system/Grid'
 import { useDropzone } from "react-dropzone";
 import { useAuth0 } from "@auth0/auth0-react";
+import UploadedHistory from "./UploadedHistory";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { useTheme } from "../context/ThemeContext";
 
 const ResumeUpload = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -18,11 +22,15 @@ const ResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
+  const [showAlert, setShowAlert] = useState(true);
+  const [refreshHistory, setRefreshHistory] = useState(false);
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     handleFile(file);
-  }
+  };
 
   const handleFile = (file) => {
     if (file) {
@@ -39,6 +47,11 @@ const ResumeUpload = () => {
     }
   };
 
+  const handleCloseAlert = () => {
+        setErrorMessage(null);
+        setShowAlert(false);
+    };
+
   const handleDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       handleFile(acceptedFiles[0]);
@@ -47,8 +60,9 @@ const ResumeUpload = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [".docx"],
     },
     onDrop: handleDrop,
     maxFiles: 1,
@@ -69,39 +83,51 @@ const ResumeUpload = () => {
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await axios.post("http://localhost:8000/api/resume/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(progress);
-        },
-        timeout: 60000, // 60 second timeout
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/resume/upload",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(progress);
+          },
+          timeout: 60000, // 60 second timeout
+        }
+      );
 
       console.log("Upload response:", response.data);
 
-      if (response.data && response.data.status.toLowerCase() === "success") {
+      const the_status = response.data.status;
+      if (
+        response.data &&
+        (the_status.toLowerCase() === "success" ||
+          the_status.toLowerCase() === "saved")
+      ) {
         setUploadStatus("success");
         setFile(null);
         setUploadProgress(0);
-      } 
-      else if (response.data && (response.data.status.toLowerCase() === "updated")){
+        setRefreshHistory((prev) => !prev);
+        // reload resume dashboard
+      } else if (response.data && the_status.toLowerCase() === "updated") {
         setUploadStatus("updated");
         setFile(null);
         setUploadProgress(0);
-      } 
-      else if (response.data && (response.data.status.toLowerCase() === 'merged')){
+        setRefreshHistory((prev) => !prev);
+      } else if (response.data && the_status.toLowerCase() === "merged") {
         setUploadStatus("merged");
         setFile(null);
         setUploadProgress(0);
+        setRefreshHistory((prev) => !prev);
       } else {
         throw new Error(response.data?.message || "Upload failed");
       }
-    } 
-    catch (error) {
+    } catch (error) {
       console.error("Upload error:", error);
       setUploadStatus("error");
       setErrorMessage(
@@ -110,11 +136,25 @@ const ResumeUpload = () => {
           "Failed to upload resume. Please try again."
       );
     }
+    setShowAlert(true);
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, p: 3 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
+
+    <Box sx={{ maxWidth: "100%", mx: "auto", mt: 4, p: 2 }}>
+      <Grid container spacing={2}>
+        <Grid size={4}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          maxWidth: "80%",
+          mx: "auto",
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+        }}
+      >
+        <Grid container spacing={2}></Grid>
         <Typography variant="h5" gutterBottom>
           Upload Your Resume
         </Typography>
@@ -124,29 +164,36 @@ const ResumeUpload = () => {
           career history.
         </Typography>
 
-        <Box {...getRootProps()}
-          sx={{ mt: 2, mb: 3, p: 3,
+        <Box
+          {...getRootProps()}
+          sx={{
+            mt: 2,
+            mb: 3,
+            p: 3,
             border: "2px dashed grey",
             borderRadius: 1,
             textAlign: "center",
             cursor: "pointer",
+            backgroundColor: theme.palette.background.default,
             "&:hover": {
-              borderColor: "primary.main",
+              borderColor: theme.palette.primary.main,
+              backgroundColor: theme.palette.action.hover,
             },
-            ...(isDragActive && { borderColor: "primary.dark",
-            backgroundColor: (theme) => theme.palette.action.hover,
-            })
+            ...(isDragActive && {
+              borderColor: theme.palette.primary.dark,
+              backgroundColor: theme.palette.action.hover,
+            }),
           }}
         >
-
-          <input {...getInputProps()} 
-          id="resume-dropzone" /> 
-          <CloudUploadIcon sx={{ fontSize: 40, color: "action.active" }} />
+          <input {...getInputProps()} id="resume-dropzone" />
+          <CloudUploadIcon
+            sx={{ fontSize: 40, color: theme.palette.action.active }}
+          />
           <Typography variant="body2" color="text.secondary" mt={1}>
-          {isDragActive ? 
-          "Drop your resume here..." :
-          "Drag and drop your resume here, or click \"select file\" "}
-        </Typography>
+            {isDragActive
+              ? "Drop your resume here..."
+              : 'Drag and drop your resume here, or click "select file"'}
+          </Typography>
         </Box>
 
         <Box sx={{ mt: 2, mb: 3 }}>
@@ -193,26 +240,29 @@ const ResumeUpload = () => {
         )}
 
         {errorMessage && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {errorMessage}
           </Alert>
         )}
 
-        {uploadStatus === "updated" && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            We've detected a similar entry has already been uploaded. Your history has been successfully updated.
+        {uploadStatus === "updated" && showAlert && (
+          <Alert severity="info" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
+            We've detected a similar entry has already been uploaded. Your
+            history has been successfully updated.
           </Alert>
         )}
 
-        {uploadStatus === "merged" && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            We've detected a similar entry has already been uploaded. We've successfully merged them together!
+        {uploadStatus === "merged" && showAlert && (
+          <Alert severity="info" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
+            We've detected a similar entry has already been uploaded. We've
+            successfully merged them together!
           </Alert>
         )}
 
-        {uploadStatus === "success" && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Resume uploaded successfully! A new entry has been created, and your history has been saved.
+        {uploadStatus === "success" && showAlert && (
+          <Alert severity="success" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
+            Resume uploaded successfully! A new entry has been created, and your
+            history has been saved.
           </Alert>
         )}
 
@@ -226,6 +276,20 @@ const ResumeUpload = () => {
           {uploadStatus === "uploading" ? "Uploading..." : "Upload Resume"}
         </Button>
       </Paper>
+      </Grid>
+
+      {/* Resume History */}
+      <Grid size={8}>
+      <Paper
+        sx={{
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+        }}
+      >
+        <UploadedHistory triggerUploadRefresh={refreshHistory} />
+      </Paper>
+      </Grid>
+      </Grid>
     </Box>
   );
 };

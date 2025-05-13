@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ParticlesBackground from "./ParticlesBackground";
 import { useAuth0 } from "@auth0/auth0-react";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -180,6 +181,8 @@ const Register = () => {
 
   // Return JSX (HTML)
   return (
+    <>
+    <ParticlesBackground></ParticlesBackground>
     <Container maxWidth="xs">
       <LoginBox elevation={3}>
         <Typography component="h1" variant="h5">
@@ -371,6 +374,7 @@ const Register = () => {
           </Fade>
         </Modal>
     </Container>
+    </>
   );
 };
 

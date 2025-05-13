@@ -52,10 +52,14 @@ mongoose
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
+const skillRoutes = require("./routes/skills")
 const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const jobDescRoutes = require("./routes/job-desc");
 const resumeRoutes = require("./routes/resumeRoutes");
+const format = require("./routes/resumeFormat");
+const jobAdviceRoutes = require("./routes/job-advice");
+const userProfileRoutes = require("./routes/user-profile");
 
 // Routes
 app.get("/", (req, res) => {
@@ -74,11 +78,23 @@ app.use("/api/career-history", careerRoutes);
 // Education Routes
 app.use("/api/education", educationRoutes);
 
+// Skill Routes
+app.use("/api/skills", skillRoutes)
+
 // Job Description Routes
 app.use("/api/job-desc", jobDescRoutes);
 
+// Job Advice Routes
+app.use("/api/jobs", jobAdviceRoutes);
+
 // Resume Generation and Status Routes
 app.use("/api/resumes", resumeRoutes);
+
+// Resume 
+app.use("/api/format", format)
+
+// User Profile Routes
+app.use("/api/user-profile", userProfileRoutes);
 
 // Protected route example
 app.get("/protected", checkJwt, (req, res) => {
