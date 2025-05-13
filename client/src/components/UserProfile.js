@@ -234,8 +234,6 @@ const UserProfile  = () => {
         setError(null);
         setSuccessMessage(null);
     };
-
-    const handleChangeTheme = () => {};
     
     return (
         <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
@@ -287,7 +285,6 @@ const UserProfile  = () => {
                         Email
                         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
                             Primary: {email} <br></br>
-            
                         </Typography>
                         <IconButton 
                                 onClick={handleSetEmail}
@@ -327,42 +324,6 @@ const UserProfile  = () => {
                         </IconButton>
                     </Typography>
                 </Box>
-
-          <hr />
-          <Box>
-            <Typography variant="h6" color="textPrimary" gutterBottom>
-              Theme
-              <Typography
-                variant="subtitle1"
-                color="textSecondary"
-                gutterBottom
-              >
-                Light
-              </Typography>
-              <IconButton
-                onClick={handleChangeTheme}
-                sx={{
-                  mb: 1,
-                  position: "relative",
-                  float: "right",
-                  marginLeft: 80,
-                  marginTop: -8,
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": { backgroundColor: "primary.dark" },
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-            </Typography>
-          </Box>
-          <hr />
-          <Typography variant="h6" color="textPrimary" gutterBottom>
-            Language
-            <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-              English
-            </Typography>
-          </Typography>
         </Paper>
       </Box>
 

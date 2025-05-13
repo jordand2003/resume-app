@@ -134,6 +134,6 @@ router.post("/email", verifyJWT, extractUserId, async (req, res) => {
       return res.status(500).json({ status: "Failed"});
      }
   }
-});
+);
 
 module.exports = router;
