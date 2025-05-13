@@ -24,6 +24,7 @@ const Particle = ({ size, color, delay, x, y }) => (
       animationDelay: delay,
       "--move-x": x,
       "--move-y": y,
+      pointerEvents: "none"
     }}
   />
 );
@@ -114,6 +115,7 @@ const ParticlesBackground = () => {
         bottom: 0,
         overflow: "hidden",
         zIndex: 0,
+        pointerEvents: "none"
       }}
     >
       {particles.map((particle, index) => (

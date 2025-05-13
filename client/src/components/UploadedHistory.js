@@ -100,13 +100,11 @@ const ResumeContent = ({ content }) => {
               <Typography variant="body2" color="text.secondary">
                 {exp.Location} | {exp.Start_Date} – {exp.End_Date}
               </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.primary" sx={{ mt: 1 }}>
                 {exp.Responsibilities &&
                   exp.Responsibilities.map((r, i) => (
                     <ListItem key={i} sx={{ ml: 2 }}>
-                      <Typography variant="body2" color="text.primary">
-                        • {r}
-                      </Typography>
+                      • {r}
                     </ListItem>
                   ))}
               </Typography>
