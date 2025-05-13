@@ -52,7 +52,7 @@ mongoose
 // Import routes
 const authRoutes = require("./routes/auth");
 const careerRoutes = require("./routes/career-history");
-const skillRoutes = require("./routes/skills")
+const skillRoutes = require("./routes/skills");
 const resumeUploadRoutes = require("./routes/resume-upload");
 const educationRoutes = require("./routes/education");
 const jobDescRoutes = require("./routes/job-desc");
@@ -79,7 +79,7 @@ app.use("/api/career-history", careerRoutes);
 app.use("/api/education", educationRoutes);
 
 // Skill Routes
-app.use("/api/skills", skillRoutes)
+app.use("/api/skills", skillRoutes);
 
 // Job Description Routes
 app.use("/api/job-desc", jobDescRoutes);
@@ -90,8 +90,8 @@ app.use("/api/jobs", jobAdviceRoutes);
 // Resume Generation and Status Routes
 app.use("/api/resumes", resumeRoutes);
 
-// Resume 
-app.use("/api/format", format)
+// Resume
+app.use("/api/format", format);
 
 // User Profile Routes
 app.use("/api/user-profile", userProfileRoutes);
@@ -100,6 +100,17 @@ app.use("/api/user-profile", userProfileRoutes);
 app.get("/protected", checkJwt, (req, res) => {
   res.json({ message: "This is a protected route", user: req.auth });
 });
+
+// Serve static files in production
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  // Handle React routing, return all requests to React app
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
