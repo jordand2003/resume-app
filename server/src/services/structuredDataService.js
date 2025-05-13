@@ -94,7 +94,7 @@ const CareerHistorySchema = new mongoose.Schema({
   },
   Start_Date: {
     type: String,
-    required: true,
+    required: false,
   },
   End_Date: {
     type: String,
@@ -129,11 +129,11 @@ const EducationHistorySchema = new mongoose.Schema({
   },
   Start_Date: {
     type: String,
-    required: true,
+    required: false,
   },
   End_Date: {
     type: String,
-    required: true,
+    required: false,
   },
   GPA: {
     type: String,
