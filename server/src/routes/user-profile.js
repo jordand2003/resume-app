@@ -2,10 +2,116 @@ const express = require("express");
 const router = express.Router();
 const { verifyJWT, extractUserId } = require("../middleware/auth");
 const mongoose = require("mongoose");
-//const multer = require("multer");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const User = require('../models/Users');
 
 //allow user to set contact info(phone and email)
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [".png", ".jpg", ".jpeg"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only PNG and JPEG photos are allowed."));
+    }
+  },
+});
+
+router.post(
+  "/upload_photo",
+  verifyJWT,
+  extractUserId,
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+      const userId = req.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "No photo uploaded",
+        });
+      }
+
+      if (!userId) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "User ID not found",
+        });
+      }
+
+      // Convert the uploaded file to base64
+      const base64Photo = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+
+      // Update user's photo in the database
+      const updatedUser = await User.findOneAndUpdate(
+        { user_id: userId },
+        { $set: { photo: base64Photo } },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User not found",
+        });
+      }
+
+      return res.status(200).json({
+        status: "Success",
+        data: base64Photo,
+      });
+    } catch (error) {
+      console.error("Photo upload error:", error);
+      return res.status(500).json({
+        status: "Failed",
+        message: "Error uploading photo",
+      });
+    }
+  }
+);
+
+// Get user's photo
+router.get("/photo", verifyJWT, extractUserId, async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log("Fetching photo for user ID:", userId);
+
+    const user = await User.findOne({ user_id: userId });
+    console.log("User found:", user ? "Yes" : "No");
+
+    if (!user) {
+      console.log("User not found in database");
+      return res.status(404).json({
+        status: "Failed",
+        message: "User not found",
+      });
+    }
+
+    console.log("User photo exists:", user.photo ? "Yes" : "No");
+    return res.status(200).json({
+      status: "Success",
+      data: user.photo || null,
+    });
+  } catch (error) {
+    console.error("Error fetching photo:", error);
+    return res.status(500).json({
+      status: "Failed",
+      message: "Error fetching photo",
+    });
+  }
+});
 
 //GET API to retrieve phone number
 router.get("/phone", verifyJWT, extractUserId, async (req, res) => {

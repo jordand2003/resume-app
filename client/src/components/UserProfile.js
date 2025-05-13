@@ -36,7 +36,9 @@ const UserProfile  = () => {
     const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState("");
-    const [avatar, setAvatarUrl] = useState("");
+    const [avatarUrl, setAvatarUrl] = useState("");
+    const [uploadError, setUploadError] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
     const { darkMode } = useTheme();
@@ -52,6 +54,7 @@ const UserProfile  = () => {
         }
         fetchEmail();
         fetchPhoneNumber();
+        fetchProfilePhoto();
     }, [isAuthenticated, navigate])
 
     const handleMenuOpen = (event) => {
@@ -231,6 +234,67 @@ const UserProfile  = () => {
             setTempEmail("");
         }
     }
+
+    // Upload profile photo
+    async function handleAvatarUpload(event) {
+        handleMenuClose();
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append("photo", file);
+
+            try {
+                const token = await getAccessTokenSilently();
+                const response = await axios.post(
+                "http://localhost:8000/api/user-profile/upload_photo",
+                formData,
+                {
+                    headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                    },
+                }
+                );
+
+                if (response.data.status === "Success") {
+                setAvatarUrl(response.data.data);
+                setSuccessMessage("Profile photo updated successfully!");
+                setUploadError(null);
+                }
+            } catch (error) {
+                console.error("Error uploading photo:", error);
+                setUploadError("Failed to upload photo. Please try again.");
+            }
+        }
+   }
+   
+   //Display photo
+   const fetchProfilePhoto = async () => {
+      try {
+        console.log("Fetching profile photo for user:", user?.sub);
+        const token = await getAccessTokenSilently();
+        const response = await axios.get(
+          "http://localhost:8000/api/user-profile/photo",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Profile photo response:", response.data);
+        if (response.data.status === "Success" && response.data.data) {
+          console.log(
+            "Setting profile photo:",
+            response.data.data.substring(0, 50) + "..."
+          );
+          setAvatarUrl(response.data.data);
+        } else {
+          console.log("No profile photo found in response");
+        }
+      } catch (error) {
+        console.error("Error fetching profile photo:", error);
+      }
+    };
    
     const handleCloseAlert = () => {
         setError(null);
@@ -249,10 +313,24 @@ const UserProfile  = () => {
                     <Box sx={{ position: 'relative', mb: 2, display: "flex" }}> 
                         <Box sx={{ position: 'relative', mb: 2 }}>     
                             <Avatar
-                                alt={user.email}
-                                src={user?.photo}
-                                sx={{ fontSize: "50px", bgcolor: "#000000", width: 80, height: 80 }}
-                            >{user.name[0].toUpperCase()}</Avatar> 
+                                alt={user.name || user.email}
+                                src={avatarUrl || user?.picture}
+                                sx={{ width: 80, height: 80 }}
+                                />
+                                <IconButton
+                                    onClick={handleMenuOpen}
+                                    sx={{
+                                        mb: 1,
+                                        position: "absolute",
+                                        bottom: -10,
+                                        left: 50,
+                                        backgroundColor: "primary.main",
+                                        color: "white",
+                                        "&:hover": { backgroundColor: "primary.dark" },
+                                    }}
+                                    >
+                                <EditIcon />
+                                </IconButton>
                         </Box> 
                         
                         <Box sx={{ mb: 2, display: "flex", paddingLeft: 3}}>
@@ -267,8 +345,31 @@ const UserProfile  = () => {
                                 </Typography>
                             </Typography>
                         </Box>
-                        
                         </Box> 
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                            >
+                            <MenuItem onClick={handleUseAccountIcon}>
+                                Use Account Icon
+                            </MenuItem>
+                            <MenuItem>
+                                <label htmlFor="avatar-upload-input">
+                                Upload Photo
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    id="avatar-upload-input"
+                                    onChange={handleAvatarUpload}
+                                    style={{ display: "none" }}
+                                />
+                                </label>
+                            </MenuItem>
+                            </Menu>
+                            {uploadError && (
+                            <Typography color="error">{uploadError}</Typography>
+                            )}
                     </Box>   
                     {successMessage && (
                         <Alert variant="outlined" severity="success" onClose={handleCloseAlert} sx={{ mb: 2 }}>
