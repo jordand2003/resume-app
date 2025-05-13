@@ -20,6 +20,8 @@ import SchoolIcon from "@mui/icons-material/School";
 import EditIcon from "@mui/icons-material/Edit";
 import Chip from '@mui/material/Chip';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { useTheme } from "../context/ThemeContext";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
 
 const Dashboard = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -33,6 +35,8 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [skillError, setSkillError] = useState(false);
   const [skillErrorMsg, setSkillErrorMsg] = useState("");
+  const { darkMode } = useTheme();
+  const theme = useMuiTheme();
 
   useEffect(() => {
     fetchData();
@@ -214,7 +218,6 @@ const Dashboard = () => {
             justifyContent: 'center',
             alignItems: 'center',
             gap: 1.5,
-            backgroundColor: '#f0f0f0',
             p: '30px'
           }}>
             {skills.length > 0 && skills.map((s, index) => (
