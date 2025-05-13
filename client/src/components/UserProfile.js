@@ -64,11 +64,12 @@ const UserProfile  = () => {
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
-
+    
+    /*
     const handleUseAccountIcon = () => {
         setAvatarUrl(null); //Reset to default/Auth0 picture
         handleMenuClose();
-    };
+    };*/
 
     //Get Phone Number
     const fetchPhoneNumber = async () => {
@@ -352,9 +353,9 @@ const UserProfile  = () => {
                             open={Boolean(anchorEl)}
                             onClose={handleMenuClose}
                             >
-                            <MenuItem onClick={handleUseAccountIcon}>
+                            {/*<MenuItem onClick={handleUseAccountIcon}>
                                 Use Account Icon
-                            </MenuItem>
+                            </MenuItem>*/}
                             <MenuItem>
                                 <label htmlFor="avatar-upload-input">
                                 Upload Photo
