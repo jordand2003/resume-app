@@ -167,8 +167,8 @@ router.post("/pull_from_resumes", verifyJWT, extractUserId, async (req, res) => 
 router.delete("/:markedSkill", verifyJWT, extractUserId, async (req, res) => {
     try {
         const userId = req.userId;
-        const { markedSkill } = req.params;
-        console.log("Received " + markedSkill + " data for user");
+        const markedSkill = decodeURIComponent(req.params.markedSkill);
+        console.log("Attempting to remove skill:", markedSkill);
 
         // Check MongoDB connection
         const connectionState = mongoose.connection.readyState;
@@ -186,12 +186,21 @@ router.delete("/:markedSkill", verifyJWT, extractUserId, async (req, res) => {
             return res.status(400).json({ message: "There's no skill list associated with you" });
         }
 
-        // Update/Remove entry
-        await SkillList.findOneAndUpdate(
+        // Update/Remove entry using exact match
+        const result = await SkillList.findOneAndUpdate(
             { user_id: userId },
-            { $pull: { skills: markedSkill } }
+            { $pull: { skills: markedSkill } },
+            { new: true }
         );
-        return res.status(200).json({ message: "Removed skill" });
+
+        if (result.skills.length === skillList.skills.length) {
+            return res.status(404).json({ message: "Skill not found in list" });
+        }
+
+        return res.status(200).json({ 
+            message: "Removed skill",
+            removedSkill: markedSkill 
+        });
 
     } catch (error){
         console.error("Error deleting skill:", error);

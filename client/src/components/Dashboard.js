@@ -111,7 +111,7 @@ const Dashboard = () => {
   const handleDelete = async (skill) => {
     try {
       const token = await getAccessTokenSilently(); // Get token
-      const skillResponse = await axios.delete(`http://localhost:8000/api/skills/${skill}`, {
+      const skillResponse = await axios.delete(`http://localhost:8000/api/skills/${encodeURIComponent(skill)}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
