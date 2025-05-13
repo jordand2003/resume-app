@@ -375,7 +375,7 @@ const UploadedHistory = ({ triggerUploadRefresh }) => {
             color: theme.palette.text.primary,
           }}
         >
-          {!selectedResume && (
+          {!selectedResume && resumes.length !== 0 && (
             <Typography color="text.secondary">
               Tap a Resume to See Details
             </Typography>
