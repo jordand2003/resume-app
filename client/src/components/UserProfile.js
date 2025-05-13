@@ -35,6 +35,8 @@ const UserProfile  = () => {
     const [tempEmail, setTempEmail] = useState("");
     const [isPhoneNumberDialogOpen, setIsPhoneNumberDialogOpen] = useState(false);
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState("");
+    const [avatar, setAvatarUrl] = useState("");
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
     const { darkMode } = useTheme();
