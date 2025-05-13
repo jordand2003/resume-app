@@ -15,12 +15,11 @@ import {
   IconButton,
   Typography,
   TextField,
-  CircularProgress,
+  //CircularProgress,
   Menu,
   MenuItem,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import axios from "axios";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
@@ -38,7 +37,7 @@ const UserProfile  = () => {
     const [anchorEl, setAnchorEl] = useState("");
     const [avatarUrl, setAvatarUrl] = useState("");
     const [uploadError, setUploadError] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
+    //const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
     const { darkMode } = useTheme();
@@ -307,8 +306,8 @@ const UserProfile  = () => {
         <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
             <NavBar />
             <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
-            <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h5" gutterBottom>
+            <Paper elevation={3} sx={{ p: 3 }}> 
+                <Typography variant="h4" gutterBottom>
                    My Profile
                 </Typography>
                 <Box sx={{ position: 'relative', mb: 2 }}>

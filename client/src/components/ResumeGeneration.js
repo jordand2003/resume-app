@@ -509,6 +509,11 @@ const ResumeGeneration = () => {
     }
   };
 
+  const handleCloseAlert = () => {
+        setGeneratedMessage(null);
+        setErrorMessage(null);
+    };
+
   const handleJobChange = (event) => {
     setSelectedJobId(event.target.value);
   };
@@ -792,7 +797,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
           )}
 
           {errorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert variant="outlined" onClose={handleCloseAlert} severity="error" sx={{ mb: 2 }}>
               {errorMessage}
             </Alert>
           )}
@@ -837,7 +842,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               <StatusChecker resumeId={resumeId} />
 
               {generationStatus === "success" && generatedMessage && (
-                <Alert severity="info" sx={{ mt: 2 }}>
+                <Alert severity="info" sx={{ mt: 2 }} variant="outlined" onClose={handleCloseAlert}>
                   {generatedMessage} - Resume ID: {resumeId}
                   <Typography variant="body2" color="text.secondary">
                     You can check the generation status using the Resume ID.
@@ -846,7 +851,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               )}
 
               {generationStatus === "error" && errorMessage && (
-                <Alert severity="error" sx={{ mt: 2 }}>
+                <Alert severity="error" sx={{ mt: 2 }}variant="outlined" onClose={handleCloseAlert}>
                   {errorMessage}
                 </Alert>
               )}

@@ -99,13 +99,18 @@ const Dashboard = () => {
   }
 
   if (error) {
-    return <Alert severity="error">{error}</Alert>;
+    return <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>{error}</Alert>;
   }
 
   // Opens textbox
   const addSkill = () => {
     setIsAddingSkill(true)
   }
+
+  const handleCloseAlert = () => {
+        setError(null);
+        setSkillErrorMsg(null);
+  };
 
   // Handles the removal of skill chips
   const handleDelete = async (skill) => {
@@ -245,7 +250,7 @@ const Dashboard = () => {
                 sx={{ textAlign: "center", fontWeight: 'bold', color:'#636363', padding:'16px'}}
               >Add in your skills!</Typography>)}
             {/* Error msg for skills */ skillError && (
-              <Alert severity="error">{skillErrorMsg}</Alert>
+              <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>{skillErrorMsg}</Alert>
             )}
         </Box>
       </Paper>

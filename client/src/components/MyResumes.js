@@ -244,6 +244,11 @@ const MyResumes = () => {
     setAdvice(null);
   };
 
+  const handleCloseAlert = () => {
+        setError(null);
+        setAdviceError(null);
+    };
+
   const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
       const token = await getAccessTokenSilently();
@@ -341,7 +346,7 @@ const MyResumes = () => {
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h4" gutterBottom>
             My Resumes
           </Typography>
 
@@ -352,7 +357,7 @@ const MyResumes = () => {
           )}
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
@@ -607,7 +612,7 @@ const MyResumes = () => {
           Advice for {job} at {company}
         </DialogTitle>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
@@ -623,7 +628,7 @@ const MyResumes = () => {
           )}
         </DialogContent>
         {adviceError && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {adviceError}
           </Alert>
         )}
