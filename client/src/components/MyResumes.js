@@ -25,9 +25,13 @@ import {
   MenuItem,
 } from "@mui/material";
 import NavBar from "./NavBar";
-import PlaceholderImg from "../Blank-Resume-Template.jpg";
+import BasicImg from "../basic.png";
+import BasicIntrImg from "../basic_interactive.png";
+import ModernImg from "../modern.png";
+import SplitImg from "../split.png";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import Markdown from 'markdown-to-jsx';
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -125,25 +129,25 @@ const MyResumes = () => {
     {
       id: 1,
       title: "Basic",
-      image: PlaceholderImg,
+      image: BasicImg,
       formattedTitle: "basic",
     },
     {
       id: 2,
       title: "Basic Interative",
-      image: PlaceholderImg,
+      image: BasicIntrImg,
       formattedTitle: "basic_interactive",
     },
     {
       id: 3,
       title: "Modern",
-      image: PlaceholderImg,
+      image: ModernImg,
       formattedTitle: "modern",
     },
     {
       id: 4,
       title: "Split",
-      image: PlaceholderImg,
+      image: SplitImg,
       formattedTitle: "split",
     },
   ];
@@ -240,10 +244,15 @@ const MyResumes = () => {
     setAdvice(null);
   };
 
+  const handleCloseAlert = () => {
+        setError(null);
+        setAdviceError(null);
+    };
+
   const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
       const token = await getAccessTokenSilently();
-      let template = "split";
+      let template = "basic";
       if (template_ind != -1) {
         template = templates[template_ind].formattedTitle;
         console.log(template);
@@ -337,7 +346,7 @@ const MyResumes = () => {
       <NavBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h4" gutterBottom>
             My Resumes
           </Typography>
 
@@ -348,7 +357,7 @@ const MyResumes = () => {
           )}
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
@@ -422,7 +431,7 @@ const MyResumes = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth={false} // changed to false
+        maxWidth='md' // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -434,9 +443,23 @@ const MyResumes = () => {
         <DialogContent dividers>
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
-              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              selectedIndex === 0 ? (
+              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 3, background: "white", color: "black", borderRadius: 2}}>
+                <div style={{
+                  margin: 0, 
+                  padding: 0, 
+                  lineHeight: '1.5', 
+                }} 
+                dangerouslySetInnerHTML={{ __html: formattedResume }} />
+              </pre>
+              ) : selectedIndex === 1 ? (
+                <Markdown>{formattedResume}</Markdown>
+                
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {formattedResume}
               </pre>
+              )
             ) : (
               selectedResume && (
                 <ResumeContent content={selectedResume.content} />
@@ -589,7 +612,7 @@ const MyResumes = () => {
           Advice for {job} at {company}
         </DialogTitle>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
@@ -598,14 +621,14 @@ const MyResumes = () => {
             <Typography>Loading advice...</Typography>
           ) : advice ? (
             <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
-              {advice}
+              <Markdown>{advice}</Markdown>
             </pre>
           ) : (
             <Typography>No advice available.</Typography>
           )}
         </DialogContent>
         {adviceError && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {adviceError}
           </Alert>
         )}

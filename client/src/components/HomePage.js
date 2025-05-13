@@ -130,6 +130,7 @@ const HomePage = () => {
         backgroundColor: theme.palette.background.default,
       }}
     >
+      <ParticlesBackground />
       <NavBar />
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Typography

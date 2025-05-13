@@ -22,6 +22,7 @@ const ResumeUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("idle"); // 'idle', 'uploading', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState("");
+  const [showAlert, setShowAlert] = useState(true);
   const [refreshHistory, setRefreshHistory] = useState(false);
   const { darkMode } = useTheme();
   const theme = useMuiTheme();
@@ -45,6 +46,11 @@ const ResumeUpload = () => {
       setErrorMessage("");
     }
   };
+
+  const handleCloseAlert = () => {
+        setErrorMessage(null);
+        setShowAlert(false);
+    };
 
   const handleDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -130,6 +136,7 @@ const ResumeUpload = () => {
           "Failed to upload resume. Please try again."
       );
     }
+    setShowAlert(true);
   };
 
   return (
@@ -233,27 +240,27 @@ const ResumeUpload = () => {
         )}
 
         {errorMessage && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
             {errorMessage}
           </Alert>
         )}
 
-        {uploadStatus === "updated" && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+        {uploadStatus === "updated" && showAlert && (
+          <Alert severity="info" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
             We've detected a similar entry has already been uploaded. Your
             history has been successfully updated.
           </Alert>
         )}
 
-        {uploadStatus === "merged" && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+        {uploadStatus === "merged" && showAlert && (
+          <Alert severity="info" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
             We've detected a similar entry has already been uploaded. We've
             successfully merged them together!
           </Alert>
         )}
 
-        {uploadStatus === "success" && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+        {uploadStatus === "success" && showAlert && (
+          <Alert severity="success" sx={{ mb: 2 }} variant="outlined" onClose={handleCloseAlert}>
             Resume uploaded successfully! A new entry has been created, and your
             history has been saved.
           </Alert>

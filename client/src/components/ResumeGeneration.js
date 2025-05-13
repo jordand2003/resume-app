@@ -509,6 +509,11 @@ const ResumeGeneration = () => {
     }
   };
 
+  const handleCloseAlert = () => {
+        setGeneratedMessage(null);
+        setErrorMessage(null);
+    };
+
   const handleJobChange = (event) => {
     setSelectedJobId(event.target.value);
   };
@@ -670,8 +675,8 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
     >
       <NavBar />
       {/** Initial Toggle Menu */}
-      <Typography variant="h4" gutterBottom>Generate Your Resume</Typography>
-      <FormControl sx={{p: "50px"}}>
+      <Typography variant="h4" sx={{ mt: 4, ml: 4 }}>Generate Your Resume</Typography>
+      <FormControl sx={{p: "2%"}}>
         <FormLabel id="demo-radio-buttons-group-label">How would you like to generate your resume?</FormLabel>
         <RadioGroup
           row
@@ -725,7 +730,6 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                     justifyContent: "center",
                     alignItems: "center",
                     gap: 1.5,
-                    backgroundColor: "#f0f0f0",
                     p: "30px",
                   }}
                 >
@@ -736,8 +740,8 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
                         label={s}
                         variant="outlined"
                         sx={{
-                          color: selectedSkills.has(s) ? "white" : "inherit",
-                          background: selectedSkills.has(s) ? "#6495ED" : "default",
+                          color:'white', 
+                          background:'#6495ED',
                           borderColor: "#6495ED",
                         }}
                         onClick={() => handleSkillClick(s)}
@@ -793,7 +797,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
           )}
 
           {errorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert variant="outlined" onClose={handleCloseAlert} severity="error" sx={{ mb: 2 }}>
               {errorMessage}
             </Alert>
           )}
@@ -838,7 +842,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               <StatusChecker resumeId={resumeId} />
 
               {generationStatus === "success" && generatedMessage && (
-                <Alert severity="info" sx={{ mt: 2 }}>
+                <Alert severity="info" sx={{ mt: 2 }} variant="outlined" onClose={handleCloseAlert}>
                   {generatedMessage} - Resume ID: {resumeId}
                   <Typography variant="body2" color="text.secondary">
                     You can check the generation status using the Resume ID.
@@ -847,7 +851,7 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
               )}
 
               {generationStatus === "error" && errorMessage && (
-                <Alert severity="error" sx={{ mt: 2 }}>
+                <Alert severity="error" sx={{ mt: 2 }}variant="outlined" onClose={handleCloseAlert}>
                   {errorMessage}
                 </Alert>
               )}

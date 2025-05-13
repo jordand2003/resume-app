@@ -88,14 +88,21 @@ const resumeUpload = async (file) => {
 
 /** Convert resume details stored in a DOCX files into String*/
 function docx2Text(fbuffer) {
-  // Processing message + JSON
-
+  const delimiter = '\n|----|\n';
+  
   // Convert into pure text data
   return mammoth
     .extractRawText({ buffer: fbuffer })
     .then((result) => {
       let pure_text = result.value;
-      return pure_text;
+      
+      // Split on lines and large whitespace gaps
+      let chunks = pure_text
+        .split(/\n|\s{2,}/g)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      return chunks.join(delimiter);
     })
     .catch((err) => {
       console.error("Error processing the DOCX file:");
@@ -127,8 +134,8 @@ function pdf2Text(fbuffer) {
 async function parse(ai, resume_text) {
   try {
     console.log(
-      "Starting Gemini AI parsing with text length:",
-      resume_text.length
+      "Starting Gemini AI parsing:",
+      //resume_text.length
     );
 
     // Get the model
@@ -136,7 +143,7 @@ async function parse(ai, resume_text) {
 
     // Prepare the prompt
     const prompt =
-      "Extract the following information from this resume text and return as JSON: {" +
+      "Extract the following information from this resume text and return as JSON. Be careful, the formatting and ordering might be slightly off because the text comes from a parsed file: {" +
       "'education':[ {'Institute': }, {'Location': }, {'Degree': }, {'Major': }, {'Start_Date': }, {'End_Date': }, {'GPA':}, {'RelevantCoursework': }, {'other': }], " +
       "'work_experience':[ {'Job_Title(s)': }, {'Company': }, {'Location': }, {'Start_Date': }, {'End_Date': }, {'Responsibilities': }]," +
       "} Resume Text: " +
@@ -153,7 +160,6 @@ async function parse(ai, resume_text) {
     const response = await result.response;
     const text = response.text();
 
-    //console.log("Gemini AI response received:", text);
     console.log("Gemini AI response received:");
     return text;
   } catch (error) {

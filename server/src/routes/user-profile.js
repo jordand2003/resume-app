@@ -5,11 +5,9 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const User = require("../models/Users");
+const User = require('../models/Users');
 
-//allow user to upload profile photo, set contact info(phone and secondary email)
-//maybe use google/github photo if signed in with OAuth
-
+//allow user to set contact info(phone and email)
 const storage = multer.memoryStorage();
 
 const upload = multer({
@@ -120,31 +118,38 @@ router.get("/phone", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId; //Oauth id
 
-    // Check MongoDB connection
-    //const connectionState = mongoose.connection.readyState;
-    //console.log("MongoDB connection state:", connectionState);
-
-    const user = await User.findOne({ user_id: userId }); //this ID matches Oauth ID in db
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ status: "Failed", message: "User not found" });
+        // Check MongoDB connection
+        //const connectionState = mongoose.connection.readyState;
+        //console.log("MongoDB connection state:", connectionState);
+        
+        const user = await User.findOne({user_id: userId}); //this ID matches Oauth ID in db
+        
+        if (!user) {
+            return res.status(404).json({ 
+              status: "Failed", 
+              message: "User not found" });
+        }
+        
+        const phoneNumber = user.phone; //found
+        if (phoneNumber){
+            return res.status(200||304).json({ 
+              status: "Success", 
+              phoneNumber });
+        }
+        else {
+            const phoneNumber = "";
+            return res.status(204).json({
+              status: "Success", 
+              message: "No phone exists.", 
+              phoneNumber}); //what if null??
+        }
+        
+       }
+       catch(error){
+        console.error("Cant get phone number.", error);
+       }
     }
-
-    const phoneNumber = user.phone; //found
-    if (phoneNumber) {
-      return res.status(200 || 304).json({ status: "Success", phoneNumber });
-    } else {
-      const phoneNumber = "";
-      return res
-        .status(204)
-        .json({ status: "Success", message: "No phone exists.", phoneNumber });
-    }
-  } catch (error) {
-    console.error("Cant get phone number.", error);
-  }
-});
+);
 
 //POST API to retrieve phone number
 router.post("/phone", verifyJWT, extractUserId, async (req, res) => {
@@ -180,51 +185,45 @@ router.post("/phone", verifyJWT, extractUserId, async (req, res) => {
   }
 });
 
-//GET API to retrieve secondary email
-router.get("/email2", verifyJWT, extractUserId, async (req, res) => {
+//GET API to retrieve primary email
+router.get("/email", verifyJWT, extractUserId, async (req, res) => {
   try {
     const userId = req.userId; //Oauth id
 
-    // Check MongoDB connection
-    //const connectionState = mongoose.connection.readyState;
-    //console.log("MongoDB connection state:", connectionState);
+      // Check MongoDB connection
+      const connectionState = mongoose.connection.readyState;
+      //console.log("MongoDB connection state:", connectionState);
 
-    const user = await User.findOne({ user_id: userId }); //this ID matches Oauth ID in db
-    if (!user) {
-      return res
-        .status(404)
-        .json({ status: "Failed", message: "User not found" });
-    }
+      const user = await User.findOne({user_id: userId}); //this ID matches Oauth ID in db
+      
+      if (!user) {
+        console.log("invalid user!")
+        return res.status(404).json({ status: "Failed", message: "User not found" });
+      }
+      const primaryEmail = user.email;
 
-    const secondaryEmail = user.email_2;
+      if (primaryEmail){   
+        return res.status(200).json({ status: "Success", primaryEmail })
+      }
 
-    if (secondaryEmail) {
-      return res.status(200).json({ status: "Success", secondaryEmail });
-    } else {
-      secondaryEmail = "";
-      return res.status(204).json({
-        status: "Success",
-        message: "Second email does not exists.",
-        secondaryEmail,
-      });
-    }
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ status: "Failed", message: "Cant get second email." });
+     }
+     catch(error){
+      console.log("error: ", error);
+      return; //res.status(500).json({ status: "Failed", message: "Cant get email."});
+     }
   }
-});
+);
 
-//POST API to set secondary email
-router.post("/email2", verifyJWT, extractUserId, async (req, res) => {
+//POST API to set primary email
+router.post("/email", verifyJWT, extractUserId, async (req, res) => {
   try {
-    const userId = req.userId; //Oauth ID
-    const { email_2: secondaryEmail } = req.body; //get email_2 set to
-    const updatedUser = await User.findOneAndUpdate(
-      { user_id: userId },
-      { $set: { email_2: secondaryEmail } },
-      { new: true, upsert: false }
-    );
+      const userId = req.userId; //Oauth ID
+      const { email: primaryEmail } = req.body;
+      const updatedUser = await User.findOneAndUpdate(
+        { user_id: userId },
+        { $set: { email: primaryEmail } },
+        { new: true, upsert: false }
+      );
 
     if (!updatedUser) {
       return res
@@ -232,19 +231,15 @@ router.post("/email2", verifyJWT, extractUserId, async (req, res) => {
         .json({ status: "Failed", message: "Could not update." });
     }
 
-    return !secondaryEmail
-      ? res
-          .status(400)
-          .json({ status: "Failed", message: "No secondary email entered." })
-      : res.status(200).json({
-          status: "Success",
-          message: "Email updated successfully.",
-          user: updatedUser,
-        });
-  } catch (error) {
-    console.error("Cannot update secondary email:", error);
-    return res.status(500).json({ status: "Failed" });
+      return !primaryEmail
+          ? res.status(400).json({ status: "Failed", message: "No email entered."})
+          : res.status(200).json({ status: "Success", message: "Email updated successfully.", user: updatedUser });
+     }
+     catch (error) {
+      console.error("Cannot update primary email:", error);
+      return res.status(500).json({ status: "Failed"});
+     }
   }
-});
+);
 
 module.exports = router;
