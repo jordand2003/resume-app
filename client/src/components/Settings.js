@@ -16,14 +16,24 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import NavBar from "./NavBar";
 import { useTheme } from "../context/ThemeContext";
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const Settings = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState("en");
   const { darkMode, toggleDarkMode } = useTheme();
+  const [useSystemPref, setUseSystemPref] = useState(false);
 
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
+  };
+
+  const toggleUseSystemPref = () => {
+    setUseSystemPref(!useSystemPref);
+    if (!useSystemPref) {
+      const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      toggleDarkMode(systemPref);
+    }
   };
 
   return (
@@ -74,9 +84,20 @@ const Settings = () => {
                   checked={darkMode}
                   onChange={toggleDarkMode}
                   name="darkMode"
+                  disabled={useSystemPref}
                 />
               }
               label="Dark Mode"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useSystemPref}
+                  onChange={toggleUseSystemPref}
+                  name="systemPref"
+                />
+              }
+              label="Use System Preferences"
             />
           </Box>
         </Paper>
