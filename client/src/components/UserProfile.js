@@ -40,6 +40,8 @@ const UserProfile  = () => {
     //const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
+    const [isNameMenuOpen,setIsNameMenuOpen] = useState(false)
+    const [tempName, setTempName] = useState("");
     const { darkMode } = useTheme();
     const theme = useMuiTheme();
 
@@ -152,6 +154,39 @@ const UserProfile  = () => {
       setTempPhoneNumber("");
     }
   };
+
+    const handleNameChange = async (event) => {
+    const newName = event.target.value;
+    setTempName(newName); 
+    };
+
+    const handleSaveName = async () => {
+    setIsNameMenuOpen(false);
+    
+    if (!tempName || tempName.trim() === '') {
+        setError("Name cannot be empty!");
+        return;
+    }
+
+    try {
+        const token = await getAccessTokenSilently();
+        const response = await axios.post("http://localhost:8000/api/auth/updateName",
+            { userId: user.sub, newName: tempName},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        if (response.status === 200) {
+            setSuccessMessage("Name updated successfully!");
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error("Error updating name:", error);
+        setError("Failed to update name. Please try again.");
+    }
+    };
 
      //Get Email
      const fetchEmail = async () => {
@@ -301,9 +336,18 @@ const UserProfile  = () => {
         setSuccessMessage(null);
         setUploadError(null);
     };
+
+    const handleNameMenu = () => {
+        setIsNameMenuOpen(true)
+    }
+    const handleCloseNameMenu = () => {
+        setIsNameMenuOpen(false);
+        setTempName("");
+        setError(null);
+    }
     
     return (
-        <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f6fa" }}>
+        <Box sx={{ minHeight: "100vh", backgroundColor: theme.palette.background.default}}>
             <NavBar />
             <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
             <Paper elevation={3} sx={{ p: 3 }}> 
@@ -337,6 +381,20 @@ const UserProfile  = () => {
                         <Box sx={{ mb: 2, display: "flex", paddingLeft: 3}}>
                             <Typography variant="h6" gutterBottom>
                                 {user.name}
+                                <IconButton
+                                    onClick={handleNameMenu}
+                                    sx={{
+                                        ml: 1.5,
+                                        width: 25,
+                                        height: 25,
+                                        bottom: 6,
+                                        backgroundColor: "primary.main",
+                                        color: "white",
+                                        "&:hover": { backgroundColor: "primary.dark" },
+                                    }}
+                                    >
+                                <EditIcon sx={{width: "15px", height: "15px"}}/>
+                                </IconButton>
                                 <Typography variant="body2" gutterBottom>
                                     User ID: {user.sub}
                                     {user.email_verified && (
@@ -475,6 +533,29 @@ const UserProfile  = () => {
           <Button onClick={handleSavePhone} color="primary">
             Save
           </Button>
+        </DialogActions>
+      </Dialog>
+
+
+      <Dialog open={isNameMenuOpen} onClose={handleCloseNameMenu}>
+        <DialogTitle>Update Full Name</DialogTitle>
+        <DialogContent>
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Full Name"
+            fullWidth
+            variant="outlined"
+            onChange={handleNameChange}
+            value={tempName}
+            />
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleCloseNameMenu}>Cancel</Button>
+            <Button onClick={handleSaveName} color="primary">
+            Save
+            </Button>
         </DialogActions>
       </Dialog>
     </Box>
