@@ -9,9 +9,20 @@ require("dotenv").config();
 
 const app = express();
 
+// CORS configuration for production and development
+const corsOptions = {
+  origin: [
+    "http://localhost:3000", // Local development
+    "https://*.vercel.app", // Vercel preview deployments
+    process.env.FRONTEND_URL, // Your custom domain (if any)
+  ].filter(Boolean),
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
@@ -100,17 +111,6 @@ app.use("/api/user-profile", userProfileRoutes);
 app.get("/protected", checkJwt, (req, res) => {
   res.json({ message: "This is a protected route", user: req.auth });
 });
-
-// Serve static files in production
-if (process.env.NODE_ENV === "production") {
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, "../client/build")));
-
-  // Handle React routing, return all requests to React app
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
-  });
-}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
