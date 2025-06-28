@@ -10,12 +10,33 @@ require("dotenv").config();
 const app = express();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:3000", // Local development
-    "https://resume-daqlzk9n1-jordans-projects-4d5192fc.vercel.app", // deployed Vercel app
-    "https://*.vercel.app", // All Vercel domains
-    "https://*.railway.app", // All Railway domains
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      "http://localhost:3000", // Local development
+      "https://resume-daqlzk9n1-jordans-projects-4d5192fc.vercel.app", // old Vercel app
+      "https://resume-2iu9kolxj-jordans-projects-4d5192fc.vercel.app", // new Vercel app
+    ];
+
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel domains
+    if (origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+
+    // Allow Railway domains
+    if (origin.endsWith(".railway.app")) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 };
