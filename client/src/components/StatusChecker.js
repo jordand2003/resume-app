@@ -4,7 +4,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Stack, CircularProgress, Typography, Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { green } from "@mui/material/colors";
-
+import { createApiUrl } from "../config/api";
 
 const StatusChecker = ({ resumeId: propResumeId }) => {
   const { getAccessTokenSilently } = useAuth0();
@@ -56,9 +56,9 @@ const StatusChecker = ({ resumeId: propResumeId }) => {
     try {
       const token = await getAccessTokenSilently();
       const response = await axios.get(
-        `http://localhost:8000/api/resumes/status/${currentResumeId}`,
+        `${createApiUrl(`api/resumes/status/${currentResumeId}`)}`,
         {
-          headers: { Authorization: `Bearer ${token}` },    
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 

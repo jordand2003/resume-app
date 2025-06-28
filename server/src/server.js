@@ -18,6 +18,8 @@ const corsOptions = {
       "http://localhost:3000", // Local development
       "https://resume-daqlzk9n1-jordans-projects-4d5192fc.vercel.app", // old Vercel app
       "https://resume-2iu9kolxj-jordans-projects-4d5192fc.vercel.app", // new Vercel app
+      "https://lighthouse-jordand2003.vercel.app", // current Vercel app
+      "https://resume-app.vercel.app", // Custom domain (replace with your actual domain)
     ];
 
     // Check if origin is in allowed list

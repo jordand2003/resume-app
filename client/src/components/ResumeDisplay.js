@@ -11,13 +11,14 @@ import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
+import { createApiUrl } from "../config/api";
 
 const ResumeDisplay = () => {
   const { getAccessTokenSilently } = useAuth0();
   const { resumeId } = useParams();
   const navigate = useNavigate();
   const [resumeContent, setResumeContent] = useState(null);
-  const [status, setStatus] = useState("loading"); 
+  const [status, setStatus] = useState("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -28,7 +29,7 @@ const ResumeDisplay = () => {
       try {
         const token = await getAccessTokenSilently();
         const response = await axios.get(
-          `http://localhost:8000/api/resumes/status/${resumeId}`,
+          `${createApiUrl(`api/resumes/status/${resumeId}`)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -36,8 +37,7 @@ const ResumeDisplay = () => {
           }
         );
 
-        console.log("Status updated: data not loading ", response.data); 
-        
+        console.log("Status updated: data not loading ", response.data);
 
         if (response.data && !updatesCancelled) {
           setStatus(response.data.status.toLowerCase());
@@ -45,26 +45,24 @@ const ResumeDisplay = () => {
           if (response.data.status.toLowerCase() === "completed") {
             setResumeContent(response.data.content);
             clearInterval(intervalId);
-          } 
-          else if (response.data.status.toLowerCase() === "failed") {
+          } else if (response.data.status.toLowerCase() === "failed") {
             setErrorMessage("Failed to generate resume.");
             setStatus("error");
-            clearInterval(intervalId); 
+            clearInterval(intervalId);
           }
-        } 
-        else {
+        } else {
           setErrorMessage("Failed to fetch resume status.");
           setStatus("error");
           clearInterval(intervalId);
         }
-      } 
-      catch (error) {
-        if (updatesCancelled){
+      } catch (error) {
+        if (updatesCancelled) {
           console.error("Error fetching resume status:", error);
           setErrorMessage(
             error.response?.data?.error ||
               error.message ||
-              "Failed to fetch resume status.");
+              "Failed to fetch resume status."
+          );
           setStatus("error");
           clearInterval(intervalId);
         }
@@ -81,14 +79,11 @@ const ResumeDisplay = () => {
       }
     }, 5000);
 
-    return () => { 
-      clearInterval(intervalId); 
+    return () => {
+      clearInterval(intervalId);
       updatesCancelled = true;
     };
-  },
-
-    [getAccessTokenSilently, resumeId, navigate]);
-
+  }, [getAccessTokenSilently, resumeId, navigate]);
 
   const handleGoBack = () => {
     navigate("/resumeRoutes"); // Go back to resume gen page
@@ -96,7 +91,7 @@ const ResumeDisplay = () => {
 
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", mt: 4, p: 3 }}>
-        <NavBar />
+      <NavBar />
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Generated Resume
@@ -105,7 +100,9 @@ const ResumeDisplay = () => {
         {status === "loading" && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
             <CircularProgress />
-            <Typography sx={{ ml: 2 }}>Checking resume generation status...</Typography>
+            <Typography sx={{ ml: 2 }}>
+              Checking resume generation status...
+            </Typography>
           </Box>
         )}
 

@@ -33,6 +33,7 @@ import LogoLight from "../../src/light-mode-logo.png";
 import LogoDark from "../../src/dark-mode-logo.png";
 import axios from "axios";
 import { useTheme } from "../context/ThemeContext";
+import { createApiUrl } from "../config/api";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ const NavBar = () => {
         console.log("Fetching profile photo for user:", user?.sub);
         const token = await getAccessTokenSilently();
         const response = await axios.get(
-          "http://localhost:8000/api/user-profile/photo",
+          createApiUrl("api/user-profile/photo"),
           {
             headers: {
               Authorization: `Bearer ${token}`,
