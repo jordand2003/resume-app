@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" />;
   }
 
-  // Allow social logins (GitHub, Google) even if email_verified is false
+  // Only require email verification for non-social logins
   const isSocial =
     user?.sub &&
     (user.sub.startsWith("github|") || user.sub.startsWith("google-oauth2|"));

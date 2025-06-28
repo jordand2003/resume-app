@@ -265,8 +265,11 @@ const LandingPage = () => {
     logout({ returnTo: window.location.origin });
   };
 
-  // If user hasn't been logouted & they still require verification, this runs
-  if (isAuthenticated && !user?.email_verified) {
+  const isSocial =
+    user?.sub &&
+    (user.sub.startsWith("github|") || user.sub.startsWith("google-oauth2|"));
+
+  if (isAuthenticated && !isSocial && !user?.email_verified) {
     return (
       <BackgroundContainer>
         <ParticlesBackground />
