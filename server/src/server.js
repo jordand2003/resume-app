@@ -9,13 +9,11 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS configuration for production and development
 const corsOptions = {
   origin: [
     "http://localhost:3000", // Local development
-    "https://*.vercel.app", // Vercel preview deployments
-    process.env.FRONTEND_URL, // Your custom domain (if any)
-  ].filter(Boolean),
+    "https://resume-daqlzk9n1-jordans-projects-4d5192fc.vercel.app", // deployed Vercel app
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
 };
