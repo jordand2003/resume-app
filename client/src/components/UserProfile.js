@@ -115,23 +115,25 @@ const UserProfile  = () => {
     const handleSavePhone = async () => {
         setIsPhoneNumberDialogOpen(false);
 
+        if (!phoneRegex.test(tempPhoneNumber)) {
+            setError("Phone number must contain digits only.");
+            return;
+        } 
         if (tempPhoneNumber.length !== 10 ){
             setError("Phone number must  be 10 digits.");
             return;
         }
-        else if (phoneRegex.test(tempPhoneNumber)){
-            setPhoneNumber(tempPhoneNumber);
-        } 
-        else {
-            setError("Phone number must be 10 digits.");
-            return;
-        }
-
+        // Without this variable, the format is not applied to phone number for whatever reason
+        const formattedPhone = `(${tempPhoneNumber.slice(0, 3)}) ${tempPhoneNumber.slice(3, 6)} ${tempPhoneNumber.slice(6)}`;
+        setPhoneNumber(formattedPhone);
+        console.log(formattedPhone);
+        if (error)
+            setError(null);
     try {
       const token = await getAccessTokenSilently();
       const response = await axios.post(
         "http://localhost:8000/api/user-profile/phone",
-        { phone: tempPhoneNumber },
+        { phone: formattedPhone },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -226,20 +228,27 @@ const UserProfile  = () => {
         setIsEmailDialogOpen(false);
         console.log("temp: ", tempEmail);
         if (tempEmail === email){
+            if (error)
+                setError(null);
             setSuccessMessage("Email is the same.");
             return;
         }
         if (tempEmail === ''){
+            if (successMessage)
+                setSuccessMessage(null);
             setError("Email cannot be empty!");
             return;
         }
         if (!emailRegex.test(tempEmail)) { // Check for valid Email syntax
+            if (successMessage)
+                setSuccessMessage(null);
             setError("Incorrect format, please try username@domain.tld");
             return;    
         }
-        else {
-            setEmail(tempEmail);
-        }
+        
+        setEmail(tempEmail);
+        if (error)
+            setError(null);
 
         try {
             const token = await getAccessTokenSilently();
@@ -381,7 +390,7 @@ const UserProfile  = () => {
                         <Box sx={{ mb: 2, display: "flex", paddingLeft: 3}}>
                             <Typography variant="h6" gutterBottom>
                                 {user.name}
-                                <IconButton
+                                {/*<IconButton
                                     onClick={handleNameMenu}
                                     sx={{
                                         ml: 1.5,
@@ -394,7 +403,7 @@ const UserProfile  = () => {
                                     }}
                                     >
                                 <EditIcon sx={{width: "15px", height: "15px"}}/>
-                                </IconButton>
+                                </IconButton>*/}
                                 <Typography variant="body2" gutterBottom>
                                     User ID: {user.sub}
                                     {user.email_verified && (

@@ -101,7 +101,7 @@ const ChecklistSelect = ({ checklist_name, full_content, indexDisplayFunction, r
           )}
 
           {/* List selection options to the left side (created dynamically) */}
-          <FormGroup>
+          <FormGroup sx={{maxHeight: "650px", overflow: "auto"}}>
             {indexDisplayFunction && renderedIndexList} {/* Render the result here */}
           </FormGroup>
         </Paper>

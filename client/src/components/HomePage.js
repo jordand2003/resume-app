@@ -130,9 +130,8 @@ const HomePage = () => {
         backgroundColor: theme.palette.background.default,
       }}
     >
-      <ParticlesBackground />
       <NavBar />
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4}}>
         <Typography
           variant="h4"
           component="h1"
@@ -165,6 +164,7 @@ const HomePage = () => {
         {currentTab === 0 && <Dashboard />}
         {currentTab === 1 && <ResumeUpload />}
       </Container>
+      <ParticlesBackground/>
     </Box>
   );
 };

@@ -156,7 +156,7 @@ const MyResumes = () => {
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const open = Boolean(anchorEl);
 
-  const format_options = ["html", "markup", "plaintext"];
+  const format_options = ["HTML", "Markup", "Plaintext"];
 
   const { darkMode } = useTheme();
   const theme = useMuiTheme();
