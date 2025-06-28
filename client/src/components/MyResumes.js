@@ -31,7 +31,8 @@ import ModernImg from "../modern.png";
 import SplitImg from "../split.png";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
-import Markdown from 'markdown-to-jsx';
+import Markdown from "markdown-to-jsx";
+import { createApiUrl } from "../config/api";
 
 const ResumeContent = ({ content }) => {
   if (!content) return null;
@@ -169,7 +170,7 @@ const MyResumes = () => {
   const fetchResumes = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/resumes", {
+      const response = await axios.get(createApiUrl("api/resumes"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -200,7 +201,7 @@ const MyResumes = () => {
       const token = await getAccessTokenSilently();
       console.log("Token: ", token);
       const response = await axios.post(
-        "http://localhost:8000/api/jobs/advice",
+        createApiUrl("api/jobs/advice"),
         {
           resumeId: resumeId,
           //jobId:
@@ -245,9 +246,9 @@ const MyResumes = () => {
   };
 
   const handleCloseAlert = () => {
-        setError(null);
-        setAdviceError(null);
-    };
+    setError(null);
+    setAdviceError(null);
+  };
 
   const handleMenuClick = async (resume, format_ind, template_ind) => {
     try {
@@ -258,7 +259,7 @@ const MyResumes = () => {
         console.log(template);
       }
       const response = await axios.post(
-        "http://localhost:8000/api/format",
+        createApiUrl("api/format"),
         {
           resumeId: resume,
           formatType: format_options[format_ind],
@@ -301,26 +302,28 @@ const MyResumes = () => {
       console.log("Selected format: " + format);
       const template = templates[selectedTemplate].formattedTitle;
       console.log("Selected template: " + template);
-      const response = await axios.get(
-        `http://localhost:8000/api/resumes/download/${resume._id}/${format}/basic/${template}`,
+      const downloadResponse = await axios.get(
+        createApiUrl(
+          `api/resumes/download/${resume._id}/${format}/basic/${template}`
+        ),
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const url = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/octet-stream" })
+      const downloadUrl = window.URL.createObjectURL(
+        new Blob([downloadResponse.data], { type: "application/octet-stream" })
       );
       const link = document.createElement("a");
 
-      link.href = url;
-      link.download = response.headers["content-disposition"]
-        ? response.headers["content-disposition"].match(
+      link.href = downloadUrl;
+      link.download = downloadResponse.headers["content-disposition"]
+        ? downloadResponse.headers["content-disposition"].match(
             /filename="?([^"]+)"?/
           )[1]
         : "downloaded_resume";
       link.click();
 
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error("Error getting formatted resume:", error);
     }
@@ -357,7 +360,12 @@ const MyResumes = () => {
           )}
 
           {error && (
-            <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+            <Alert
+              variant="outlined"
+              severity="error"
+              onClose={handleCloseAlert}
+              sx={{ mb: 2 }}
+            >
               {error}
             </Alert>
           )}
@@ -431,7 +439,7 @@ const MyResumes = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth='md' // changed to false
+        maxWidth="md" // changed to false
         slotProps={{
           sx: { minHeight: "80vh" },
         }}
@@ -444,21 +452,34 @@ const MyResumes = () => {
           <Box sx={{ maxWidth: "100%" }}>
             {formattedResume ? (
               selectedIndex === 0 ? (
-              <pre style={{ whiteSpace: "normal", wordBreak: "break-word", margin: 0, padding: 3, background: "white", color: "black", borderRadius: 2}}>
-                <div style={{
-                  margin: 0, 
-                  padding: 0, 
-                  lineHeight: '1.5', 
-                }} 
-                dangerouslySetInnerHTML={{ __html: formattedResume }} />
-              </pre>
+                <pre
+                  style={{
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                    margin: 0,
+                    padding: 3,
+                    background: "white",
+                    color: "black",
+                    borderRadius: 2,
+                  }}
+                >
+                  <div
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      lineHeight: "1.5",
+                    }}
+                    dangerouslySetInnerHTML={{ __html: formattedResume }}
+                  />
+                </pre>
               ) : selectedIndex === 1 ? (
                 <Markdown>{formattedResume}</Markdown>
-                
               ) : (
-                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {formattedResume}
-              </pre>
+                <pre
+                  style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                >
+                  {formattedResume}
+                </pre>
               )
             ) : (
               selectedResume && (
@@ -574,7 +595,9 @@ const MyResumes = () => {
             ))}
           </Menu>
           <Button
-            onClick={() => handleDownload(selectedResume, selectedIndex, selectedTemplate)}
+            onClick={() =>
+              handleDownload(selectedResume, selectedIndex, selectedTemplate)
+            }
             disabled={selectedIndex === -1}
           >
             Download
@@ -612,7 +635,12 @@ const MyResumes = () => {
           Advice for {job} at {company}
         </DialogTitle>
         {error && (
-          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+          <Alert
+            variant="outlined"
+            severity="error"
+            onClose={handleCloseAlert}
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
@@ -628,7 +656,12 @@ const MyResumes = () => {
           )}
         </DialogContent>
         {adviceError && (
-          <Alert variant="outlined" severity="error" onClose={handleCloseAlert} sx={{ mb: 2 }}>
+          <Alert
+            variant="outlined"
+            severity="error"
+            onClose={handleCloseAlert}
+            sx={{ mb: 2 }}
+          >
             {adviceError}
           </Alert>
         )}

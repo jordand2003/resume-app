@@ -21,7 +21,7 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  FormLabel
+  FormLabel,
 } from "@mui/material";
 import NavBar from "./NavBar";
 import StatusChecker from "./StatusChecker";
@@ -29,6 +29,7 @@ import ChecklistSelect from "./ChecklistSelect";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 import { marked } from "marked";
+import { createApiUrl } from "../config/api";
 
 //----------------- Functions ------------------------------
 const formatDate = (dateString) => {
@@ -46,7 +47,7 @@ const ResumeContent = ({ content }) => {
   if (!content) return null;
 
   const parsedData = content.parsedData || {}; // Add a fallback in case parsedData is missing
-  
+
   return (
     <Box sx={{ p: 2 }}>
       {parsedData.education && parsedData.education.length > 0 && (
@@ -151,48 +152,48 @@ const EduContent = ({ content }) => {
 
   return (
     <Box sx={{ p: 2 }}>
-      {content  && (
+      {content && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 0 }}>
             Education
           </Typography>
-            <Box sx={{ mb: 2, ml: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                {content.institute || content.Institute}, {content?.location || content?.Location}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {content?.degree || content?.Degree} in {content?.major || content?.Major}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                GPA: {content?.gpa || content?.GPA}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {content?.startDate || content?.Start_Date} -{" "}
-                {content?.endDate || content?.End_Date}
-              </Typography>
+          <Box sx={{ mb: 2, ml: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+              {content.institute || content.Institute},{" "}
+              {content?.location || content?.Location}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {content?.degree || content?.Degree} in{" "}
+              {content?.major || content?.Major}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              GPA: {content?.gpa || content?.GPA}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {content?.startDate || content?.Start_Date} -{" "}
+              {content?.endDate || content?.End_Date}
+            </Typography>
+            <Typography
+              color="text.primary"
+              sx={{ fontSize: "12px", fontWeight: "bold" }}
+            >
+              Relevant Coursework:
+            </Typography>
+            {(content.relevantCoursework || content.RelevantCoursework) && (
               <Typography
-                color="text.primary"
-                sx={{ fontSize: "12px", fontWeight: "bold" }}
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: "12px", ml: 4 }}
               >
-                Relevant Coursework:
+                {content.relevantCoursework || content.RelevantCoursework}
               </Typography>
-              {(content.relevantCoursework || content.RelevantCoursework) && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: "12px", ml: 4 }}
-                >
-                  {content.relevantCoursework || content.RelevantCoursework}
-                </Typography>
-              )}
-            </Box>
+            )}
+          </Box>
         </>
       )}
-
     </Box>
   );
 };
-
 
 const CareerContent = ({ content }) => {
   if (!content) return null;
@@ -200,7 +201,7 @@ const CareerContent = ({ content }) => {
   return (
     <>
       {/* Career Section */}
-      {content &&  (
+      {content && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Career
@@ -227,8 +228,6 @@ const CareerContent = ({ content }) => {
   );
 };
 
-  
-
 /*-----------------------------------Actual component is here------------------------------------------*/
 const ResumeGeneration = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -239,12 +238,12 @@ const ResumeGeneration = () => {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [resumes, setResumes] = useState(null);
-  const [skills, setSkills] = useState(null)
+  const [skills, setSkills] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [markedCareerEntries, setMarkedCareerEntries] = useState(new Set());
   const [markedEduEntries, setMarkedEduEntries] = useState(new Set());
-  const [careers, setCareers] = useState(null)
-  const [edus, setEdus] = useState(null)
+  const [careers, setCareers] = useState(null);
+  const [edus, setEdus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState(null);
   const [markedEntries, setMarkedEntries] = useState(new Set());
@@ -253,10 +252,11 @@ const ResumeGeneration = () => {
   const theme = useMuiTheme();
 
   const handleSkillClick = (skill) => {
-    setSelectedSkills((prevSelected) =>
-      prevSelected.includes(skill)
-        ? prevSelected.filter((s) => s !== skill) // Unselect
-        : [...prevSelected, skill]                // Select
+    setSelectedSkills(
+      (prevSelected) =>
+        prevSelected.includes(skill)
+          ? prevSelected.filter((s) => s !== skill) // Unselect
+          : [...prevSelected, skill] // Select
     );
   };
 
@@ -278,7 +278,7 @@ const ResumeGeneration = () => {
     setErrorMessage("");
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/job-desc", {
+      const response = await axios.get(createApiUrl("api/job-desc"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -307,7 +307,7 @@ const ResumeGeneration = () => {
   const fetchResumes = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/resume", {
+      const response = await axios.get(createApiUrl("api/resume"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -330,11 +330,14 @@ const ResumeGeneration = () => {
   const fetchCareers = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/career-history/history_v2", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        createApiUrl("api/career-history/history_v2"),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.data && response.data.data) {
         setCareers(response.data.data);
@@ -353,7 +356,7 @@ const ResumeGeneration = () => {
   const fetchEdus = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/education/v2", {
+      const response = await axios.get(createApiUrl("api/education/v2"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -376,7 +379,7 @@ const ResumeGeneration = () => {
   const fetchSkills = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/skills", {
+      const response = await axios.get(createApiUrl("api/skills"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -409,16 +412,23 @@ const ResumeGeneration = () => {
 
     try {
       /** Pull selected data from each entry */
-        let selectedCareers = []; let selectedEdus = []; let selectedSkills = [];
-        for (const entry of markedEntries) {
-          selectedCareers.push(...entry.work_experience);
-          selectedEdus.push(...entry.education);
-          selectedSkills.push(...entry.skills);
-        }
+      let selectedCareers = [];
+      let selectedEdus = [];
+      let selectedSkills = [];
+      for (const entry of markedEntries) {
+        selectedCareers.push(...entry.work_experience);
+        selectedEdus.push(...entry.education);
+        selectedSkills.push(...entry.skills);
+      }
       const token = await getAccessTokenSilently();
       const response = await axios.post(
-        "http://localhost:8000/api/resumes/generate_v2",
-        { jobId: selectedJobId, selectedCareers : selectedCareers, selectedEdus: selectedEdus, selectedSkills: selectedSkills },
+        createApiUrl("api/resumes/generate_v2"),
+        {
+          jobId: selectedJobId,
+          selectedCareers: selectedCareers,
+          selectedEdus: selectedEdus,
+          selectedSkills: selectedSkills,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -465,12 +475,16 @@ const ResumeGeneration = () => {
     setResumeId(null);
     setGeneratedMessage("");
 
-
     try {
       const token = await getAccessTokenSilently();
       const response = await axios.post(
-        "http://localhost:8000/api/resumes/generate_v2",
-        { jobId: selectedJobId, selectedCareers : careers, careers: edus, selectedSkills: Array.from(selectedSkills)},
+        createApiUrl("api/resumes/generate_v2"),
+        {
+          jobId: selectedJobId,
+          selectedCareers: careers,
+          careers: edus,
+          selectedSkills: Array.from(selectedSkills),
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -489,7 +503,6 @@ const ResumeGeneration = () => {
         // Set new status
         localStorage.setItem("resumeId", response.data.resumeId);
         localStorage.setItem("status", "Processing");
-
       } else {
         throw new Error(
           response.data?.message || "Failed to start resume generation."
@@ -507,9 +520,9 @@ const ResumeGeneration = () => {
   };
 
   const handleCloseAlert = () => {
-        setGeneratedMessage(null);
-        setErrorMessage(null);
-    };
+    setGeneratedMessage(null);
+    setErrorMessage(null);
+  };
 
   const handleJobChange = (event) => {
     setSelectedJobId(event.target.value);
@@ -520,7 +533,12 @@ const ResumeGeneration = () => {
   };
 
   // Can use this for the `indexDisplsyFunction` prop to create List items
-  const resumeIndexList = (allResumes, handleViewContent, markedEntries, setMarkedEntries) => {
+  const resumeIndexList = (
+    allResumes,
+    handleViewContent,
+    markedEntries,
+    setMarkedEntries
+  ) => {
     return allResumes.map((resume, index) => (
       <React.Fragment key={resume._id}>
         {index > 0 && <Divider />}
@@ -536,9 +554,11 @@ const ResumeGeneration = () => {
         >
           <Checkbox /** Add or remove entries from the markedEntry's set (in the child component) */
             checked={markedEntries.has(resume.parsedData)}
-            onChange={(event) => {  
+            onChange={(event) => {
               if (event.target.checked) {
-                setMarkedEntries((prevMarked) => new Set(prevMarked).add(resume.parsedData));
+                setMarkedEntries((prevMarked) =>
+                  new Set(prevMarked).add(resume.parsedData)
+                );
               } else {
                 setMarkedEntries((prevMarked) => {
                   const nextMarked = new Set(prevMarked);
@@ -567,101 +587,115 @@ const ResumeGeneration = () => {
     ));
   };
 
-// Can use this for the `indexDisplsyFunction` prop to create List items
-const careerIndexList = (careers, handleViewContent, markedCareerEntries, setMarkedCareerEntries) => {
-  return careers.map((career, index) => (
-    <React.Fragment key={career._id}>
-      {index > 0 && <Divider />}
-      <ListItem
-        alignItems="flex-start"
-        sx={{
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-          },
-          cursor: "pointer",
-        }}
-        onClick={() => handleViewContent(career)}
-      >
-        <Checkbox
-          checked={markedCareerEntries.has(career)}
-          onChange={(event) => {
-            if (event.target.checked) {
-              setMarkedCareerEntries((prevMarked) => new Set(prevMarked).add(career));
-            } else {
-              setMarkedCareerEntries((prevMarked) => {
-                const nextMarked = new Set(prevMarked);
-                nextMarked.delete(career);
-                return nextMarked;
-              });
-            }
+  // Can use this for the `indexDisplsyFunction` prop to create List items
+  const careerIndexList = (
+    careers,
+    handleViewContent,
+    markedCareerEntries,
+    setMarkedCareerEntries
+  ) => {
+    return careers.map((career, index) => (
+      <React.Fragment key={career._id}>
+        {index > 0 && <Divider />}
+        <ListItem
+          alignItems="flex-start"
+          sx={{
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
+            cursor: "pointer",
           }}
-        />
-        <ListItemText
-          primary={
-            <Typography variant="subtitle1" component="div">
-              {career.Job_Title || "New Career Entry"}
-            </Typography>
-          }
-          secondary={
-            <>
-              <Typography variant="body2" color="text.secondary">
-                {career.Company}
+          onClick={() => handleViewContent(career)}
+        >
+          <Checkbox
+            checked={markedCareerEntries.has(career)}
+            onChange={(event) => {
+              if (event.target.checked) {
+                setMarkedCareerEntries((prevMarked) =>
+                  new Set(prevMarked).add(career)
+                );
+              } else {
+                setMarkedCareerEntries((prevMarked) => {
+                  const nextMarked = new Set(prevMarked);
+                  nextMarked.delete(career);
+                  return nextMarked;
+                });
+              }
+            }}
+          />
+          <ListItemText
+            primary={
+              <Typography variant="subtitle1" component="div">
+                {career.Job_Title || "New Career Entry"}
               </Typography>
-            </>
-          }
-        />
-      </ListItem>
-    </React.Fragment>
-  ));
-};
+            }
+            secondary={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  {career.Company}
+                </Typography>
+              </>
+            }
+          />
+        </ListItem>
+      </React.Fragment>
+    ));
+  };
 
-// Can use this for the `indexDisplsyFunction` prop to create List items
-const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEntries) => {
-  return edus.map((edu, index) => (
-    <React.Fragment key={edu._id}>
-      {index > 0 && <Divider />}
-      <ListItem
-        alignItems="flex-start"
-        sx={{
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-          },
-          cursor: "pointer",
-        }}
-        onClick={() => handleViewContent(edu)}
-      >
-        <Checkbox
-          checked={markedEduEntries.has(edu)}
-          onChange={(event) => {
-            if (event.target.checked) {
-              setMarkedEduEntries((prevMarked) => new Set(prevMarked).add(edu));
-            } else {
-              setMarkedEduEntries((prevMarked) => {
-                const nextMarked = new Set(prevMarked);
-                nextMarked.delete(edu);
-                return nextMarked;
-              });
-            }
+  // Can use this for the `indexDisplsyFunction` prop to create List items
+  const eduIndexList = (
+    edus,
+    handleViewContent,
+    markedEduEntries,
+    setMarkedEduEntries
+  ) => {
+    return edus.map((edu, index) => (
+      <React.Fragment key={edu._id}>
+        {index > 0 && <Divider />}
+        <ListItem
+          alignItems="flex-start"
+          sx={{
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
+            cursor: "pointer",
           }}
-        />
-        <ListItemText
-          primary={
-            <Typography variant="subtitle1" component="div">
-              {edu.Institute || "New Education Entry"}
-            </Typography>
-          }
-          secondary={
-            <>
-              <Typography variant="body2" color="text.secondary">
-                {edu.Degree} in {edu.Major}
+          onClick={() => handleViewContent(edu)}
+        >
+          <Checkbox
+            checked={markedEduEntries.has(edu)}
+            onChange={(event) => {
+              if (event.target.checked) {
+                setMarkedEduEntries((prevMarked) =>
+                  new Set(prevMarked).add(edu)
+                );
+              } else {
+                setMarkedEduEntries((prevMarked) => {
+                  const nextMarked = new Set(prevMarked);
+                  nextMarked.delete(edu);
+                  return nextMarked;
+                });
+              }
+            }}
+          />
+          <ListItemText
+            primary={
+              <Typography variant="subtitle1" component="div">
+                {edu.Institute || "New Education Entry"}
               </Typography>
-            </>
-          }
-        />
-      </ListItem>
-    </React.Fragment>
-  ));
-};
+            }
+            secondary={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  {edu.Degree} in {edu.Major}
+                </Typography>
+              </>
+            }
+          />
+        </ListItem>
+      </React.Fragment>
+    ));
+  };
 
   return (
     <Box
@@ -672,9 +706,13 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
     >
       <NavBar />
       {/** Initial Toggle Menu */}
-      <Typography variant="h4" sx={{ mt: 4, ml: 4 }}>Generate Your Resume</Typography>
-      <FormControl sx={{p: "2%"}}>
-        <FormLabel id="demo-radio-buttons-group-label">How would you like to generate your resume?</FormLabel>
+      <Typography variant="h4" sx={{ mt: 4, ml: 4 }}>
+        Generate Your Resume
+      </Typography>
+      <FormControl sx={{ p: "2%" }}>
+        <FormLabel id="demo-radio-buttons-group-label">
+          How would you like to generate your resume?
+        </FormLabel>
         <RadioGroup
           row
           //aria-labelledby="demo-radio-buttons-group-label"
@@ -682,184 +720,246 @@ const eduIndexList = (edus, handleViewContent, markedEduEntries, setMarkedEduEnt
           name="radio-buttons-group"
           onChange={handleTabChange}
         >
-          <FormControlLabel value="manual" control={<Radio />} label="Manually Select Data" />
-          <FormControlLabel value="resume" control={<Radio />} label="Use Resume Data" />
+          <FormControlLabel
+            value="manual"
+            control={<Radio />}
+            label="Manually Select Data"
+          />
+          <FormControlLabel
+            value="resume"
+            control={<Radio />}
+            label="Use Resume Data"
+          />
         </RadioGroup>
       </FormControl>
 
       {/** Manual Selection Menu */}
-        {currentTab === "manual" && (
-          <>
-            <ChecklistSelect
-              checklist_name="Career"
-              full_content={careers}
-              indexDisplayFunction={(full_content, handleViewContentFromChild, markedCareerEntries, setMarkedCareerEntries) =>
-                careerIndexList(full_content, handleViewContentFromChild, markedCareerEntries, setMarkedCareerEntries)
-              }
-              rightSideDisplayFunction={(selectedEntry) => (
-                <CareerContent content={selectedEntry} />
-              )}
-              markedEntries={markedCareerEntries}
-              setMarkedEntries={setMarkedCareerEntries}
-            />
-            <ChecklistSelect
-              checklist_name="Education"
-              full_content={edus}
-              indexDisplayFunction={(full_content, handleViewContentFromChild, markedEduEntries, setMarkedEduEntries) =>
-                eduIndexList(full_content, handleViewContentFromChild, markedEduEntries, setMarkedEduEntries)
-              }
-              rightSideDisplayFunction={(selectedEntry) => (
-                <EduContent content={selectedEntry} />
-              )}
-              markedEntries={markedEduEntries}
-              setMarkedEntries={setMarkedEduEntries}
-            />
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Box>
-                <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
-                  {/**<AutoStoriesIcon sx={{ mr: 1 }} />*/}
-                  Skills
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: 1.5,
-                    p: "30px",
-                  }}
-                >
-                  {skills && skills.length > 0 ? (
-                    skills.map((s, index) => (
-                      <Chip
+      {currentTab === "manual" && (
+        <>
+          <ChecklistSelect
+            checklist_name="Career"
+            full_content={careers}
+            indexDisplayFunction={(
+              full_content,
+              handleViewContentFromChild,
+              markedCareerEntries,
+              setMarkedCareerEntries
+            ) =>
+              careerIndexList(
+                full_content,
+                handleViewContentFromChild,
+                markedCareerEntries,
+                setMarkedCareerEntries
+              )
+            }
+            rightSideDisplayFunction={(selectedEntry) => (
+              <CareerContent content={selectedEntry} />
+            )}
+            markedEntries={markedCareerEntries}
+            setMarkedEntries={setMarkedCareerEntries}
+          />
+          <ChecklistSelect
+            checklist_name="Education"
+            full_content={edus}
+            indexDisplayFunction={(
+              full_content,
+              handleViewContentFromChild,
+              markedEduEntries,
+              setMarkedEduEntries
+            ) =>
+              eduIndexList(
+                full_content,
+                handleViewContentFromChild,
+                markedEduEntries,
+                setMarkedEduEntries
+              )
+            }
+            rightSideDisplayFunction={(selectedEntry) => (
+              <EduContent content={selectedEntry} />
+            )}
+            markedEntries={markedEduEntries}
+            setMarkedEntries={setMarkedEduEntries}
+          />
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ display: "flex", alignItems: "center" }}
+              >
+                {/**<AutoStoriesIcon sx={{ mr: 1 }} />*/}
+                Skills
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 1.5,
+                  p: "30px",
+                }}
+              >
+                {skills && skills.length > 0 ? (
+                  skills.map((s, index) => (
+                    <Chip
                       key={index}
                       label={s}
-                      variant={selectedSkills.includes(s) ? "filled" : "outlined"}
+                      variant={
+                        selectedSkills.includes(s) ? "filled" : "outlined"
+                      }
                       sx={{
-                        color: selectedSkills.includes(s) ? 'white' : '#6495ED',
-                        background: selectedSkills.includes(s) ? '#6495ED' : 'transparent',
+                        color: selectedSkills.includes(s) ? "white" : "#6495ED",
+                        background: selectedSkills.includes(s)
+                          ? "#6495ED"
+                          : "transparent",
                         borderColor: "#6495ED",
                       }}
                       onClick={() => handleSkillClick(s)}
-                      />
-                    ))
-                  ) : (
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        color: "#636363",
-                        padding: "16px",
-                      }}
-                    >
-                      No skills added yet!
-                    </Typography>
-                  )}
-                </Box>
+                    />
+                  ))
+                ) : (
+                  <Typography
+                    sx={{
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      color: "#636363",
+                      padding: "16px",
+                    }}
+                  >
+                    No skills added yet!
+                  </Typography>
+                )}
               </Box>
-            </Paper>
-          </>
-        )}
-        {currentTab === "resume" && (
-          <ChecklistSelect
-            checklist_name="Resume"
-            full_content={resumes}
-            indexDisplayFunction={(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild) =>
-              resumeIndexList(full_content, handleViewContentFromChild, markedEntriesFromChild, setMarkedEntriesFromChild)
-            }
-            rightSideDisplayFunction={(selectedEntry) => (
-              <ResumeContent content={selectedEntry} />
-            )}
-            markedEntries={markedEntries} // Pass markedEntries as a prop
-            setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
-          />
-        )} 
+            </Box>
+          </Paper>
+        </>
+      )}
+      {currentTab === "resume" && (
+        <ChecklistSelect
+          checklist_name="Resume"
+          full_content={resumes}
+          indexDisplayFunction={(
+            full_content,
+            handleViewContentFromChild,
+            markedEntriesFromChild,
+            setMarkedEntriesFromChild
+          ) =>
+            resumeIndexList(
+              full_content,
+              handleViewContentFromChild,
+              markedEntriesFromChild,
+              setMarkedEntriesFromChild
+            )
+          }
+          rightSideDisplayFunction={(selectedEntry) => (
+            <ResumeContent content={selectedEntry} />
+          )}
+          markedEntries={markedEntries} // Pass markedEntries as a prop
+          setMarkedEntries={setMarkedEntries} // Pass setMarkedEntries as a prop
+        />
+      )}
 
       {/** Submit Area */}
       {currentTab && (
-      <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Generate Your Resume!
-          </Typography>
+        <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Generate Your Resume!
+            </Typography>
 
-          {generationStatus === "loading" && (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
-              <CircularProgress />
-              <Typography sx={{ ml: 2 }}>
-                Starting resume generation...
-              </Typography>
-            </Box>
-          )}
+            {generationStatus === "loading" && (
+              <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>
+                  Starting resume generation...
+                </Typography>
+              </Box>
+            )}
 
-          {errorMessage && (
-            <Alert variant="outlined" onClose={handleCloseAlert} severity="error" sx={{ mb: 2 }}>
-              {errorMessage}
-            </Alert>
-          )}
-
-          {generationStatus !== "loading" && (
-            <>
-              <FormControl fullWidth margin="normal">
-                <InputLabel id="job-listing-label">
-                  Select Job You Are Applying For
-                </InputLabel>
-                <Select
-                  labelId="job-listing-label"
-                  id="job-listing"
-                  label="Select Job You Are Applying For"
-                  value={selectedJobId}
-                  onChange={handleJobChange}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {jobList.map((job) => (
-                    <MenuItem key={job._id} value={job._id}>
-                      {job.job_title || "Job"} at {job.company || "Company"}
-                    </MenuItem>
-                  ))}
-                  {jobList.length === 0 && (
-                    <MenuItem disabled>No job listings available.</MenuItem>
-                  )}
-                </Select>
-              </FormControl>
-
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={currentTab === "resumes" ? handleGenerate : handleManualGenerate}
-                fullWidth
-                disabled={generationStatus === "loading" || !selectedJobId}
-                sx={{ mt: 3 }}
+            {errorMessage && (
+              <Alert
+                variant="outlined"
+                onClose={handleCloseAlert}
+                severity="error"
+                sx={{ mb: 2 }}
               >
-                Generate Resume
-              </Button>
+                {errorMessage}
+              </Alert>
+            )}
 
-              <StatusChecker resumeId={resumeId} />
+            {generationStatus !== "loading" && (
+              <>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel id="job-listing-label">
+                    Select Job You Are Applying For
+                  </InputLabel>
+                  <Select
+                    labelId="job-listing-label"
+                    id="job-listing"
+                    label="Select Job You Are Applying For"
+                    value={selectedJobId}
+                    onChange={handleJobChange}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {jobList.map((job) => (
+                      <MenuItem key={job._id} value={job._id}>
+                        {job.job_title || "Job"} at {job.company || "Company"}
+                      </MenuItem>
+                    ))}
+                    {jobList.length === 0 && (
+                      <MenuItem disabled>No job listings available.</MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
 
-              {generationStatus === "success" && generatedMessage && (
-                <Alert severity="info" sx={{ mt: 2 }} variant="outlined" onClose={handleCloseAlert}>
-                  {generatedMessage} - Resume ID: {resumeId}
-                  <Typography variant="body2" color="text.secondary">
-                    You can check the generation status using the Resume ID.
-                  </Typography>
-                </Alert>
-              )}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={
+                    currentTab === "resumes"
+                      ? handleGenerate
+                      : handleManualGenerate
+                  }
+                  fullWidth
+                  disabled={generationStatus === "loading" || !selectedJobId}
+                  sx={{ mt: 3 }}
+                >
+                  Generate Resume
+                </Button>
 
-              {generationStatus === "error" && errorMessage && (
-                <Alert severity="error" sx={{ mt: 2 }}variant="outlined" onClose={handleCloseAlert}>
-                  {errorMessage}
-                </Alert>
-              )}
-            </>
-          )}
-        </Paper>
-      </Box>
+                <StatusChecker resumeId={resumeId} />
+
+                {generationStatus === "success" && generatedMessage && (
+                  <Alert
+                    severity="info"
+                    sx={{ mt: 2 }}
+                    variant="outlined"
+                    onClose={handleCloseAlert}
+                  >
+                    {generatedMessage} - Resume ID: {resumeId}
+                    <Typography variant="body2" color="text.secondary">
+                      You can check the generation status using the Resume ID.
+                    </Typography>
+                  </Alert>
+                )}
+
+                {generationStatus === "error" && errorMessage && (
+                  <Alert
+                    severity="error"
+                    sx={{ mt: 2 }}
+                    variant="outlined"
+                    onClose={handleCloseAlert}
+                  >
+                    {errorMessage}
+                  </Alert>
+                )}
+              </>
+            )}
+          </Paper>
+        </Box>
       )}
-      
-
     </Box>
   );
 };

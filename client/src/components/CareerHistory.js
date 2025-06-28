@@ -11,9 +11,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavBar from "./NavBar";
-import Grid from '@mui/system/Grid'
+import Grid from "@mui/system/Grid";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { createApiUrl } from "../config/api";
 
 const CareerHistory = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -33,7 +34,7 @@ const CareerHistory = () => {
     try {
       const token = await getAccessTokenSilently();
       const response = await axios.get(
-        "http://localhost:8000/api/career-history/history_v2",
+        createApiUrl("api/career-history/history_v2"),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -121,7 +122,7 @@ const CareerHistory = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:8000/api/career-history/history_v2",
+        createApiUrl("api/career-history/history_v2"),
         { work_experience: [formattedData] }, // Send as an array
         {
           headers: {
@@ -176,7 +177,7 @@ const CareerHistory = () => {
         const token = await getAccessTokenSilently();
         const edu_id = careerHistory[index]._id;
         const response = await axios.delete(
-          "http://localhost:8000/api/career-history/history_v2",
+          createApiUrl("api/career-history/history_v2"),
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -283,80 +284,85 @@ const CareerHistory = () => {
           </Box>
         )}
         <Grid container spacing={2}>
-        <Grid size={6}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Career History
-          </Typography>
-          {careerHistory.map((job, index) => (
-            <Box
-              key={index}
-              data-job-id={job._id}
-              sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
-            >
-              <TextField
-                fullWidth
-                label="Company"
-                value={job.company || ""}
-                onChange={(e) =>
-                  handleInputChange(index, "company", e.target.value)
-                }
-                margin="normal"
-                error={!!careerErrors[index]?.company}
-                helperText={careerErrors[index]?.company}
-                required
-              />
-              <TextField
-                fullWidth
-                label="Position"
-                value={job.position || ""}
-                onChange={(e) =>
-                  handleInputChange(index, "position", e.target.value)
-                }
-                margin="normal"
-                error={!!careerErrors[index]?.position}
-                helperText={careerErrors[index]?.position}
-                required
-              />
-              <TextField
-                fullWidth
-                label="Start Date"
-                value={job.startDate || ""}
-                onChange={(e) =>
-                  handleInputChange(index, "startDate", e.target.value)
-                }
-                margin="normal"
-                error={!!careerErrors[index]?.startDate}
-                helperText={careerErrors[index]?.startDate}
-                required
-                placeholder="e.g., Jan 2020"
-              />
-              <TextField
-                fullWidth
-                label="End Date"
-                value={job.endDate || ""}
-                onChange={(e) =>
-                  handleInputChange(index, "endDate", e.target.value)
-                }
-                margin="normal"
-                error={!!careerErrors[index]?.endDate}
-                helperText={careerErrors[index]?.endDate}
-                required
-                placeholder="e.g., Present"
-              />
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Key Responsibilities"
-                value={job.description || ""}
-                onChange={(e) =>
-                  handleInputChange(index, "description", e.target.value)
-                }
-                margin="normal"
-                placeholder="Enter job responsibilities and achievements"
-              />
-              {/*
+          <Grid size={6}>
+            <Paper elevation={3} sx={{ p: 3 }}>
+              <Typography variant="h5" gutterBottom>
+                Career History
+              </Typography>
+              {careerHistory.map((job, index) => (
+                <Box
+                  key={index}
+                  data-job-id={job._id}
+                  sx={{
+                    mb: 3,
+                    p: 2,
+                    border: "1px solid #ddd",
+                    borderRadius: 1,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="Company"
+                    value={job.company || ""}
+                    onChange={(e) =>
+                      handleInputChange(index, "company", e.target.value)
+                    }
+                    margin="normal"
+                    error={!!careerErrors[index]?.company}
+                    helperText={careerErrors[index]?.company}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Position"
+                    value={job.position || ""}
+                    onChange={(e) =>
+                      handleInputChange(index, "position", e.target.value)
+                    }
+                    margin="normal"
+                    error={!!careerErrors[index]?.position}
+                    helperText={careerErrors[index]?.position}
+                    required
+                  />
+                  <TextField
+                    fullWidth
+                    label="Start Date"
+                    value={job.startDate || ""}
+                    onChange={(e) =>
+                      handleInputChange(index, "startDate", e.target.value)
+                    }
+                    margin="normal"
+                    error={!!careerErrors[index]?.startDate}
+                    helperText={careerErrors[index]?.startDate}
+                    required
+                    placeholder="e.g., Jan 2020"
+                  />
+                  <TextField
+                    fullWidth
+                    label="End Date"
+                    value={job.endDate || ""}
+                    onChange={(e) =>
+                      handleInputChange(index, "endDate", e.target.value)
+                    }
+                    margin="normal"
+                    error={!!careerErrors[index]?.endDate}
+                    helperText={careerErrors[index]?.endDate}
+                    required
+                    placeholder="e.g., Present"
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Key Responsibilities"
+                    value={job.description || ""}
+                    onChange={(e) =>
+                      handleInputChange(index, "description", e.target.value)
+                    }
+                    margin="normal"
+                    placeholder="Enter job responsibilities and achievements"
+                  />
+                  {/*
                             <TextField
                                 fullWidth
                                 label="Location"
@@ -365,63 +371,63 @@ const CareerHistory = () => {
                                 margin="normal"
                                 placeholder="Enter location"
                             />*/}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <Button
+                      type="button"
+                      variant="contained"
+                      color="primary"
+                      sx={{ mt: 0.25 }}
+                      onClick={() => handleSaveCareerEntry(index)}
+                    >
+                      Save Career Entry
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleRemoveCareerEntry(index)}
+                      sx={{ mt: 1 }}
+                    >
+                      Remove Job
+                    </Button>
+                  </Box>
+                </Box>
+              ))}
               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                 <Button
                   type="button"
-                  variant="contained"
-                  color="primary"
-                  sx={{ mt: 0.25 }}
-                  onClick={() => handleSaveCareerEntry(index)}
-                >
-                  Save Career Entry
-                </Button>
-                <Button
-                  type="button"
                   variant="outlined"
-                  color="error"
-                  onClick={() => handleRemoveCareerEntry(index)}
-                  sx={{ mt: 1 }}
+                  onClick={handleAddCareerEntry}
                 >
-                  Remove Job
+                  Add Another Job
                 </Button>
-              </Box>
-            </Box>
-          ))}
-          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={handleAddCareerEntry}
-            >
-              Add Another Job
-            </Button>
-            {/* You might still want a general "Save All" button if needed */}
-            {/* <Button type="submit" variant="contained" color="primary">
+                {/* You might still want a general "Save All" button if needed */}
+                {/* <Button type="submit" variant="contained" color="primary">
                             Save All Career History
                         </Button> */}
-          </Box>
-        </Paper>
-        </Grid>
-        <Grid size={6}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Free-form Career History
-          </Typography>
-          <Box
-              sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
-            >
-              <TextField
-                fullWidth
-                label="Paste career history here"
-                value={""}
-                onChange={""}
-                margin="normal"
-                multiline="true"
-                rows={5}
-              />
-          </Box>
-        </Paper>
-        </Grid>
+              </Box>
+            </Paper>
+          </Grid>
+          <Grid size={6}>
+            <Paper elevation={3} sx={{ p: 3 }}>
+              <Typography variant="h5" gutterBottom>
+                Free-form Career History
+              </Typography>
+              <Box
+                sx={{ mb: 3, p: 2, border: "1px solid #ddd", borderRadius: 1 }}
+              >
+                <TextField
+                  fullWidth
+                  label="Paste career history here"
+                  value={""}
+                  onChange={""}
+                  margin="normal"
+                  multiline="true"
+                  rows={5}
+                />
+              </Box>
+            </Paper>
+          </Grid>
         </Grid>
       </Box>
     </Box>

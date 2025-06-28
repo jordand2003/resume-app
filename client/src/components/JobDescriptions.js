@@ -13,6 +13,7 @@ import {
 import NavBar from "./NavBar";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { createApiUrl } from "../config/api";
 
 const JobDescription = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -30,7 +31,7 @@ const JobDescription = () => {
   const fetchJobDescHistory = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/job-desc", {
+      const response = await axios.get(createApiUrl("api/job-desc"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -77,7 +78,7 @@ const JobDescription = () => {
 
       console.log("Submitting job description history:", formattedData);
       const response = await axios.post(
-        "http://localhost:8000/api/job-desc",
+        createApiUrl("api/job-desc"),
         {
           job_description: formattedData, // Match the database field name
         },

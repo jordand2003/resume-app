@@ -23,6 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 import { useTheme } from "../context/ThemeContext";
+import { createApiUrl } from "../config/api";
 
 const ResumeContent = ({ content }) => {
   const theme = useMuiTheme();
@@ -174,7 +175,7 @@ const UploadedHistory = ({ triggerUploadRefresh }) => {
   const fetchResumes = async () => {
     try {
       const token = await getAccessTokenSilently();
-      const response = await axios.get("http://localhost:8000/api/resume", {
+      const response = await axios.get(createApiUrl("api/resume"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -235,7 +236,7 @@ const UploadedHistory = ({ triggerUploadRefresh }) => {
     //console.log(resume._id )
     const token = await getAccessTokenSilently();
     const response = await axios.delete(
-      `http://localhost:8000/api/resume/${resume_id}`,
+      `${createApiUrl(`api/resume/${resume_id}`)}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

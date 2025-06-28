@@ -13,6 +13,7 @@ import {
 import NavBar from "./NavBar";
 import { useTheme } from "../context/ThemeContext";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { createApiUrl } from "../config/api";
 
 const EducationInfo = () => {
   const { getAccessTokenSilently } = useAuth0();
@@ -45,13 +46,10 @@ const EducationInfo = () => {
   const fetchEducationInfo = async () => {
     try {
       const token = await getAccessTokenSilently();
-      //const response = await axios.get("http://localhost:8000/api/education/v2", {
-      const response = await axios.get(
-        "http://localhost:8000/api/education/v2",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      //const response = await axios.get(createApiUrl("api/education/v2"), {
+      const response = await axios.get(createApiUrl("api/education/v2"), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       console.log("Education history response:", response.data);
 
       if (response.data && response.data.data) {
@@ -115,7 +113,7 @@ const EducationInfo = () => {
       }));
 
       const response = await axios.post(
-        "http://localhost:8000/api/education",
+        createApiUrl("api/education"),
         { education: formattedData },
         {
           headers: {
@@ -167,16 +165,13 @@ const EducationInfo = () => {
       try {
         const token = await getAccessTokenSilently();
         const edu_id = education[index]._id;
-        const response = await axios.delete(
-          "http://localhost:8000/api/education/v2",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            data: { id: edu_id },
-          }
-        );
+        const response = await axios.delete(createApiUrl("api/education/v2"), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          data: { id: edu_id },
+        });
 
         if (response.data.status === "Success") {
           setSuccessMessage("Education entry deleted successfully!");
@@ -248,7 +243,7 @@ const EducationInfo = () => {
 
       // Make addition or update existing entry
       const response = await axios.post(
-        "http://localhost:8000/api/education/v2",
+        createApiUrl("api/education/v2"),
         { education: [formattedData] }, // Send as an array
         {
           headers: {
