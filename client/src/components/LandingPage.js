@@ -372,14 +372,7 @@ const LandingPage = () => {
           </LogoContainer>
           <AuthButtonsContainer>
             <StyledButton variant="outlined" onClick={handleSignIn}>
-              Sign In
-            </StyledButton>
-            <StyledButton
-              variant="contained"
-              /*onClick={handleRegister}*/ component={Link}
-              to="/register"
-            >
-              Register
+              Sign In/Register
             </StyledButton>
           </AuthButtonsContainer>
         </NavContainer>
