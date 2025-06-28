@@ -16,6 +16,7 @@ import Dashboard from "./Dashboard";
 import ParticlesBackground from "./ParticlesBackground";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 import { useTheme } from "../context/ThemeContext";
+import { createApiUrl } from "../config/api";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const HomePage = () => {
         try {
           const accessToken = await memoizedGetAccessTokenSilently();
           const checkResponse = await fetch(
-            `http://localhost:8000/api/auth/users/${user.sub}`,
+            `${createApiUrl(`api/auth/users/${user.sub}`)}`,
             {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -58,21 +59,18 @@ const HomePage = () => {
 
           // User doesn't exist, create them
           if (checkResponse.status === 404) {
-            const createResponse = await fetch(
-              "http://localhost:8000/api/auth/users",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                  user_id: user.sub,
-                  email: user.email,
-                  name: user.name,
-                }),
-              }
-            );
+            const createResponse = await fetch(createApiUrl("api/auth/users"), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                user_id: user.sub,
+                email: user.email,
+                name: user.name,
+              }),
+            });
 
             if (!createResponse.ok) {
               console.error("Failed to create user in database");
@@ -131,7 +129,7 @@ const HomePage = () => {
       }}
     >
       <NavBar />
-      <Container maxWidth="lg" sx={{ mt: 4}}>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Typography
           variant="h4"
           component="h1"
@@ -164,7 +162,7 @@ const HomePage = () => {
         {currentTab === 0 && <Dashboard />}
         {currentTab === 1 && <ResumeUpload />}
       </Container>
-      <ParticlesBackground/>
+      <ParticlesBackground />
     </Box>
   );
 };

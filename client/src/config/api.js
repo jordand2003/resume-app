@@ -1,23 +1,18 @@
-// API Configuration for different environments
-const API_CONFIG = {
-  development: {
-    baseURL: "http://localhost:8000",
-  },
-  production: {
-    baseURL:
-      process.env.REACT_APP_API_URL || "https://your-railway-app.railway.app",
-  },
+// API Configuration
+const getApiUrl = () => {
+  // If REACT_APP_API_URL is set, use it (for production)
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  // In development, use localhost
+  return "http://localhost:8000";
 };
 
-// Get current environment
-const environment = process.env.NODE_ENV || "development";
+export const API_BASE_URL = getApiUrl();
 
-// Export the base URL for the current environment
-export const API_BASE_URL = API_CONFIG[environment].baseURL;
-
-// Helper function to create full API URLs
 export const createApiUrl = (endpoint) => {
-  return `${API_BASE_URL}${endpoint}`;
+  const cleanEndpoint = endpoint.replace(/^\/+/, "");
+  return `${API_BASE_URL}/${cleanEndpoint}`;
 };
 
-export default API_CONFIG;
+export default API_BASE_URL;

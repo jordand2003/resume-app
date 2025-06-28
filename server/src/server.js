@@ -13,6 +13,8 @@ const corsOptions = {
   origin: [
     "http://localhost:3000", // Local development
     "https://resume-daqlzk9n1-jordans-projects-4d5192fc.vercel.app", // deployed Vercel app
+    "https://*.vercel.app", // All Vercel domains
+    "https://*.railway.app", // All Railway domains
   ],
   credentials: true,
   optionsSuccessStatus: 200,
