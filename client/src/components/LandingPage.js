@@ -16,8 +16,9 @@ import {
 } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
 import ParticlesBackground from "./ParticlesBackground";
-import { Link } from 'react-router-dom';
-import Logo from './Logo';
+import { Link } from "react-router-dom";
+import Logo from "./Logo";
+import { createApiUrl } from "../config/api";
 
 const fadeIn = keyframes`
   from {
@@ -171,23 +172,66 @@ const LogoContainer = styled(Box)({
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { loginWithRedirect, isAuthenticated, isLoading, user, logout } = useAuth0();
+  const {
+    loginWithRedirect,
+    isAuthenticated,
+    isLoading,
+    user,
+    logout,
+    getAccessTokenSilently,
+  } = useAuth0();
 
   React.useEffect(() => {
     // If user hasn't been logouted & they still require verification, this runs
     const checkEmailVerification = async () => {
       if (isAuthenticated && user) {
-        if (!user.email_verified) {
+        if (
+          !user.email_verified &&
+          !(
+            user.sub.startsWith("github|") ||
+            user.sub.startsWith("google-oauth2|")
+          )
+        ) {
           // Stay on landing page with verification message
           return;
         } else {
+          // Always check and create user in backend
+          try {
+            const accessToken = await getAccessTokenSilently();
+            const checkResponse = await fetch(
+              createApiUrl(`api/auth/users/${user.sub}`),
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            if (checkResponse.status === 404) {
+              // User does not exist, create them
+              await fetch(createApiUrl("api/auth/users"), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  user_id: user.sub,
+                  email: user.email,
+                  name: user.name,
+                }),
+              });
+            }
+          } catch (error) {
+            console.error("Error during user check/creation:", error);
+          }
           navigate("/home");
         }
       }
     };
 
     checkEmailVerification();
-  }, [isAuthenticated, navigate, user]);
+  }, [isAuthenticated, navigate, user, getAccessTokenSilently]);
 
   const refreshVerificationStatus = async () => {
     try {
@@ -263,12 +307,9 @@ const LandingPage = () => {
                   Check Verification Status
                 </StyledButton>
               </ButtonContainer>
-                <StyledButton
-                  color="primary"
-                  onClick={handleSignOut}
-                >
-                  Home Page
-                </StyledButton>
+              <StyledButton color="primary" onClick={handleSignOut}>
+                Home Page
+              </StyledButton>
             </StyledPaper>
           </ContentSection>
         </Container>
@@ -330,7 +371,11 @@ const LandingPage = () => {
             <StyledButton variant="outlined" onClick={handleSignIn}>
               Sign In
             </StyledButton>
-            <StyledButton variant="contained" /*onClick={handleRegister}*/ component={Link} to="/register">
+            <StyledButton
+              variant="contained"
+              /*onClick={handleRegister}*/ component={Link}
+              to="/register"
+            >
               Register
             </StyledButton>
           </AuthButtonsContainer>
